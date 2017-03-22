@@ -14,6 +14,7 @@ rule token = parse
 | ';'      { SEMI }
 | ':'      { COLON }
 | ','      { COMMA }
+| '|'	   { BAR }
 | '+'      { PLUS }
 | "++"     { MPLUS }
 | '-'      { MINUS }
