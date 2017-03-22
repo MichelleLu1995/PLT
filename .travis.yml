@@ -1,1 +1,10 @@
+#
+# https://travis-ci.org/MichelleLu1995/PLT/
+#
+
 sudo: required
+language: python
+python: "2.7_with_system_site_packages"
+env: "OCAML_VERSION=4.01.0 OPAM_VERSION=1.2.0"
+script: make test
+
