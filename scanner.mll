@@ -50,19 +50,34 @@ rule token = parse
 | "row"    { ROW }
 | "column" { COLUMN }
 | "file"   { FILE }
-| "pixel"  { PIXEL }
-| "list"   { LIST }
 | "tuple"  { TUPLE }
 | "print"  { PRINT }
-| "range"  { RANGE }
 | "main"   { MAIN }
 | "def"    { DEF }
 | "in"     { IN }
-| ['0'-'9']+ as lxm { LITERAL(int_of_string lxm) }
+
+| "True"|"False" as lxm { BOOL_LIT(bool_of_string lxm) }
+| ['0'-'9']+'.'['0'-'9']+ as lxm { FLOAT_LIT(float_of_string lxm) }
+| ['0'-'9']+ as lxm { INT_LIT(int_of_string lxm) }
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
+| '"'(['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_' ' ']* as lxm)'"' { STRING_LIT(lxm) }
 | eof { EOF }
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
 
 and comment = parse
   "*/" { token lexbuf }
 | _    { comment lexbuf }
+
+
+(*
+{
+let main () =
+	let lexbuf = Lexing.from_channel stdin in
+	try
+		while true do
+			ignore (token lexbuf)
+		done
+	with _ -> print_string "invalid_token\n"
+let _ = Printexc.print main ()
+
+}*)
