@@ -13,10 +13,13 @@ open Ast
 %token <bool> BOOL_LIT
 %token <float> FLOAT_LIT
 
+%token DEF
+%token IN
 %token EOF
 
 %nonassoc NOELSE
 %nonassoc ELSE
+%nonassoc ELIF
 %right ASSIGN
 %left OR
 %left AND
@@ -41,11 +44,11 @@ decls:
 
 fdecl:
    DEF typ ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
-     { { typ = $1;
-	 fname = $2;
-	 formals = $4;
-	 locals = List.rev $7;
-	 body = List.rev $8 } }
+     { { typ = $2;
+	 fname = $3;
+	 formals = $5;
+	 locals = List.rev $8;
+	 body = List.rev $9 } }
 
 formals_opt:
     /* nothing */ { [] }
@@ -71,16 +74,13 @@ typ:
   | tuple_typ { $1 }
 
 matrix_typ:
-  primitive ID LSQBRACE INT_LITERAL RSQBRACE LSQBRACE INT_LITERAL RSQBRACE SEMI { MatrixTyp($2, $4, $7) }
-
+  primitive LSQBRACE INT_LIT RSQBRACE LSQBRACE INT_LIT RSQBRACE { MatrixTyp($1, $3, $6) }
+	
 row_typ:
-  primitive ID LSQBRACE INT_LITERAL RSQBRACE SEMI { RowTyp($2, $4) }
+  primitive LSQBRACE INT_LIT RSQBRACE { RowTyp($1, $3) }
 
 column_typ:
-  primitive ID LSQBRACE INT_LITERAL RSQBRACE SEMI { ColumnTyp($2, $4) }
-
-tuple_typ:
-  INT ID LPAREN INT_LITERAL RPAREN SEMI { TupleTyp($2, $4) }
+  primitive LSQBRACE INT_LIT BAR RSQBRACE { ColumnTyp($1, $3) }
 
 primitive:
   	INT { Int }
@@ -111,7 +111,7 @@ stmt:
   | IF LPAREN expr RPAREN stmt ELIF stmt ELSE stmt { If($3, $5, $7, $9) }
   | FOR LPAREN expr_opt SEMI expr SEMI expr_opt RPAREN stmt
      { For($3, $5, $7, $9) }
-  | FOR LPAREN expr IN expr RPAREN stmt { For($3, $5, $7) }
+  | FOR LPAREN expr IN expr RPAREN stmt { MFor($3, $5, $7) }
   | WHILE LPAREN expr RPAREN stmt { While($3, $5) }
 
 expr_opt:
@@ -164,7 +164,7 @@ literals:
 
 
 tuple_literal:
-	LPAREN INT COMMA INT COMMA INT RPAREN { TupleLit($1, $3, $5) }
+	LPAREN INT_LIT COMMA INT_LIT COMMA INT_LIT RPAREN { TupleLit($2, $4, $6) }
 
 primitive_rowlit:
 	primitives { $1 }
