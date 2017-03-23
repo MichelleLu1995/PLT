@@ -60,12 +60,8 @@ formal_list:
 
 typ:
 	primitive { typ($1) }
-  | INT { Int }
-  | BOOL { Bool }
-  | VOID { Void }
   | MATRIX { Matrix }
   | ROW { Row }
-  | FLOAT { Float }
   | COLUMN { Column }
   | FILE { File }
   | matrix_typ { $1 }
@@ -82,8 +78,12 @@ row_typ:
 column_typ:
   primitive LSQBRACE INT_LIT BAR RSQBRACE { ColumnTyp($1, $3) }
 
+tuple_typ:
+  INT LPAREN INT_LIT RPAREN { TupleTyp($1, $3) }
+
 primitive:
   	INT { Int }
+  | STRING { String }
   | BOOL { Bool }
   | VOID { Void }
   | FLOAT { Float }
@@ -151,6 +151,7 @@ expr:
 primitives:
 	INT_LIT { IntLit($1) }
   | FLOAT_LIT { FloatLit($1) }
+  | STRING_LIT { StringLit($1) }
 
 literals:
 	primitives { $1 }
