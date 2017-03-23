@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 INPUT_FILES="parser/*.in"
 printf "$Running parser tests...\n$"
 
