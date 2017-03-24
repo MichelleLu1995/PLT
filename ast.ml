@@ -92,23 +92,6 @@ let string_of_tuple t =
 in 
 "(" ^ string_of_tuple_literal t
 
-(* change this to match our matrix... *)
-let string_of_matrix m r c = 
- let rec string_of_matrix_literal = function
-      [] -> "| " ^ string_of_int r ^ ", " ^ string_of_int c ^ "]"
-    | [hd] -> (match hd with
-                IntLit(i) -> string_of_int i
-              | FloatLit(f) -> string_of_float f
-              | TupleLit(t) -> string_of_tuple t
-              | _ -> raise( Failure("Illegal expression in matrix primitive") )) ^ string_of_matrix_literal []
-    | hd::tl -> (match hd with
-                    IntLit(i) -> string_of_int i ^ ", "
-                  | FloatLit(f) -> string_of_float f ^ ", "
-                  | TupleLit(t) -> string_of_tuple t ^ ", "
-                  | _ -> raise( Failure("Illegal expression in matrix primitive") )) ^ string_of_matrix_literal tl
-  in
-  "[|" ^ string_of_matrix_literal m
-
 let string_of_row r =
   let rec string_of_row_literal = function
 	[] -> "]"
@@ -141,10 +124,21 @@ let string_of_column c =
 in
 "[" ^ string_of_column_literal c
 
+let string_of_matrix m = 
+ let rec string_of_matrix_literal = function
+      [] -> "}"
+    | [hd] -> (match hd with
+                RowLit(r) -> string_of_row r
+              | _ -> raise( Failure("Illegal expression in matrix primitive") )) ^ string_of_matrix_literal []
+    | hd::tl -> (match hd with
+                    RowLit(r) -> string_of_row r ^ ", "
+                  | _ -> raise( Failure("Illegal expression in matrix primitive") )) ^ string_of_matrix_literal tl
+  in
+  "{" ^ string_of_matrix_literal m
+
 let rec string_of_expr = function
     IntLit(i) -> string_of_int i
-  | BoolLit(true) -> "True"
-  | BoolLit(false) -> "False"
+  | BoolLit(b) -> string_of_bool b
   | StringLit(s) -> s
   | Id(i) -> i
   | FloatLit(f) -> string_of_float f 
