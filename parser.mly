@@ -3,9 +3,9 @@ open Ast
 %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA BAR COLON LSQBRACE RSQBRACE
-%token PLUS MINUS TIMES DIVIDE ASSIGN NOT MMINUS MTIMES MDIVIDE PLUSEQ
+%token PLUS MINUS TIMES DIVIDE ASSIGN NOT MPLUS MMINUS MTIMES MDIVIDE PLUSEQ
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR MEQ
-%token RETURN IF ELSE FOR WHILE INT BOOL VOID MATRIX ROW FLOAT COLUMN FILE TUPLE
+%token RETURN IF ELSE FOR WHILE INT BOOL STRING VOID MATRIX ROW FLOAT COLUMN FILE TUPLE
 
 %token <int> INT_LIT
 %token <string> ID
@@ -59,7 +59,7 @@ formal_list:
   | formal_list COMMA typ ID { ($3,$4) :: $1 }
 
 typ:
-	primitive { typ($1) }
+	primitive { $1 }
   | MATRIX { Matrix }
   | ROW { Row }
   | COLUMN { Column }
@@ -79,7 +79,7 @@ column_typ:
   primitive LSQBRACE INT_LIT BAR RSQBRACE { ColumnTyp($1, $3) }
 
 tuple_typ:
-  INT LPAREN INT_LIT RPAREN { TupleTyp($1, $3) }
+  primitive LPAREN INT_LIT RPAREN { TupleTyp($1, $3) }
 
 primitive:
   	INT { Int }
@@ -106,9 +106,7 @@ stmt:
   | RETURN expr SEMI { Return $2 }
   | LBRACE stmt_list RBRACE { Block(List.rev $2) }
   | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
-  | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
-  | IF LPAREN expr RPAREN stmt ELIF stmt %prec NOELSE { If($3, $5, $7, Block([])) }
-  | IF LPAREN expr RPAREN stmt ELIF stmt ELSE stmt { If($3, $5, $7, $9) }
+  | IF LPAREN expr RPAREN stmt ELSE stmt { If($3, $5, $7) }
   | FOR LPAREN expr_opt SEMI expr SEMI expr_opt RPAREN stmt
      { For($3, $5, $7, $9) }
   | FOR LPAREN expr IN expr RPAREN stmt { MFor($3, $5, $7) }
@@ -120,9 +118,8 @@ expr_opt:
 
 expr:
     literals          { $1 }
-  | TRUE             { BoolLit(true) }
-  | FALSE            { BoolLit(false) }
-  | ID               { Id($1) }
+  | ID				 { Id($1) }
+  | BOOL_LIT         { BoolLit($1) }
   | expr PLUS   expr { Binop($1, Add,   $3) }
   | expr MINUS  expr { Binop($1, Sub,   $3) }
   | expr TIMES  expr { Binop($1, Mult,  $3) }
@@ -156,39 +153,43 @@ primitives:
 literals:
 	primitives { $1 }
   |	tuple_literal	{ $1 }
-  |	LSQBRACE primitive_rowlit RSQBRACE { RowLit(List.Rev $2) }
-  | LSQBRACE tuple_rowlit RSQBRACE { RowLit(List.Rev $2) }
-  | LSQBRACE primitive_columnlit RSQBRACE { ColumnLit(List.Rev $2) }
-  | LSQBRACE tuple_columnlit RSQBRACE { ColumnLit(List.Rev $2) }
-  | LBRACE primitive_matrixlit RBRACE { MatrixLit(List.Rev $2) }
-  | LBRACE tuple_matrixlit RBRACE { MatrixLit(List.Rev $2) }
+  |	LSQBRACE primitive_rowlit RSQBRACE { RowLit(List.rev $2) }
+  | LSQBRACE tuple_rowlit RSQBRACE { RowLit(List.rev $2) }
+  | LSQBRACE primitive_columnlit RSQBRACE { ColumnLit(List.rev $2) }
+  | LSQBRACE tuple_columnlit RSQBRACE { ColumnLit(List.rev $2) }
+  | LBRACE primitive_matrixlit RBRACE { MatrixLit(List.rev $2) }
+  | LBRACE tuple_matrixlit RBRACE { MatrixLit(List.rev $2) }
 
+
+array_literal:
+	primitives { [$1] }
+  | array_literal COMMA primitives { $3 :: $1 }
 
 tuple_literal:
-	LPAREN INT_LIT COMMA INT_LIT COMMA INT_LIT RPAREN { TupleLit($2, $4, $6) }
+	LPAREN array_literal RPAREN { TupleLit(List.rev $2) }
 
 primitive_rowlit:
-	primitives { $1 }
+	primitives { [$1] }
   | primitive_rowlit COMMA primitives { $3 :: $1 }
 
 primitive_columnlit:
-	primitives { $1 }
+	primitives { [$1] }
   | primitive_columnlit BAR primitives { $3 :: $1 }	
 
 tuple_rowlit:
-	tuple_literal { $1 } 
+	tuple_literal { [$1] } 
   | tuple_rowlit COMMA tuple_literal { $3 :: $1 }
 
 tuple_columnlit:
-	tuple_literal { $1 }
+	tuple_literal { [$1] }
   | tuple_columnlit BAR primitives { $3 :: $1 }
 
 tuple_matrixlit:
-	LSQBRACE tuple_rowlit RSQBRACE { $2 }
+	LSQBRACE tuple_rowlit RSQBRACE { [$2] }
   | tuple_matrixlit COMMA LSQBRACE tuple_rowlit RSQBRACE { $4 :: $1 }
 	
 primitive_matrixlit:
-	LSQBRACE primitive_rowlit RSQBRACE { $2 }
+	LSQBRACE primitive_rowlit RSQBRACE { [$2] }
   | primitive_matrixlit COMMA LSQBRACE primitive_rowlit RSQBRACE { $4 ::$1 }
 	
 
