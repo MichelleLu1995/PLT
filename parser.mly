@@ -142,8 +142,6 @@ expr:
   | ID ASSIGN expr   { Assign($1, $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | LPAREN expr RPAREN { $2 }
-(* add matrix access? *)
-
 
 primitives:
 	INT_LIT { IntLit($1) }
@@ -155,8 +153,6 @@ literals:
   |	tuple_literal	{ $1 } 
   |	LSQBRACE primitive_rowlit RSQBRACE { RowLit(List.rev $2) }
   | LSQBRACE tuple_rowlit RSQBRACE { RowLit(List.rev $2) }
-  (*| LSQBRACE primitive_columnlit RSQBRACE { ColumnLit(List.rev $2) }
-  | LSQBRACE tuple_columnlit RSQBRACE { ColumnLit(List.rev $2) }*)
   | LMPERCENT primitive_matrixlit RMPERCENT { MatrixLit(List.rev $2) }
   | LMPERCENT tuple_matrixlit RMPERCENT { MatrixLit(List.rev $2) }
 
@@ -170,27 +166,10 @@ tuple_literal:
 primitive_rowlit:
 	primitives { [$1] }
   | primitive_rowlit COMMA primitives { $3 :: $1 }
-(*
-primitive_columnlit:
-	primitives { [$1] }
-  | primitive_columnlit BAR primitives { $3 :: $1 }	
-*)
+
 tuple_rowlit:
 	tuple_literal { [$1] } 
   | tuple_rowlit COMMA tuple_literal { $3 :: $1 }
-(*
-tuple_columnlit:
-	tuple_literal { [$1] }
-  | tuple_columnlit BAR primitives { $3 :: $1 }
-
-tuple_matrixlit:
-	LSQBRACE tuple_rowlit RSQBRACE { [$2] }
-  | tuple_matrixlit COMMA LSQBRACE tuple_rowlit RSQBRACE { $4 :: $1 }
-
-primitive_matrixlit:
-	LSQBRACE primitive_rowlit RSQBRACE { [$2] }
-  | primitive_matrixlit COMMA LSQBRACE primitive_rowlit RSQBRACE { $4 ::$1 }
-*)
 
 tuple_matrixlit:
 	tuple_rowlit { [$1] }
