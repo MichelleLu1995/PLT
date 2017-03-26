@@ -29,7 +29,7 @@ type expr = IntLit of int
   | TupleLit of expr list
   | MatrixLit of expr list list 
   | RowLit of expr list
-  | ColumnLit of expr list
+  (*| ColumnLit of expr list*)
   | Binop of expr * op * expr 
   | Unop of uop * expr
   | Assign of string * expr 
@@ -107,7 +107,7 @@ let string_of_row r =
 	| _ -> raise( Failure("Illegal expression in row primitive") )) ^ string_of_row_literal tl
 in
 "[" ^ string_of_row_literal r
-
+(*
 let string_of_column c =
   let rec string_of_column_literal = function
 	[] -> "]"
@@ -122,7 +122,7 @@ let string_of_column c =
 	| TupleLit(t) -> string_of_tuple t ^ "| "
 	| _ -> raise( Failure("Illegal expression in column primitive") )) ^ string_of_column_literal tl
 in
-"[" ^ string_of_column_literal c
+"[" ^ string_of_column_literal c*)
 
 let string_of_matrix m = 
  let rec string_of_matrix_literal = function
@@ -145,7 +145,7 @@ let rec string_of_expr = function
   | MatrixLit(_)-> "matrix literal"
   | TupleLit(t) -> string_of_tuple t 
   | RowLit(r) -> string_of_row r 
-  | ColumnLit(c) -> string_of_column c
+  (*| ColumnLit(c) -> string_of_column c*)
   | Binop(e1, o, e2) ->
       string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
   | Unop(o, e) -> string_of_uop o ^ string_of_expr e
@@ -191,13 +191,13 @@ let string_of_typ = function
 										| _ -> raise( Failure("Illegal expression in tuple primitive") ))
 					 | _ -> raise( Failure("Illegal expression in row primitive")))
 
-  | ColumnTyp(c, l1) -> (match c with 
+  (*| ColumnTyp(c, l1) -> (match c with 
                        Int -> "int" ^ "[" ^ string_of_int l1 ^ "]"
                      | Float -> "float" ^ "[" ^ string_of_int l1 ^ "]" 
                      | TupleTyp(x, l) -> (match x with 
                                           Int -> "int" ^ "(" ^ string_of_int l ^ ")"
 										| _ -> raise( Failure("Illegal expression in tuple primitive") ))
-					 | _ -> raise( Failure("Illegal expression in column primitive")))
+					 | _ -> raise( Failure("Illegal expression in column primitive")))*)
   (*| File*) 
   | _ -> raise( Failure("Illegal expression in string_of_typ"))
   
