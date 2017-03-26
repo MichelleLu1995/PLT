@@ -28,7 +28,6 @@ rule token = parse
 | '/'      { DIVIDE }
 | "//"     { MDIVIDE }
 | '='      { ASSIGN }
-| '^'      { EXPONENT }
 | "=="     { EQ }
 | "!="     { NEQ }
 | "=?"     { MEQ }
@@ -42,7 +41,6 @@ rule token = parse
 | "!"      { NOT }
 | "if"     { IF }
 | "else"   { ELSE }
-| "elif"   { ELIF }
 | "for"    { FOR }
 | "while"  { WHILE }
 | "return" { RETURN }
@@ -56,8 +54,6 @@ rule token = parse
 | "column" { COLUMN }
 | "file"   { FILE }
 | "tuple"  { TUPLE }
-| "print"  { PRINT }
-| "main"   { MAIN }
 | "def"    { DEF }
 | "in"     { IN }
 
@@ -73,7 +69,6 @@ and comment = parse
   "*/" { token lexbuf }
 | _    { comment lexbuf }
 
-
 (*
 {
 let main () =
@@ -85,4 +80,5 @@ let main () =
 	with _ -> print_string "invalid_token\n"
 let _ = Printexc.print main ()
 
-}*)
+}
+*)

@@ -6,7 +6,7 @@ OCAMLC = ocamlc
 OBJS = ../../scanner.cmo tokenize.cmo
 INCLUDES = -I ../../
 
-defailt: tokenize
+default: tokenize
 
 tokenize: $(OBJS)
 	$(OCAMLC) $(INCLUDES) -o tokenize $(OBJS)
@@ -21,3 +21,5 @@ tokenize: $(OBJS)
 clean:
 	rm -f tokenize *.cmo *.cmi
 
+tokenize.cmo:
+tokenize.cmx:

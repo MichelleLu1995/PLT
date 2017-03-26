@@ -1,2 +1,2 @@
 binop(1, +, 2)
-binop()
+binop(binop(3,+, 4), - 2)
