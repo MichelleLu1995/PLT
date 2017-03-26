@@ -2,7 +2,7 @@
 open Ast
 %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA BAR COLON LSQBRACE RSQBRACE
+%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA BAR COLON LSQBRACE RSQBRACE LPERCENT RPERCENT
 %token PLUS MINUS TIMES DIVIDE ASSIGN NOT MPLUS MMINUS MTIMES MDIVIDE PLUSEQ
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR MEQ
 %token RETURN IF ELSE FOR WHILE INT BOOL STRING VOID MATRIX ROW FLOAT COLUMN FILE TUPLE
@@ -78,7 +78,7 @@ column_typ:
   primitive LSQBRACE INT_LIT BAR RSQBRACE { ColumnTyp($1, $3) }
 
 tuple_typ:
-  primitive LPAREN INT_LIT RPAREN { TupleTyp($1, $3) }
+  primitive LPERCENT INT_LIT RPERCENT { TupleTyp($1, $3) }
 
 primitive:
   	INT { Int }
@@ -161,11 +161,11 @@ literals:
   | LBRACE tuple_matrixlit RBRACE { MatrixLit(List.rev $2) }
 
 array_literal:
-	primitives { [$1] }
+	primitives { [$1] } 
   | array_literal COMMA primitives { $3 :: $1 }
 
 tuple_literal:
-	LPAREN array_literal RPAREN { TupleLit(List.rev $2) }
+	LPERCENT array_literal RPERCENT { TupleLit(List.rev $2) }
 
 primitive_rowlit:
 	primitives { [$1] }
