@@ -5,11 +5,16 @@
 default: test
 
 test: build
-	./scanner_tests.sh
+	@echo "   " 
+	./scanner_testing.sh
+	@echo "   "
+	./parser_testing.sh
 
 build: 
 	cd scanner; make
+	cd parser; make
 
 .PHONY: clean
 clean:
 	cd scanner; make clean
+	cd parser; make clean
