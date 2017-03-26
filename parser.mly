@@ -161,7 +161,7 @@ literals:
   | LMPERCENT tuple_matrixlit RMPERCENT { MatrixLit(List.rev $2) }
 
 array_literal:
-	primitives { [$1] }
+	primitives { [$1] } 
   | array_literal COMMA primitives { $3 :: $1 }
 
 tuple_literal:
