@@ -19,7 +19,6 @@ open Ast
 
 %nonassoc NOELSE
 %nonassoc ELSE
-%nonassoc ELIF
 %right ASSIGN
 %left OR
 %left AND
@@ -143,6 +142,7 @@ expr:
   | ID ASSIGN expr   { Assign($1, $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | LPAREN expr RPAREN { $2 }
+(* add matrix access? *)
 
 
 primitives:
@@ -152,14 +152,13 @@ primitives:
 
 literals:
 	primitives { $1 }
-  |	tuple_literal	{ $1 }
+  |	tuple_literal	{ $1 } 
   |	LSQBRACE primitive_rowlit RSQBRACE { RowLit(List.rev $2) }
   | LSQBRACE tuple_rowlit RSQBRACE { RowLit(List.rev $2) }
-  | LSQBRACE primitive_columnlit RSQBRACE { ColumnLit(List.rev $2) }
-  | LSQBRACE tuple_columnlit RSQBRACE { ColumnLit(List.rev $2) }
+  (*| LSQBRACE primitive_columnlit RSQBRACE { ColumnLit(List.rev $2) }
+  | LSQBRACE tuple_columnlit RSQBRACE { ColumnLit(List.rev $2) }*)
   | LBRACE primitive_matrixlit RBRACE { MatrixLit(List.rev $2) }
   | LBRACE tuple_matrixlit RBRACE { MatrixLit(List.rev $2) }
-
 
 array_literal:
 	primitives { [$1] }
@@ -171,15 +170,15 @@ tuple_literal:
 primitive_rowlit:
 	primitives { [$1] }
   | primitive_rowlit COMMA primitives { $3 :: $1 }
-
+(*
 primitive_columnlit:
 	primitives { [$1] }
   | primitive_columnlit BAR primitives { $3 :: $1 }	
-
+*)
 tuple_rowlit:
 	tuple_literal { [$1] } 
   | tuple_rowlit COMMA tuple_literal { $3 :: $1 }
-
+(*
 tuple_columnlit:
 	tuple_literal { [$1] }
   | tuple_columnlit BAR primitives { $3 :: $1 }
@@ -187,11 +186,19 @@ tuple_columnlit:
 tuple_matrixlit:
 	LSQBRACE tuple_rowlit RSQBRACE { [$2] }
   | tuple_matrixlit COMMA LSQBRACE tuple_rowlit RSQBRACE { $4 :: $1 }
-	
+
 primitive_matrixlit:
 	LSQBRACE primitive_rowlit RSQBRACE { [$2] }
   | primitive_matrixlit COMMA LSQBRACE primitive_rowlit RSQBRACE { $4 ::$1 }
-	
+*)
+
+tuple_matrixlit:
+	tuple_rowlit { [$1] }
+  | tuple_matrixlit BAR tuple_rowlit { $3 :: $1 }
+
+primitive_matrixlit:
+	primitive_rowlit { [$1] }
+  | primitive_matrixlit BAR primitive_rowlit { $3 :: $1 }
 
 actuals_opt:
     /* nothing */ { [] }
