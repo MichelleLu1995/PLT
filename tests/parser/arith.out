@@ -1,2 +1,4 @@
-binop(1, +, 2)
-binop(binop(3,+, 4), - 2)
+void main() { 
+int x;
+x = 5;
+}
