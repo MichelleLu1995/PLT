@@ -9,6 +9,8 @@ test: build
 	./scanner_testing.sh
 	@echo "   "
 	./parser_testing.sh
+	@echo "   "
+	@echo "TESTING COMPLETE"
 
 build: 
 	cd scanner; make
