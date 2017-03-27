@@ -67,7 +67,7 @@ let translate (globals, functions) =
 
     (* Construct code for an expression; return its value *)
     let rec expr builder = function
-
+        A.Binop (e1, op, e2) ->
         let string_of_e1'_llvalue = L.string_of_llvalue e1'
         and string_of_e2'_llvalue = L.string_of_llvalue e2' in
 
@@ -170,7 +170,7 @@ let translate (globals, functions) =
        the statement's successor *)
     let rec stmt builder = function
   A.Block sl -> List.fold_left stmt builder sl
-      | A.Expr e -> ignore (expr builder e); builder
+      | A.Expr e -> ignore (expr builder e); builder in
 
     (* Build the code for each statement in the function *)
     let builder = stmt builder (A.Block fdecl.A.body) in
