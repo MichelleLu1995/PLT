@@ -39,6 +39,8 @@ let translate (globals, functions) =
   let function_decls =
     let function_decl m fdecl =
       let name = fdecl.A.fname
+      and formal_types =
+  Array.of_list (List.map (fun (t,_) -> ltype_of_typ t) fdecl.A.formals)
       in let ftype = L.function_type (ltype_of_typ fdecl.A.typ) formal_types in
       StringMap.add name (L.define_function name ftype the_module, fdecl) m in
     List.fold_left function_decl StringMap.empty functions in
@@ -68,6 +70,9 @@ let translate (globals, functions) =
     (* Construct code for an expression; return its value *)
     let rec expr builder = function
         A.Binop (e1, op, e2) ->
+         let e1' = expr builder e1
+    and e2' = expr builder e2 in
+
         let string_of_e1'_llvalue = L.string_of_llvalue e1'
         and string_of_e2'_llvalue = L.string_of_llvalue e2' in
 
@@ -131,14 +136,11 @@ let translate (globals, functions) =
 
         let build_ops_with_type typ =
           match typ with
-            "int" -> int_uops op
-          | "float" -> float_uops op
-          | "bool" -> bool_uops op
-          | _ -> raise(UnsupportedUnop)
+          _ -> raise(UnsupportedUnop)
         in
         build_ops_with_type e'_type
       | A.Assign (e1, e2) -> let e1' = (match e1 with
-                                          A.Id s -> lookup s
+                                          (*A.Id s -> lookup s*)
                                         | _ -> raise (IllegalAssignment))
                                and e2' = expr builder e2 in
                        ignore (L.build_store e2' e1' builder); e2'
@@ -148,9 +150,11 @@ let translate (globals, functions) =
       | A.Call ("printf", [e]) ->
     L.build_call printf_func [| float_format_str ; (expr builder e) |]
       "printf" builder
-      | A.Call ("prints", [e]) -> let get_string = function A.StringLiteral s -> s | _ -> "" in
+      (*
+      | A.Call ("prints", [e]) -> let get_string = function A.StringLit s -> s | _ -> "" in
       let s_ptr = L.build_global_stringptr ((get_string e)) ".str" builder in
     L.build_call printf_func [| s_ptr |] 
+  *)
       | A.Call (f, act) ->
          let (fdef, fdecl) = StringMap.find f function_decls in
    let actuals = List.rev (List.map (expr builder) (List.rev act)) in
@@ -179,7 +183,6 @@ let translate (globals, functions) =
     add_terminal builder (match fdecl.A.typ with
         A.Void -> L.build_ret_void
       | A.Int -> L.build_ret (L.const_int i32_t 0)
-      | A.Float -> L.build_ret (L.const_float float_t 0.0)
       | A.Bool -> L.build_ret (L.const_int i1_t 0)
       | _ -> raise (UnsupportedReturnType))
   in

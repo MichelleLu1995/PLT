@@ -4,10 +4,10 @@
 
 # Easiest way to build: using ocamlbuild, which in turn uses ocamlfind
 
-all : JSTEM.native printbig.o
+.PHONY : JSTEM.native
 
 JSTEM.native :
-	ocamlbuild -use-ocamlfind -pkgs llvm,llvm.analysis -cflags -w,+a-4 \
+	ocamlbuild -use-ocamlfind -pkgs llvm,llvm.analysis,str -cflags -w,+a-4 \
 		JSTEM.native
 
 # "make clean" removes all generated files
@@ -16,14 +16,13 @@ JSTEM.native :
 clean :
 	ocamlbuild -clean
 	rm -rf testall.log *.diff microc scanner.ml parser.ml parser.mli
-	rm -rf printbig
 	rm -rf *.cmx *.cmi *.cmo *.cmx *.o *.s *.ll *.out *.exe
 
 # More detailed: build using ocamlc/ocamlopt + ocamlfind to locate LLVM
 
 OBJS = ast.cmx codegen.cmx parser.cmx scanner.cmx semant.cmx JSTEM.cmx
 
-microc : $(OBJS)
+JSTEM : $(OBJS)
 	ocamlfind ocamlopt -linkpkg -package llvm -package llvm.analysis $(OBJS) -o JSTEM
 
 scanner.ml : scanner.mll
