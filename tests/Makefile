@@ -5,8 +5,8 @@
 default: test
 
 test: build
-	#./all_testing.sh
-	#@echo "   " 
+	./compiler_testing.sh
+	@echo "   " 
 	./scanner_testing.sh
 	@echo "   "
 	./parser_testing.sh
