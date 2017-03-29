@@ -1,28 +1,10 @@
-#!/bin/sh
 
-# Regression testing script for MicroC
-# Step through a list of files
-#  Compile, run, and check the output of each expected-to-work test
-#  Compile and check the error of each expected-to-fail test
-
-# Path to the LLVM interpreter
 LLI="lli"
-#LLI="/usr/local/opt/llvm/bin/lli"
-
-#Path to the LLVM compiler
 LLC="llc"
-#LLC="/usr/local/opt/llvm/bin/llc"
-
-#Path to the G++ compiler
 GPP="g++"
-
-# Path to the ml compiler.  Usually "./ml.native"
-# Try "_build/ml.native" if ocamlbuild was unable to create a symbolic link.
 JSTEM="./JSTEM.native"
-#ML="_build/ml.native"
+SL="stdlib.JSTEM"
 
-SL = "stdlib.JSTEM"
-# Set time limit for all operations
 ulimit -t 30
 
 globallog=testall.log
@@ -97,7 +79,7 @@ Check() {
     generatedfiles=""
 
     generatedfiles="$generatedfiles ${basename}.ll ${basename}.s ${basename}.o a.out ${basename}.out" &&
-    Run "$JSTEM -c"  $1 "stdlib.JSTEM >" "${basename}.ll" &&
+    Run "$JSTEM -c"  $1 "$SL >" "${basename}.ll" &&
     Run "$LLC" "-filetype=obj" "${basename}.ll" ">" "${basename}.o" &&
     Run "$GPP" "${basename}.o" ">" "a.out" &&
     Run "./a.out" ">" "${basename}.out" &&
@@ -135,7 +117,7 @@ CheckFail() {
     generatedfiles=""
 
     generatedfiles="$generatedfiles ${basename}.err ${basename}.diff" &&
-    RunFail "$JSTEM" $1 "2>" "${basename}.err" ">>" $globallog &&
+    RunFail "$ML" $1 "2>" "${basename}.err" ">>" $globallog &&
     Compare ${basename}.err ${reffile}.err ${basename}.diff
 
     # Report the status and clean up the generated files
@@ -181,7 +163,7 @@ if [ $# -ge 1 ]
 then
     files=$@
 else
-    files="tests/compiler_tests/test-*.JSTEM tests/compiler_tests/fail-*.JSTEM"
+    files="compiler_tests/test-*.JSTEM compiler_tests/fail-*.JSTEM"
 fi
 
 for file in $files
