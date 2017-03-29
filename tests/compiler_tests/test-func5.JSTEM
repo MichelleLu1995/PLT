@@ -1,7 +1,7 @@
 def int foo(int a){
-	return a;
+    return a;
 }
 
 def int main(){
-	return 0;
+    return 0;
 }

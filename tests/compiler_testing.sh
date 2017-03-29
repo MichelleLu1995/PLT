@@ -26,7 +26,6 @@ Usage() {
 
 SignalError() {
     if [ $error -eq 0 ] ; then
-	echo "FAILED"
 	error=1
     fi
     echo "  $1"
@@ -48,7 +47,7 @@ Compare() {
 Run() {
     echo $* 1>&2
     eval $* || {
-	SignalError "$1 failed on $*"
+	SignalError " -- failed on command $*"
 	return 1
     }
 }
@@ -71,10 +70,9 @@ Check() {
     reffile=`echo $1 | sed 's/.JSTEM$//'`
     basedir="`echo $1 | sed 's/\/[^\/]*$//'`/."
 
-    echo -n "$basename..."
-
     echo 1>&2
     echo "###### Testing $basename" 1>&2
+    echo -n " - $basename..."
 
     generatedfiles=""
 
@@ -88,17 +86,19 @@ Check() {
     # Report the status and clean up the generated files
 
     if [ $error -eq 0 ] ; then
-	if [ $keep -eq 0 ] ; then
-	    rm -f $generatedfiles
-	fi
-	echo "OK"
-    filecount=$(expr $filecount + 1)
-	echo "###### SUCCESS" 1>&2
+    	if [ $keep -eq 0 ] ; then
+    	    rm -f $generatedfiles
+    	fi
+    	
+        filecount=$(expr $filecount + 1)
+        printf "...SUCCESS\n" 
+    	echo "###### SUCCESS" 1>&2
+
     else
-	echo "###### FAILED" 1>&2
-	globalerror=$error
-    filecount=$(expr $filecount + 1)
-    failurecount=$(expr $failurecount + 1)
+    	echo "###### FAILURE" 1>&2
+    	globalerror=$error
+        filecount=$(expr $filecount + 1)
+        failurecount=$(expr $failurecount + 1)
     fi
 }
 
@@ -109,7 +109,7 @@ CheckFail() {
     reffile=`echo $1 | sed 's/.JSTEM$//'`
     basedir="`echo $1 | sed 's/\/[^\/]*$//'`/."
 
-    echo -n "$basename..."
+    echo -n " - $basename..."
 
     echo 1>&2
     echo "###### Testing $basename" 1>&2
@@ -117,7 +117,7 @@ CheckFail() {
     generatedfiles=""
 
     generatedfiles="$generatedfiles ${basename}.err ${basename}.diff" &&
-    RunFail "$JSTEM" $1 "2>" "${basename}.err" ">>" $globallog &&
+    RunFail "$ML" $1 "2>" "${basename}.err" ">>" $globallog &&
     Compare ${basename}.err ${reffile}.err ${basename}.diff
 
     # Report the status and clean up the generated files
@@ -126,7 +126,7 @@ CheckFail() {
 	if [ $keep -eq 0 ] ; then
 	    rm -f $generatedfiles
 	fi
-	echo "OK"
+	echo "SUCCESS"
 	echo "###### SUCCESS" 1>&2
     filecount=$(expr $filecount + 1)
     else
@@ -163,8 +163,11 @@ if [ $# -ge 1 ]
 then
     files=$@
 else
-    files="compiler_tests/test-*.JSTEM compiler_tests/fail-*.JSTEM"
+    #files="compiler_tests/test-*.JSTEM compiler_tests/fail-*.JSTEM"
+    files="compiler_tests/test-*.JSTEM"
 fi
+
+echo "TESTING COMPILER"
 
 for file in $files
 do
