@@ -69,7 +69,7 @@ rule token = parse
 | ['0'-'9']+'.'['0'-'9']+ as lxm { FLOAT_LIT(float_of_string lxm) }
 | ['0'-'9']+ as lxm { INT_LIT(int_of_string lxm) }
 | id      as lxm { ID(lxm) }
-| '"'(['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_' ' ']* as lxm)'"' { STRING_LIT(lxm) }
+| '"'(['a'-'z' 'A'-'Z' '0'-'9' '_' ' ']* as lxm)'"' { STRING_LIT(lxm) }
 | eof { EOF }
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
 
