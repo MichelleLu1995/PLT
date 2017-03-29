@@ -1,13 +1,11 @@
-def void foo(bool i)
-{
-  int i; /* Should hide the formal i */
+def void foo(bool i){
+	int i;
 
-  i = 42;
-  print(i + i);
+	i = 42;
+	print(i + 1);
 }
 
-def int main()
-{
-  foo(True);
-  return 0;
+def int main(){
+	foo(True);
+	return 0;
 }

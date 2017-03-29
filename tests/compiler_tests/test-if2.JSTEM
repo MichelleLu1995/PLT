@@ -1,11 +1,10 @@
-def int main()
-{
-  if (True){
-  	print(42);
-  }  
-  else{
-  	print(8);
-  } 
-  print(17);
-  return 0;
+def int main(){
+	if (True){
+		print(42);
+	}
+	else{
+		print(8);
+	}
+	print(17);
+	return 0;
 }
