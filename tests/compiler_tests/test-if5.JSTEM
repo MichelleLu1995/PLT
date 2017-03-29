@@ -12,7 +12,7 @@ def int cond(bool b)
 
 def int main()
 {
- print(cond(true));
- print(cond(false));
+ print(cond(True));
+ print(cond(False));
  return 0;
 }
