@@ -289,7 +289,7 @@ let function_decls =
     L.build_call printf_func [| float_format_str ; (expr builder e) |]
       "printf" builder
       | A.Call ("prints", [e]) -> let get_string = function A.StringLit s -> s | _ -> "" in
-      let s_ptr = L.build_global_stringptr ((get_string e) ^ "\n") ".str" builder in
+      let s_ptr = L.build_global_stringptr ((get_string e)) ".str" builder in
     L.build_call printf_func [| s_ptr |] "printf" builder
       | A.Call (f, act) ->
          let (fdef, fdecl) = StringMap.find f function_decls in
