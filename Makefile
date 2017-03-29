@@ -15,7 +15,7 @@ JSTEM.native :
 clean :
 	ocamlbuild -clean
 	rm -rf testall.log *.diff microc scanner.ml parser.ml parser.mli
-	rm -rf *.cmx *.cmi *.cmo *.cmx *.o *.s *.ll *.out *.exe
+	rm -rf *.cmx *.cmi *.cmo *.cmx *.o *.s *.ll *.out *.exe *.err
 	cd tests; make clean
 
 # More detailed: build using ocamlc/ocamlopt + ocamlfind to locate LLVM
