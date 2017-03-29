@@ -4,7 +4,8 @@
 
 default: test
 
-test: build
+test: 
+	./all_testing.sh
 	@echo "   " 
 	./scanner_testing.sh
 	@echo "   "
