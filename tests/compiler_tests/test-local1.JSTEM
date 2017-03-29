@@ -8,6 +8,6 @@ def void foo(bool i)
 
 def int main()
 {
-  foo(true);
+  foo(True);
   return 0;
 }

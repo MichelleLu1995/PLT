@@ -1,6 +1,6 @@
 def int main()
 {
-  if (false){
+  if (False){
   	print(42);
   }  
   else {
