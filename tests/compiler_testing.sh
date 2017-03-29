@@ -2,7 +2,7 @@
 LLI="lli"
 LLC="llc"
 GPP="g++"
-JSTEM="./JSTEM.native"
+JSTEM="../JSTEM.native"
 SL="stdlib.JSTEM"
 
 ulimit -t 30
