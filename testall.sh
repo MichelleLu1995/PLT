@@ -18,7 +18,7 @@ GPP="g++"
 
 # Path to the ml compiler.  Usually "./ml.native"
 # Try "_build/ml.native" if ocamlbuild was unable to create a symbolic link.
-ML="./JSTEM.native"
+JSTEM="./JSTEM.native"
 #ML="_build/ml.native"
 
 SL = "stdlib.JSTEM"
@@ -97,7 +97,7 @@ Check() {
     generatedfiles=""
 
     generatedfiles="$generatedfiles ${basename}.ll ${basename}.s ${basename}.o a.out ${basename}.out" &&
-    Run "$ML"  $1 "$SL >" "${basename}.ll" &&
+    Run "$JSTEM -c"  $1 "stdlib.JSTEM >" "${basename}.ll" &&
     Run "$LLC" "-filetype=obj" "${basename}.ll" ">" "${basename}.o" &&
     Run "$GPP" "${basename}.o" ">" "a.out" &&
     Run "./a.out" ">" "${basename}.out" &&
@@ -135,7 +135,7 @@ CheckFail() {
     generatedfiles=""
 
     generatedfiles="$generatedfiles ${basename}.err ${basename}.diff" &&
-    RunFail "$ML" $1 "2>" "${basename}.err" ">>" $globallog &&
+    RunFail "$JSTEM" $1 "2>" "${basename}.err" ">>" $globallog &&
     Compare ${basename}.err ${reffile}.err ${basename}.diff
 
     # Report the status and clean up the generated files
