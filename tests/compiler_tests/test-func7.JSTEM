@@ -1,9 +1,10 @@
 def void foo(int c){
-	a = c + 42;
+    int a;    
+    a = c + 42;
+    print(a);
 }
 
 def int main(){
-	foo(73);
-	print(a);
-	return 0;
+    foo(73);
+    return 0;
 }
