@@ -4,9 +4,9 @@
 
 default: test
 
-test: 
-	./all_testing.sh
-	@echo "   " 
+test: build
+	#./all_testing.sh
+	#@echo "   " 
 	./scanner_testing.sh
 	@echo "   "
 	./parser_testing.sh
