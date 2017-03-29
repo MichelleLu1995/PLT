@@ -1,0 +1,6 @@
+def int main()
+{
+  if (True) {
+    foo; /* Error: undeclared variable */
+  }
+}
