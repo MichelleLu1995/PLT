@@ -3,7 +3,7 @@ LLI="lli"
 LLC="llc"
 GPP="g++"
 JSTEM="../JSTEM.native"
-SL="stdlib.JSTEM"
+SL="../stdlib.JSTEM"
 
 ulimit -t 30
 
@@ -117,7 +117,7 @@ CheckFail() {
     generatedfiles=""
 
     generatedfiles="$generatedfiles ${basename}.err ${basename}.diff" &&
-    RunFail "$ML" $1 "2>" "${basename}.err" ">>" $globallog &&
+    RunFail "$JSTEM" $1 "2>" "${basename}.err" ">>" $globallog &&
     Compare ${basename}.err ${reffile}.err ${basename}.diff
 
     # Report the status and clean up the generated files
