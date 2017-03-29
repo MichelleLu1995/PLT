@@ -18,6 +18,7 @@ open Ast
 %token EOF
 
 %nonassoc NOELSE
+%nonassoc NOLSQBRACE
 %nonassoc ELSE
 %right ASSIGN
 %left OR
@@ -69,7 +70,7 @@ typ:
   | tuple_typ { $1 }
 
 matrix_typ:
-  primitive LSQBRACE INT_LIT RSQBRACE LSQBRACE INT_LIT RSQBRACE { MatrixTyp($1, $3, $6) }
+  typ LSQBRACE INT_LIT RSQBRACE LSQBRACE INT_LIT RSQBRACE { MatrixTyp($1, $3, $6) }
 	
 row_typ:
   primitive LSQBRACE INT_LIT RSQBRACE { RowTyp($1, $3) }
@@ -142,6 +143,9 @@ expr:
   | expr ASSIGN expr   { Assign($1, $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | LPAREN expr RPAREN { $2 }
+  | ID LSQBRACE expr RSQBRACE %prec NOLSQBRACE { RowAccess($1, $3) }
+  | ID LPERCENT expr RPERCENT { TupleAccess($1, $3) }
+  | ID LSQBRACE expr RSQBRACE LSQBRACE expr RSQBRACE { MatrixAccess($1, $3, $6) }
 
 primitives:
 	INT_LIT { IntLit($1) }

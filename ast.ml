@@ -34,6 +34,9 @@ type expr = IntLit of int
   | Unop of uop * expr
   | Assign of expr * expr 
   | Call of string * expr list
+  | RowAccess of string * expr
+  | TupleAccess of string * expr
+  | MatrixAccess of string * expr
   | Noexpr
             
 type stmt = Block of stmt list 
