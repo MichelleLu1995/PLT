@@ -6,7 +6,6 @@
 	Scanf.sscanf ("\"" ^ s ^ "\"") "%S%!" (fun x -> x)
 }
 
-let whitespace = [' ' '\t' '\r' '\n']
 let digits = ['0'-'9']
 let alphabet = ['a'-'z' 'A'-'Z']
 let alphanumund = alphabet | digits | '_'
