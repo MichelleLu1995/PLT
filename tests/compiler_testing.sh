@@ -28,7 +28,7 @@ SignalError() {
     if [ $error -eq 0 ] ; then
 	error=1
     fi
-    echo "  $1"
+    printf "$1 ERROR\n"
 }
 
 # Compare <outfile> <reffile> <difffile>
@@ -37,7 +37,7 @@ Compare() {
     generatedfiles="$generatedfiles $3"
     echo diff -b $1 $2 ">" $3 1>&2
     diff -b "$1" "$2" > "$3" 2>&1 || {
-	SignalError "$1 differs"
+	SignalError "  - $basename -- $1 differs"
 	echo "FAILED $1 differs from $2" 1>&2
     }
 }
@@ -47,7 +47,7 @@ Compare() {
 Run() {
     echo $* 1>&2
     eval $* || {
-	SignalError " -- failed on command $*"
+	SignalError "  - $basename -- failed on command $*"
 	return 1
     }
 }
@@ -57,7 +57,7 @@ Run() {
 RunFail() {
     echo $* 1>&2
     eval $* && {
-	SignalError "failed: $* did not report an error"
+	SignalError "  - $basename -- failed: $* did not report an error"
 	return 1
     }
     return 0
@@ -72,7 +72,6 @@ Check() {
 
     echo 1>&2
     echo "###### Testing $basename" 1>&2
-    echo -n " - $basename..."
 
     generatedfiles=""
 
@@ -91,7 +90,7 @@ Check() {
     	fi
     	
         filecount=$(expr $filecount + 1)
-        printf "...SUCCESS\n" 
+        printf "%-65s SUCCESS\n" "  - $basename..."
     	echo "###### SUCCESS" 1>&2
 
     else
@@ -109,8 +108,6 @@ CheckFail() {
     reffile=`echo $1 | sed 's/.JSTEM$//'`
     basedir="`echo $1 | sed 's/\/[^\/]*$//'`/."
 
-    echo -n " - $basename..."
-
     echo 1>&2
     echo "###### Testing $basename" 1>&2
 
@@ -126,7 +123,7 @@ CheckFail() {
 	if [ $keep -eq 0 ] ; then
 	    rm -f $generatedfiles
 	fi
-	echo "SUCCESS"
+	printf "%-65s SUCCESS\n" "  - $basename..."
 	echo "###### SUCCESS" 1>&2
     filecount=$(expr $filecount + 1)
     else
@@ -163,26 +160,20 @@ if [ $# -ge 1 ]
 then
     files=$@
 else
-    #files="compiler_tests/test-*.JSTEM compiler_tests/fail-*.JSTEM"
-    files="compiler_tests/test-*.JSTEM"
+    pfiles="compiler_tests/test-*.JSTEM"
+    ffiles="compiler_tests/fail-*.JSTEM"
 fi
 
 echo "TESTING COMPILER"
 
-for file in $files
+for file in $pfiles
 do
-    case $file in
-	*test-*)
-	    Check $file 2>> $globallog
-	    ;;
-	*fail-*)
-	    CheckFail $file 2>> $globallog
-	    ;;
-	*)
-	    echo "unknown file type $file"
-	    globalerror=1
-	    ;;
-    esac
+	Check $file 2>> $globallog
+done
+printf "\n"
+for file in $ffiles
+do
+    CheckFail $file 2>> $globallog
 done
 
 successcount=$(($filecount-$failurecount))
