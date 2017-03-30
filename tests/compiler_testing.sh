@@ -114,7 +114,7 @@ CheckFail() {
     generatedfiles=""
 
     generatedfiles="$generatedfiles ${basename}.err ${basename}.diff" &&
-    RunFail "$ML" $1 "2>" "${basename}.err" ">>" $globallog &&
+    RunFail "$JSTEM -c" $1 "$SL 2>" "${basename}.err" ">>" $globallog &&
     Compare ${basename}.err ${reffile}.err ${basename}.diff
 
     # Report the status and clean up the generated files
