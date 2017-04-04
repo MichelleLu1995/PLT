@@ -5,7 +5,7 @@ open Ast
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA BAR COLON LSQBRACE RSQBRACE LPERCENT RPERCENT LMPERCENT RMPERCENT
 %token PLUS MINUS TIMES DIVIDE ASSIGN NOT MPLUS MMINUS MTIMES MDIVIDE PLUSEQ
 %token EQ NEQ LT LEQ GT GEQ AND OR MEQ
-%token RETURN IF ELSE FOR WHILE INT BOOL STRING VOID MATRIX ROW FLOAT COLUMN FILE TUPLE
+%token RETURN IF ELSE FOR WHILE INT BOOL STRING VOID MATRIX ROW FLOAT FILE TUPLE
 
 %token <int> INT_LIT
 %token <string> ID
@@ -62,21 +62,15 @@ typ:
 	primitive { $1 }
   | MATRIX { Matrix }
   | ROW { Row }
-  | COLUMN { Column }
   | FILE { File }
   | matrix_typ { $1 }
   | row_typ { $1 }
-  | column_typ { $1 }
-  | tuple_typ { $1 }
 
 matrix_typ:
-  typ LSQBRACE INT_LIT RSQBRACE LSQBRACE INT_LIT RSQBRACE { MatrixTyp($1, $3, $6) }
+  primitive LSQBRACE INT_LIT RSQBRACE LSQBRACE INT_LIT RSQBRACE { MatrixTyp($1, $3, $6) }
 	
 row_typ:
   primitive LSQBRACE INT_LIT RSQBRACE { RowTyp($1, $3) }
-
-column_typ:
-  primitive LSQBRACE INT_LIT BAR RSQBRACE { ColumnTyp($1, $3) }
 
 tuple_typ:
   primitive LPERCENT INT_LIT RPERCENT { TupleTyp($1, $3) }
@@ -87,7 +81,7 @@ primitive:
   | BOOL { Bool }
   | VOID { Void }
   | FLOAT { Float }
-  | TUPLE { Tuple }
+  | tuple_typ { $1 }
 
 vdecl_list:
     /* nothing */    { [] }
@@ -143,9 +137,11 @@ expr:
   | expr ASSIGN expr   { Assign($1, $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | LPAREN expr RPAREN { $2 }
-  | ID LSQBRACE expr RSQBRACE %prec NOLSQBRACE { RowAccess($1, $3) }
-  | ID LPERCENT expr RPERCENT { TupleAccess($1, $3) }
-  | ID LSQBRACE expr RSQBRACE LSQBRACE expr RSQBRACE { MatrixAccess($1, $3, $6) }
+  | ID LSQBRACE INT_LIT RSQBRACE %prec NOLSQBRACE { RowAccess($1, $3) }
+  | ID LPERCENT INT_LIT RPERCENT { TupleAccess($1, $3) }
+  | ID LSQBRACE INT_LIT RSQBRACE LSQBRACE INT_LIT RSQBRACE { MatrixAccess($1, $3, $6) }
+  | ID LSQBRACE INT_LIT RSQBRACE LSQBRACE COLON RSQBRACE { MRowAccess($1, $3) }
+  | ID LSQBRACE COLON RSQBRACE LSQBRACE INT_LIT RSQBRACE { MColumnAccess($1, $6) }
 
 primitives:
 	INT_LIT { IntLit($1) }
