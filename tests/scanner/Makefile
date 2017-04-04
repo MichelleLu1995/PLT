@@ -19,7 +19,5 @@ tokenize: $(OBJS)
 
 .PHONY: clean
 clean:
-	rm -f tokenize *.cmo *.cmi
+	rm -f tokenize *.cmo *.cmi *.cmx
 
-tokenize.cmo:
-tokenize.cmx:

@@ -5,11 +5,12 @@
 default: test
 
 test: build
-	@echo "   " 
 	./scanner_testing.sh
 	@echo "   "
 	./parser_testing.sh
 	@echo "   "
+	./compiler_testing.sh
+	@echo "   " 
 	@echo "TESTING COMPLETE"
 
 build: 

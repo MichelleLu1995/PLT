@@ -1,0 +1,9 @@
+bool i;
+
+def int main(){
+	int i;
+
+	i = 42;
+	print(i + i);
+	return 0;
+}
