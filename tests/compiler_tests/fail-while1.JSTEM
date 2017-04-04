@@ -1,0 +1,13 @@
+def int main()
+{
+  int i;
+
+  while (True) {
+    i = i + 1;
+  }
+
+  while (42) { /* Should be boolean */
+    i = i + 1;
+  }
+
+}

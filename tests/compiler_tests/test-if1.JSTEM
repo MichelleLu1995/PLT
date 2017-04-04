@@ -1,0 +1,8 @@
+def int main(){
+	if (True){
+		print(42);
+	}
+
+	print(17);
+	return 0;
+}

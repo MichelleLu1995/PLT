@@ -5,12 +5,12 @@ open Ast
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA BAR COLON LSQBRACE RSQBRACE LPERCENT RPERCENT LMPERCENT RMPERCENT
 %token PLUS MINUS TIMES DIVIDE ASSIGN NOT MPLUS MMINUS MTIMES MDIVIDE PLUSEQ
 %token EQ NEQ LT LEQ GT GEQ AND OR MEQ
-%token RETURN IF ELSE FOR WHILE INT BOOL STRING VOID MATRIX ROW FLOAT FILE TUPLE
+%token TRUE FALSE
+%token RETURN IF ELSE FOR WHILE INT BOOL STRING VOID MATRIX ROW FLOAT COLUMN FILE TUPLE
 
 %token <int> INT_LIT
 %token <string> ID
 %token <string> STRING_LIT
-%token <bool> BOOL_LIT
 %token <float> FLOAT_LIT
 
 %token DEF
@@ -113,7 +113,6 @@ expr_opt:
 expr:
     literals          { $1 }
   | ID				 { Id($1) }
-  | BOOL_LIT         { BoolLit($1) }
   | expr PLUS   expr { Binop($1, Add,   $3) }
   | expr MINUS  expr { Binop($1, Sub,   $3) }
   | expr TIMES  expr { Binop($1, Mult,  $3) }
@@ -147,6 +146,8 @@ primitives:
 	INT_LIT { IntLit($1) }
   | FLOAT_LIT { FloatLit($1) }
   | STRING_LIT { StringLit($1) }
+  | TRUE      { BoolLit(true) }
+  | FALSE     { BoolLit(false) }
 
 literals:
 	primitives { $1 }
