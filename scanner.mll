@@ -64,7 +64,6 @@ rule token = parse
 | "void"   { VOID }
 | "mx"     { MATRIX }
 | "row"    { ROW }
-| "column" { COLUMN }
 | "file"   { FILE }
 | "tuple"  { TUPLE }
 | "def"    { DEF }

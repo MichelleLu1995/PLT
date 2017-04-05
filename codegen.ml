@@ -35,21 +35,21 @@ let translate (globals, functions) =
     | A.Void -> void_t
     | A.Float -> float_t
     | A.String -> pointer_t i8_t
-    | MatrixTyp(typ, size1, size2) -> (match typ with
+    | A.MatrixTyp(typ, size1, size2) -> (match typ with
                                       A.Int    -> array_t (array_t i32_t size2) size1
                                     | A.Float  -> array_t (array_t float_t size2) size1
                                     | A.TupleTyp(typ1,size3) -> (match typ1 with
                                               A.Int    -> array_t (array_t (array_t i32_t size3) size2) size1
                                             | _ -> raise (UnsupportedTupleType))
                                     | _ -> raise (UnsupportedMatrixType))
-    | RowTyp(typ, size) -> (match typ with
+    | A.RowTyp(typ, size) -> (match typ with
                                       A.Int    -> array_t i32_t size
                                     | A.Float  -> array_t float_t size
                                     | A.TupleTyp(typ1,size1) -> (match typ1 with
                                               A.Int    -> array_t (array_t i32_t size1) size
                                             | _ -> raise (UnsupportedTupleType))
                                     | _ -> raise (UnsupportedRowType))
-    | TupleTyp(typ, size) -> (match typ with
+    | A.TupleTyp(typ, size) -> (match typ with
                                       A.Int    -> array_t i32_t size
                                     | _ -> raise (UnsupportedTupleType))
   in
@@ -138,6 +138,13 @@ let function_decls =
       | A.TupleLit _ -> ltype_of_typ (A.Tuple)
       | _ -> raise (UnsupportedRowType) in
 
+	let build_row_access s i1 i2 builder isAssign =
+	  if isAssign
+		then L.build_gep (lookup s) [| i1; i2 |] s builder
+	  else
+		L.build_load (L.build_gep (lookup s) [| i1; i2 |] s builder) s builder
+	in
+
     (* Construct code for an expression; return its value *)
     let rec expr builder = function
         A.IntLit i -> L.const_int i32_t i
@@ -153,6 +160,7 @@ let function_decls =
                               | A.TupleLit t -> let realOrder=List.map List.rev m in let i32Lists = List.map (List.map (expr builder)) realOrder in let listOfArrays=List.map Array.of_list i32Lists in let i32ListOfArrays = List.map (L.const_array (array_t (get_tuple_type t) (List.length t))) listOfArrays in let arrayOfArrays=Array.of_list i32ListOfArrays in L.const_array (array_t (array_t (get_tuple_type t) (List.length t)) (List.length (List.hd m))) arrayOfArrays
                               | _ -> raise ( UnsupportedMatrixType ))
       | A.RowLit r ->  L.const_array (get_row_type r) (Array.of_list (List.map (expr builder) r))
+	  | A.RowAccess(s, e1) -> let i1 = expr builder e1 in build_row_access s (L.const_int i32_t 0) i1 builder false
       | A.Binop (e1, op, e2) -> 
         let e1' = expr builder e1
         and e2' = expr builder e2 in
@@ -279,6 +287,7 @@ let function_decls =
         build_ops_with_type e'_type 
       | A.Assign (e1, e2) -> let e1' = (match e1 with
                                             A.Id s -> lookup s
+										  | A.RowAccess(s, e1) -> let i1 = expr builder e1 in build_row_access s (L.const_int i32_t 0) i1 builder true
                                           | _ -> raise (IllegalAssignment))
                              and e2' = expr builder e2 in
                      ignore (L.build_store e2' e1' builder); e2' 

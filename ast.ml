@@ -33,11 +33,11 @@ type expr = IntLit of int
   | Unop of uop * expr
   | Assign of expr * expr 
   | Call of string * expr list
-  | RowAccess of string * int
-  | TupleAccess of string * int
-  | MatrixAccess of string * int * int
-  | MRowAccess of string * int
-  | MColumnAccess of string * int
+  | RowAccess of string * expr
+  | TupleAccess of string * expr
+  | MatrixAccess of string * expr * expr
+  | MRowAccess of string * expr
+  | MColumnAccess of string * expr
   | Noexpr
             
 type stmt = Block of stmt list 
@@ -139,11 +139,11 @@ let rec string_of_expr = function
   | Assign(v, e) -> string_of_expr v ^ " = " ^ string_of_expr e
   | Call(f, el) ->
       f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
-  | RowAccess(r, i) -> r ^ "[" ^ string_of_int i ^ "]"
-  | TupleAccess(t, i) -> t ^ "(%" ^ string_of_int i ^ "%)"
-  | MatrixAccess(m, i1, i2) -> m ^ "[" ^ string_of_int i1 ^ "][" ^ string_of_int i2 ^ "]"
-  | MRowAccess(r, i) -> r ^ "[" ^ string_of_int i ^ "][:]"
-  | MColumnAccess(c, i) -> c ^ "[:][" ^ string_of_int i ^ "]"
+  | RowAccess(r, e) -> r ^ "[" ^ string_of_expr e ^ "]"
+  | TupleAccess(t, e) -> t ^ "(%" ^ string_of_expr e ^ "%)"
+  | MatrixAccess(m, e1, e2) -> m ^ "[" ^ string_of_expr e1 ^ "][" ^ string_of_expr e2 ^ "]"
+  | MRowAccess(r, e) -> r ^ "[" ^ string_of_expr e ^ "][:]"
+  | MColumnAccess(c, e) -> c ^ "[:][" ^ string_of_expr e ^ "]"
   | Noexpr -> ""
 
 let rec string_of_stmt = function

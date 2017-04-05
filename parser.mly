@@ -136,11 +136,11 @@ expr:
   | expr ASSIGN expr   { Assign($1, $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | LPAREN expr RPAREN { $2 }
-  | ID LSQBRACE INT_LIT RSQBRACE %prec NOLSQBRACE { RowAccess($1, $3) }
-  | ID LPERCENT INT_LIT RPERCENT { TupleAccess($1, $3) }
-  | ID LSQBRACE INT_LIT RSQBRACE LSQBRACE INT_LIT RSQBRACE { MatrixAccess($1, $3, $6) }
-  | ID LSQBRACE INT_LIT RSQBRACE LSQBRACE COLON RSQBRACE { MRowAccess($1, $3) }
-  | ID LSQBRACE COLON RSQBRACE LSQBRACE INT_LIT RSQBRACE { MColumnAccess($1, $6) }
+  | ID LSQBRACE expr RSQBRACE %prec NOLSQBRACE { RowAccess($1, $3) }
+  | ID LPERCENT expr RPERCENT { TupleAccess($1, $3) }
+  | ID LSQBRACE expr RSQBRACE LSQBRACE expr RSQBRACE { MatrixAccess($1, $3, $6) }
+  | ID LSQBRACE expr RSQBRACE LSQBRACE COLON RSQBRACE { MRowAccess($1, $3) }
+  | ID LSQBRACE COLON RSQBRACE LSQBRACE expr RSQBRACE { MColumnAccess($1, $6) }
 
 primitives:
 	INT_LIT { IntLit($1) }
