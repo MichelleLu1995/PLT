@@ -26,22 +26,26 @@ let check (globals, functions) =
     | _ -> ()
   in
 
+(*   let check_assign lvaluet rvaluet err =
+     if lvaluet = rvaluet then lvaluet else raise err
+  in *)
   let check_assign lvaluet rvaluet err =
     match (lvaluet, rvaluet) with
-      (DataType(Int), DataType(Int)) -> lvaluet
-    | (DataType(Float), DataType(Float)) -> lvaluet
-    | (DataType(Char), DataType(Char)) -> lvaluet
-    | (DataType(String), DataType(String)) -> lvaluet
-    | (DataType(Bool), DataType(Bool)) -> lvaluet
-    | (DataType(Void), DataType(Void)) -> lvaluet
-    | (TupleType(Int, l1), TupleType(Int, l2)) -> if l1 == l2 then lvaluet else if l1 == 0 then lvaluet else raise err
-    | (MatrixType(DataType(Int), r1, c1), MatrixType(DataType(Int), r2, c2)) -> if r1 == r2 && c1 == c2 then lvaluet else raise err
-    | (MatrixType(DataType(Float), r1, c1), MatrixType(DataType(Float), r2, c2)) -> if r1 == r2 && c1 == c2 then lvaluet else raise err
-    | (MatrixType(TupleType(Int, d1), r1, c1), MatrixType(TupleType(Int, d2), r2, c2)) -> if d1 == d2 && r1 == r2 && c1 == c2 then lvaluet else raise err
-    | (TuplePointerType(Int), TuplePointerType(Int)) -> lvaluet
+      (Int, Int) -> lvaluet
+    | (Float, Float) -> lvaluet
+    | (String, String) -> lvaluet
+    | (Bool, Bool) -> lvaluet
+    | (Void, Void) -> lvaluet
+    | (TupleTyp(Int, l1), TupleTyp(Int, l2)) -> if l1 == l2 then lvaluet else if l1 == 0 then lvaluet else raise err
+    | (RowTyp(Int, l1), RowTyp(Int, l2)) -> if l1 == l2 then lvaluet else if l1 == 0 then lvaluet else raise err 
+    | (RowTyp(Float, l1), RowTyp(Float, l2)) -> if l1 == l2 then lvaluet else if l1 == 0 then lvaluet else raise err
+    | (MatrixTyp(Int, r1, c1), MatrixTyp(Int, r2, c2)) -> if r1 == r2 && c1 == c2 then lvaluet else raise err
+    | (MatrixTyp(Float, r1, c1), MatrixTyp(Float, r2, c2)) -> if r1 == r2 && c1 == c2 then lvaluet else raise err
+    | (MatrixTyp(TupleTyp(Int, d1), r1, c1), MatrixTyp(TupleTyp(Int, d2), r2, c2)) -> if d1 == d2 && r1 == r2 && c1 == c2 then lvaluet else raise err
+    (* | (TuplePointerType(Int), TuplePointerType(Int)) -> lvaluet
     | (MatrixPointerType(Int), MatrixPointerType(Int)) -> lvaluet
     | (MatrixPointerType(Float), MatrixPointerType(Float)) -> lvaluet
-    | (MatrixTuplePointerType(Int), MatrixTuplePointerType(Int)) -> lvaluet
+    | (MatrixTuplePointerType(Int), MatrixTuplePointerType(Int)) -> lvaluet *)
     | _ -> raise err
   in
 
@@ -117,33 +121,33 @@ let check_function func =
 
  let type_of_tuple t =
     match (List.hd t) with
-      IntLit _ -> TupleType(Int, List.length t)
+      IntLit _ -> TupleTyp(Int, List.length t)
     | _ -> raise (Failure ("illegal tuple type")) in
 
   let rec check_tuple_literal tt l i =
     let length = List.length l in
     match (tt, List.nth l i) with
-      (TupleType(Int, _), IntLit _) -> if i == length - 1 then TupleType(Int, length) else check_tuple_literal (TupleType(Int, length)) l (succ i)
+      (TupleTyp(Int, _), IntLit _) -> if i == length - 1 then TupleTyp(Int, length) else check_tuple_literal (TupleTyp(Int, length)) l (succ i)
     | _ -> raise (Failure ("illegal tuple literal"))
   in
 
-  let access_type = function
-      TupleType(p, _) -> DataType(p)
-    | _ -> raise (Failure ("illegal access type")) in
+(*   let access_type = function
+      TupleTyp(p, _) -> DataType(p)
+    | _ -> raise (Failure ("illegal access type")) in *)
 
   let matrix_acces_type = function
-      MatrixType(t, _, _) -> t
+      MatrixTyp(t, _, _) -> t
     | _ -> raise (Failure ("illegal matrix access") ) in
 
   let type_of_matrix m r c =
     match (List.hd (List.hd m)) with
-        IntLit _ -> MatrixType(DataType(Int), r, c)
-      | FloatLit _ -> MatrixType(DataType(Float), r, c)
-      | TupleLiteral t -> MatrixType((type_of_tuple) t, r, c)
+        IntLit _ -> MatrixTyp(Int, r, c)
+      | FloatLit _ -> MatrixTyp(Float, r, c)
+      | TupleLit t -> MatrixTyp((type_of_tuple) t, r, c)
       | _ -> raise (Failure ("illegal matrix type"))
   in
 
-  let check_pointer_type = function
+ (*  let check_pointer_type = function
       TuplePointerType(t) -> TuplePointerType(t)
     | MatrixPointerType(t) -> MatrixPointerType(t)
     | MatrixTuplePointerType(t) -> MatrixTuplePointerType(t)
@@ -169,94 +173,87 @@ let check_function func =
     | TuplePointerType(p) -> DataType(p)
     | MatrixPointerType(p) -> DataType(p)
     | MatrixTuplePointerType(p) -> DataType(p)
-    | _ -> raise ( Failure ("cannot dereference a non-pointer type") ) in
+    | _ -> raise ( Failure ("cannot dereference a non-pointer type") ) in *)
 
   (* Return the type of an expression or throw an exception *)
   let rec expr = function
-    IntLit _ -> DataType(Int)
-  | FloatLit _ -> DataType(Float)
-  | CharLit _ -> DataType(Char)
-  | StrLit _ -> DataType(String)
-  | BoolLit _ -> DataType(Bool)
+    IntLit _ -> Int
+  | FloatLit _ -> Float
+  | StringLit _ -> String
+  | BoolLit _ -> Bool
   | Id s -> type_of_identifier s
-  | TupleLiteral t -> check_tuple_literal (type_of_tuple t) t 0
-  | MatrixLiteral m -> type_of_matrix m (List.length m) (List.length (List.hd m))
-  | TupleAccess(s, e) -> let _ = (match (expr e) with
-                                    DataType(Int) -> DataType(Int)
+  | TupleLit t -> check_tuple_literal (type_of_tuple t) t 0
+  | MatrixLit m -> type_of_matrix m (List.length m) (List.length (List.hd m))
+  (* | TupleAccess(s, e) -> let _ = (match (expr e) with
+                                    Int -> Int
                                   | _ -> raise (Failure ("attempting to access with a non-integer type"))) in
                          access_type (type_of_identifier s)
   | MatrixAccess(s, e1, e2) -> let _ = (match (expr e1) with
-                                          DataType(Int) -> DataType(Int)
+                                          Int -> Int
                                         | _ -> raise (Failure ("attempting to access with a non-integer type")))
                                and _ = (match (expr e2) with
-                                          DataType(Int) -> DataType(Int)
+                                          Int -> Int
                                         | _ -> raise (Failure ("attempting to access with a non-integer type"))) in
                                matrix_acces_type (type_of_identifier s)
-  | PointerIncrement(s) -> check_pointer_type (type_of_identifier s)
-  | Length(s) -> (match (type_of_identifier s) with
-                    TupleType(_, _) -> DataType(Int)
-                  | MatrixType(TupleType(_, _), _, _) -> DataType(Int)
-                  | _ -> raise(Failure ("cannot get the length of non-matrix-of-tuples or non-tuple datatype")))
-  | Rows(s) -> (match (type_of_identifier s) with
-                  MatrixType(_, _, _) -> DataType(Int)
-                | _ -> raise (Failure ("cannot get the rows of non-matrix datatype")))
-  | Columns(s) -> (match (type_of_identifier s) with
-                     MatrixType(_, _, _) -> DataType(Int)
-                   | _ -> raise (Failure ("cannot get the rows of non-matrix datatype")))
-  | Free(s) -> (match (type_of_identifier s) with
-                  MatrixType(TupleType(_, _), _, _) -> DataType(Void)
+  | PointerIncrement(s) -> check_pointer_type (type_of_identifier s) *)
+(*   | RowLit(s) -> (match (type_of_identifier s) with
+                  MatrixTyp(_, _, _) -> Int
+                | _ -> raise (Failure ("cannot get the rows of non-matrix datatype"))) *)
+(*   | Free(s) -> (match (type_of_identifier s) with
+                  MatrixTyp(TupleTyp(_, _), _, _) -> Void
                 | _ -> raise (Failure ("cannot free a non-matrix-tuple type")))
   | TupleReference(s) -> check_tuple_pointer_type (type_of_identifier s)
   | Dereference(s) -> pointer_type (type_of_identifier s)
   | MatrixReference(s) -> check_matrix_pointer_type (type_of_identifier s)
-  | MatrixTupleReference(s) -> check_matrix_tuple_pointer_type (type_of_identifier s)
+  | MatrixTupleReference(s) -> check_matrix_tuple_pointer_type (type_of_identifier s) *)
   | Binop(e1, op, e2) as e -> let t1 = expr e1 and t2 = expr e2 in
   (match op with
-      Add | Sub | Mult | Div when t1 = DataType(Int) && t2 = DataType(Int) -> DataType(Int)
-    | Add | Sub | Mult | Div when t1 = DataType(Float) && t2 = DataType(Float) -> DataType(Float)
-    | Add | Sub | Mult | Div when t1 = DataType(Int) && t2 = DataType(Float) -> DataType(Float)
-    | Madd | Msub | Mmult | Mdiv when t1 MatrixType(Int) && t2 MatrixType(Int) -> MatrixType(Int)
-    | Madd | Msub | Mmult | Mdiv when t1 MatrixType(Float) && t2 MatrixType(Float) -> MatrixType(Float)
-    | Madd | Msub | Mmult | Mdiv when t1 MatrixType(Int) && t2 MatrixType(Float) -> MatrixType(Float)
-    | Madd | Msub | Mmult | Mdiv when t1 MatrixType(TupleType(Int)) && t2 MatrixType(TupleType(Int)) -> MatrixType(TupleType(Int))
-    | Madd | Msub | Mmult | Mdiv when t1 MatrixType(TupleType(Int)) && t2 DataType(Int) -> MatrixType(TupleType(Int))
-    | Equal | Neq | Meq | when t1 = t2 -> DataType(Bool)
-    | PlusEq when t1 = DataType(Int) && t2 = DataType(Int) -> DataType(Int)
-    | PlusEq when t1 = DataType(Float) && DataType(Float) -> DataType(Float)
-    | PlusEq when t1 = DataType(Int) && t2 = DataType(Float) -> DataType(Float)
-    | PlusEq when t1 = DataType(MatrixType) && DataType(MatrixType) -> DataType(MatrixType)
-    | PlusEq when t1 = DataType(MatrixType) && DataType(Int) -> DataType(MatrixType)
-    | PlusEq when t1 = DataType(MatrixType) && DataType(Float) -> DataType(MatrixType)
-    | Less | Leq | Greater | Geq when t1 = DataType(Int) && t2 = DataType(Int) -> DataType(Bool)
-    | Less | Leq | Greater | Geq when t1 = DataType(Float) && t2 = DataType(Float) -> DataType(Float)
-    | And | Or when t1 = DataType(Bool) && t2 = DataType(Bool) -> DataType(Bool)
+      Add | Sub | Mult | Div when t1 = Int && t2 = Int -> Int
+    | Add | Sub | Mult | Div when t1 = Float && t2 = Float -> Float
+    | Add | Sub | Mult | Div when t1 = Int && t2 = Float -> Float
+    | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(Int) && t2 = MatrixTyp(Int) -> MatrixTyp(Int)
+    | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(Float) && t2 = MatrixTyp(Float) -> MatrixTyp(Float)
+    | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(Int) && t2 = MatrixTyp(Float) -> MatrixTyp(Float)
+    | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(TupleTyp(Int)) && t2 = MatrixType(TupleTyp(Int)) -> MatrixTyp(TupleTyp(Int))
+    | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(TupleTyp(Int)) && t2 = Int -> MatrixTyp(TupleTyp(Int))
+    | Equal | Neq | Meq when t1 = t2 -> Bool
+    | Equal | Neq | Meq when t1 = t2 -> Bool
+    | PlusEq when t1 = Int && t2 = Int -> Int
+    | PlusEq when t1 = Float && Float -> Float
+    | PlusEq when t1 = Int && t2 = Float -> Floatd
+    | PlusEq when t1 = MatrixTyp && MatrixTyp -> MatrixTyp
+    | PlusEq when t1 = MatrixTyp && Int -> MatrixTyp
+    | PlusEq when t1 = MatrixTyp && Float -> MatrixTyp
+    | Less | Leq | Greater | Geq when t1 = Int && t2 = Int -> Bool
+    | Less | Leq | Greater | Geq when t1 = Float && t2 = Float -> Float
+    | And | Or when t1 = Bool && t2 = Bool -> Bool
     | _ -> raise (Failure ("illegal binary operator " ^
       string_of_typ t1 ^ " " ^ string_of_op op ^ " " ^
       string_of_typ t2 ^ " in " ^ string_of_expr e))
   )
   | Unop(op, e) as ex -> let t = expr e in
   (match op with
-      Neg when t = DataType(Int) -> DataType(Int)
-    | Neg when t = DataType(Float) -> DataType(Float)
-    | Not when t = DataType(Bool) -> DataType(Bool)
+      Neg when t = Int -> Int
+    | Neg when t = Float -> Float
+    | Not when t = Bool -> Bool
     | _ -> raise (Failure ("illegal unary operator " ^ string_of_uop op ^
       string_of_typ t ^ " in " ^ string_of_expr ex)))
-  | Noexpr -> DataType(Void)
-  | Assign(e1, e2) as ex -> let lt = (match e1 with
+  | Noexpr -> Void
+ (*  | Assign(e1, e2) as ex -> let lt = (match e1 with
                                         TupleAccess(s, e) -> (match (expr e) with
-                                                                DataType(Int) -> (match (type_of_identifier s) with
-                                                                                    TupleType(p, _) -> (match p with
-                                                                                                          Int -> DataType(Int)
+                                                                Int -> (match (type_of_identifier s) with
+                                                                                    TupleTyp(p, _) -> (match p with
+                                                                                                          Int -> Int
                                                                                                        )
                                                                                    | _ -> raise ( Failure ("cannot access a non-tuple type") )
                                                                                  )
                                                                 | _ -> raise ( Failure ("expression is not of type int") )
                                                              )
                                       | MatrixAccess(s, _, _) -> (match (type_of_identifier s) with
-                                                                      MatrixType(t, _, _) -> (match t with
-                                                                                                    DataType(Int) -> DataType(Int)
-                                                                                                  | DataType(Float) -> DataType(Float)
-                                                                                                  | TupleType(p, l) -> TupleType(p, l)
+                                                                      MatrixTyp(t, _, _) -> (match t with
+                                                                                                    Int -> Int
+                                                                                                  | Float -> Float
+                                                                                                  | TupleTyp(p, l) -> TupleTyp(p, l)
                                                                                                   | _ -> raise ( Failure ("illegal matrix of matrices") )
                                                                                                 )
                                                                       | _ -> raise ( Failure ("cannot access a primitive") )
@@ -264,9 +261,9 @@ let check_function func =
                                       | _ -> expr e1)
                             and rt = (match e2 with
                                         TupleAccess(s, e) -> (match (expr e) with
-                                                                DataType(Int) -> (match (type_of_identifier s) with
-                                                                                    TupleType(p, _) -> (match p with
-                                                                                                          Int -> DataType(Int)
+                                                                Int -> (match (type_of_identifier s) with
+                                                                                    TupleTyp(p, _) -> (match p with
+                                                                                                          Int -> Int
                                                                                                        )
                                                                                    | _ -> raise ( Failure ("cannot access a non-tuple type") )
                                                                                  )
@@ -274,9 +271,9 @@ let check_function func =
                                                              )
                                       | MatrixAccess(s, _, _) -> (match (type_of_identifier s) with
                                                                       MatrixType(t, _, _) -> (match t with
-                                                                                                  DataType(Int) -> DataType(Int)
-                                                                                                | DataType(Float) -> DataType(Float)
-                                                                                                | TupleType(p, l) -> TupleType(p, l)
+                                                                                                  Int -> Int
+                                                                                                | Float -> Float
+                                                                                                | TupleTyp(p, l) -> TupleTyp(p, l)
                                                                                                 | _ -> raise ( Failure ("illegal matrix of matrices") )
                                                                                               )
                                                                       | _ -> raise ( Failure ("cannot access a primitive") )
@@ -284,7 +281,7 @@ let check_function func =
                                       | _ -> expr e2) in
   check_assign lt rt (Failure ("illegal assignment " ^ string_of_typ lt ^
     " = " ^ string_of_typ rt ^ " in " ^
-  string_of_expr ex))
+  string_of_expr ex)) *)
   | Call(fname, actuals) as call -> let fd = function_decl fname in
   if List.length actuals != List.length fd.formals then
    raise (Failure ("expecting " ^ string_of_int
@@ -300,7 +297,7 @@ let check_function func =
 
   let check_bool_expr e =
     match (expr e) with
-      DataType(Bool) -> ()
+      DataTyp(Bool) -> ()
     | _ -> raise (Failure ("expected Boolean expression in " ^ string_of_expr e))
   in
 
