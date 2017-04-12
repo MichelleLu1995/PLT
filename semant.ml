@@ -237,8 +237,8 @@ let check_function func =
     | _ -> raise (Failure ("illegal unary operator " ^ string_of_uop op ^
       string_of_typ t ^ " in " ^ string_of_expr ex)))
   | Noexpr -> Void
- (*  | Assign(e1, e2) as ex -> let lt = (match e1 with
-                                        TupleAccess(s, e) -> (match (expr e) with
+  | Assign(e1, e2) as ex -> let lt = (match e1 with
+                                        (* TupleAccess(s, e) -> (match (expr e) with
                                                                 Int -> (match (type_of_identifier s) with
                                                                                     TupleTyp(p, _) -> (match p with
                                                                                                           Int -> Int
@@ -255,10 +255,10 @@ let check_function func =
                                                                                                   | _ -> raise ( Failure ("illegal matrix of matrices") )
                                                                                                 )
                                                                       | _ -> raise ( Failure ("cannot access a primitive") )
-                                                                   )
+                                                                   ) *)
                                       | _ -> expr e1)
                             and rt = (match e2 with
-                                        TupleAccess(s, e) -> (match (expr e) with
+                                       (*  TupleAccess(s, e) -> (match (expr e) with
                                                                 Int -> (match (type_of_identifier s) with
                                                                                     TupleTyp(p, _) -> (match p with
                                                                                                           Int -> Int
@@ -275,11 +275,11 @@ let check_function func =
                                                                                                 | _ -> raise ( Failure ("illegal matrix of matrices") )
                                                                                               )
                                                                       | _ -> raise ( Failure ("cannot access a primitive") )
-                                                                   )
+                                                                   ) *)
                                       | _ -> expr e2) in
   check_assign lt rt (Failure ("illegal assignment " ^ string_of_typ lt ^
     " = " ^ string_of_typ rt ^ " in " ^
-  string_of_expr ex)) *)
+  string_of_expr ex))
   | Call(fname, actuals) as call -> let fd = function_decl fname in
   if List.length actuals != List.length fd.formals then
    raise (Failure ("expecting " ^ string_of_int
