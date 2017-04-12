@@ -6,7 +6,7 @@
 
 .PHONY : JSTEM.native
 JSTEM.native :
-	ocamlbuild -use-ocamlfind -pkgs llvm,llvm.analysis,str -cflags -w,+a-4 \
+	ocamlbuild -use-ocamlfind -pkgs llvm,llvm.analysis,llvm.bitwriter,llvm.bitreader,llvm.linker,str -cflags -w,+a-4 \
 		JSTEM.native
 
 # "make clean" removes all generated files

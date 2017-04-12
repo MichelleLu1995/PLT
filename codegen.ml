@@ -65,6 +65,16 @@ let translate (globals, functions) =
   let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
   let printf_func = L.declare_function "printf" printf_t the_module in
 
+  (* Declare C functions for file inegration *)
+  let open_ty = L.function_type i32_t [| (L.pointer_type i8_t); i32_t |] in
+  let open_func = L.declare_function "open" open_ty the_module in 
+  let close_ty = L.function_type i32_t [| i32_t |] in
+  let close_func = L.declare_function "close" close_ty the_module in
+  let read_ty = L.function_type i32_t [| i32_t; L.pointer_type i8_t; i32_t |] in 
+  let read_func = L.declare_function "read" read_ty the_module in
+  let write_ty = L.function_type i32_t [| i32_t; L.pointer_type i8_t; i32_t |] in
+  let write_func = L.declare_function "write" write_ty the_module in
+
   (* Define each function (arguments and return type) so we can call it *)
 let function_decls =
     let function_decl m fdecl =
@@ -75,11 +85,11 @@ let function_decls =
       StringMap.add name (L.define_function name ftype the_module, fdecl) m in
     List.fold_left function_decl StringMap.empty functions in
 
+
   (* Fill in the body of the given function *)
   let build_function_body fdecl =
     let (the_function, _) = StringMap.find fdecl.A.fname function_decls in
     let builder = L.builder_at_end context (L.entry_block the_function) in
-
     let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder
     and float_format_str = L.build_global_stringptr "%f\n" "fmt" builder in
     
@@ -282,6 +292,10 @@ let function_decls =
                                           | _ -> raise (IllegalAssignment))
                              and e2' = expr builder e2 in
                      ignore (L.build_store e2' e1' builder); e2' 
+      | A.Call ("open", [e])
+      | A.Call ("write", [e])
+      | A.Call ("close", [e])
+      | A.Call ("read", [e])
       | A.Call ("print", [e]) | A.Call ("printb", [e]) ->
     L.build_call printf_func [| int_format_str ; (expr builder e) |]
       "printf" builder
