@@ -16,9 +16,6 @@ module L = Llvm
 module A = Ast
 open Exceptions
 
-open Llvm.MemoryBuffer
-open Llvm_bitreader
-
 module StringMap = Map.Make(String)
 
 let translate (globals, functions) =
@@ -68,6 +65,16 @@ let translate (globals, functions) =
   let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
   let printf_func = L.declare_function "printf" printf_t the_module in
 
+  (* Declare C functions for file inegration *)
+  let open_ty = L.function_type i32_t [| (L.pointer_type i8_t); i32_t |] in
+  let open_func = L.declare_function "open" open_ty the_module in 
+  let close_ty = L.function_type i32_t [| i32_t |] in
+  let close_func = L.declare_function "close" close_ty the_module in
+  let read_ty = L.function_type i32_t [| i32_t; L.pointer_type i8_t; i32_t |] in 
+  let read_func = L.declare_function "read" read_ty the_module in
+  let write_ty = L.function_type i32_t [| i32_t; L.pointer_type i8_t; i32_t |] in
+  let write_func = L.declare_function "write" write_ty the_module in
+
   (* Define each function (arguments and return type) so we can call it *)
 let function_decls =
     let function_decl m fdecl =
@@ -77,23 +84,12 @@ let function_decls =
       in let ftype = L.function_type (ltype_of_typ fdecl.A.typ) formal_types in
       StringMap.add name (L.define_function name ftype the_module, fdecl) m in
     List.fold_left function_decl StringMap.empty functions in
- 
-  let c_library_functions () =
-    let open_ty = function_type i32_t [| (pointer_type i8_t); i32_t |] in
-    let _ = declare_function "open" open_ty the_module in 
-    let close_ty = function_type i32_t [| i32_t |] in
-    let _ = declare_function "close" close_ty the_module in
-    let read_ty = function_type i32_t [| i32_t; pointer_type i8_t; i32_t |] in 
-    let _ = declare_function "read" read_ty the_module in
-    let write_ty = function_type i32_t [| i32_t; pointer_type i8_t; i32_t |] in
-    let _ = declare_function "write" write_ty the_module in
 
 
   (* Fill in the body of the given function *)
   let build_function_body fdecl =
     let (the_function, _) = StringMap.find fdecl.A.fname function_decls in
     let builder = L.builder_at_end context (L.entry_block the_function) in
-    let _ = c_library_functions () in
     let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder
     and float_format_str = L.build_global_stringptr "%f\n" "fmt" builder in
     
@@ -151,13 +147,7 @@ let function_decls =
       | A.FloatLit _ -> ltype_of_typ (A.Float)
       | A.TupleLit _ -> ltype_of_typ (A.Tuple)
       | _ -> raise (UnsupportedRowType) in
- (* 
-    let c_call fdecl m = function
-      | "open" -> function_decls "open" fdecl
-      | "write" -> function_decls "write" fdecl
-      | "close" -> function_decls "close" fdecl
-      | "read" -> function_decls "read" fdecl in
-*)
+
     (* Construct code for an expression; return its value *)
     let rec expr builder = function
         A.IntLit i -> L.const_int i32_t i
@@ -302,10 +292,10 @@ let function_decls =
                                           | _ -> raise (IllegalAssignment))
                              and e2' = expr builder e2 in
                      ignore (L.build_store e2' e1' builder); e2' 
-      | A.C_Call ("open", [e]) -> function_decls "open" fdecl
-      | A.C_Call ("write", [e]) -> function_decls "write" fdecl
-      | A.C_Call ("close", [e]) -> function_decls "close" fdecl
-      | A.C_Call ("read", [e]) -> function_decls "read" fdecl
+      | A.Call ("open", [e])
+      | A.Call ("write", [e])
+      | A.Call ("close", [e])
+      | A.Call ("read", [e])
       | A.Call ("print", [e]) | A.Call ("printb", [e]) ->
     L.build_call printf_func [| int_format_str ; (expr builder e) |]
       "printf" builder
@@ -384,13 +374,6 @@ let function_decls =
       | A.Bool -> L.build_ret (L.const_int i1_t 0)
       | _ -> raise (UnsupportedReturnType))
   in
-
-  let linker filename = 
-    let llctx = Llvm.global_context () in
-    let llmem = Llvm.MemoryBuffer.of_file filename in
-    let llm = Llvm_bitreader.parse_bitcode llctx llmem in
-    ignore(Llvm_linker.link_modules the_module llm) in
-
 
   List.iter build_function_body functions;
   the_module
