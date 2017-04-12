@@ -9,7 +9,7 @@ def int cond(bool b){
 	return x;
 }
 
-def void main(){
+def int main(){
 	print(cond(True));
 	print(cond(False));
 }

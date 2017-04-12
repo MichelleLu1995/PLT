@@ -6,11 +6,11 @@ open Ast
 %token PLUS MINUS TIMES DIVIDE ASSIGN NOT MPLUS MMINUS MTIMES MDIVIDE PLUSEQ
 %token EQ NEQ LT LEQ GT GEQ AND OR MEQ
 %token TRUE FALSE
-%token RETURN IF ELSE FOR WHILE INT BOOL STRING VOID MATRIX ROW FLOAT FILE TUPLE
+%token RETURN IF ELSE FOR WHILE INT BOOL VOID MATRIX ROW FLOAT FILE TUPLE
 
 %token <int> INT_LIT
-%token <string> ID
 %token <string> STRING_LIT
+%token <string> ID
 %token <float> FLOAT_LIT
 
 %token DEF
@@ -77,7 +77,6 @@ tuple_typ:
 
 primitive:
   	INT { Int }
-  | STRING { String }
   | BOOL { Bool }
   | VOID { Void }
   | FLOAT { Float }

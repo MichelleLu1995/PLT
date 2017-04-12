@@ -43,7 +43,6 @@ let tokenize = function
 | RETURN -> "RETURN"
 | INT -> "INT"
 | BOOL -> "BOOL"
-| STRING -> "STRING"
 | FLOAT -> "FLOAT"
 | VOID -> "VOID"
 | MATRIX -> "MATRIX"
