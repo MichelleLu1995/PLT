@@ -24,9 +24,6 @@ let check (globals, functions) =
     | _ -> ()
   in
 
-(*   let check_assign lvaluet rvaluet err =
-     if lvaluet = rvaluet then lvaluet else raise err
-  in *)
   let check_assign lvaluet rvaluet err =
     match (lvaluet, rvaluet) with
       (Int, Int) -> lvaluet
@@ -217,12 +214,11 @@ let check_function func =
   *)  | Equal | Neq | Meq when t1 = t2 -> Bool
     | Equal | Neq | Meq when t1 = t2 -> Bool
     | PlusEq when t1 = Int && t2 = Int -> Int
-    (*| PlusEq when t1 = Float && Float -> Float*)
     | PlusEq when t1 = Int && t2 = Float -> Float
-    (*| PlusEq when t1 = MatrixTyp && MatrixTyp -> MatrixTyp
+    (* | PlusEq when t1 = MatrixTyp && MatrixTyp -> MatrixTyp
     | PlusEq when t1 = MatrixTyp && Int -> MatrixTyp
     | PlusEq when t1 = MatrixTyp && Float -> MatrixTyp
-   *) | Less | Leq | Greater | Geq when t1 = Int && t2 = Int -> Bool
+    *) | Less | Leq | Greater | Geq when t1 = Int && t2 = Int -> Bool
     | Less | Leq | Greater | Geq when t1 = Float && t2 = Float -> Float
     | And | Or when t1 = Bool && t2 = Bool -> Bool
     | _ -> raise (Failure ("illegal binary operator " ^
