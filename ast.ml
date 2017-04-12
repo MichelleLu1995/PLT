@@ -165,6 +165,7 @@ let string_of_typ = function
   | Bool -> "bool"
   | Void -> "void"
   | Float -> "float"
+  | String -> "string"
   | MatrixTyp(t, l1, l2) -> (match t with 
                         Int -> "int" ^ "[" ^ string_of_int l1 ^ "][" ^ string_of_int l2 ^ "]"
                       | Float -> "float" ^ "[" ^ string_of_int l1 ^ "][" ^ string_of_int l2 ^ "]" 
