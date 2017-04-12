@@ -12,6 +12,5 @@ def int main(){
 	printb(!False);
 	printb(!True);
 	print(-10);
-	print(--42);
 	return 0;
 }
