@@ -1,4 +1,4 @@
-int def main()
+def int main()
 {
-  return True; /* Should return int */
+  return True;
 }
