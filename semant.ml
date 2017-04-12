@@ -1,5 +1,3 @@
-(* Semantic checking for the ML compiler *)
-
 open Ast
 
 module StringMap = Map.Make(String)
@@ -210,21 +208,21 @@ let check_function func =
   (match op with
       Add | Sub | Mult | Div when t1 = Int && t2 = Int -> Int
     | Add | Sub | Mult | Div when t1 = Float && t2 = Float -> Float
-    | Add | Sub | Mult | Div when t1 = Int && t2 = Float -> Float
-    | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(Int) && t2 = MatrixTyp(Int) -> MatrixTyp(Int)
+    | Add | Sub | Mult | Div when t1 = Int && t2 = Float -> Float (*
+    | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(Int,Int,Int) && t2 = MatrixTyp(Int,Int,Int) -> MatrixTyp(Int,Int,Int)
     | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(Float) && t2 = MatrixTyp(Float) -> MatrixTyp(Float)
     | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(Int) && t2 = MatrixTyp(Float) -> MatrixTyp(Float)
     | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(TupleTyp(Int)) && t2 = MatrixType(TupleTyp(Int)) -> MatrixTyp(TupleTyp(Int))
     | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(TupleTyp(Int)) && t2 = Int -> MatrixTyp(TupleTyp(Int))
-    | Equal | Neq | Meq when t1 = t2 -> Bool
+  *)  | Equal | Neq | Meq when t1 = t2 -> Bool
     | Equal | Neq | Meq when t1 = t2 -> Bool
     | PlusEq when t1 = Int && t2 = Int -> Int
-    | PlusEq when t1 = Float && Float -> Float
-    | PlusEq when t1 = Int && t2 = Float -> Floatd
-    | PlusEq when t1 = MatrixTyp && MatrixTyp -> MatrixTyp
+    (*| PlusEq when t1 = Float && Float -> Float*)
+    | PlusEq when t1 = Int && t2 = Float -> Float
+    (*| PlusEq when t1 = MatrixTyp && MatrixTyp -> MatrixTyp
     | PlusEq when t1 = MatrixTyp && Int -> MatrixTyp
     | PlusEq when t1 = MatrixTyp && Float -> MatrixTyp
-    | Less | Leq | Greater | Geq when t1 = Int && t2 = Int -> Bool
+   *) | Less | Leq | Greater | Geq when t1 = Int && t2 = Int -> Bool
     | Less | Leq | Greater | Geq when t1 = Float && t2 = Float -> Float
     | And | Or when t1 = Bool && t2 = Bool -> Bool
     | _ -> raise (Failure ("illegal binary operator " ^
@@ -292,12 +290,12 @@ let check_function func =
       (Failure ("illegal actual argument found " ^ string_of_typ et ^
         " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e))))
    fd.formals actuals;
-   fd.datatype
-  in
+   fd.typ
+  in 
 
   let check_bool_expr e =
     match (expr e) with
-      DataTyp(Bool) -> ()
+      Bool -> ()
     | _ -> raise (Failure ("expected Boolean expression in " ^ string_of_expr e))
   in
 
@@ -311,9 +309,9 @@ let check_function func =
   | [] -> ()
   in check_block sl
   | Expr e -> ignore (expr e)
-  | Return e -> let t = expr e in if t = func.datatype then () else
+  | Return e -> let t = expr e in if t = func.typ then () else
   raise (Failure ("return gives " ^ string_of_typ t ^ " expected " ^
-   string_of_typ func.datatype ^ " in " ^ string_of_expr e))
+   string_of_typ func.typ ^ " in " ^ string_of_expr e))
 
   | If(p, b1, b2) -> check_bool_expr p; stmt b1; stmt b2
   | For(e1, e2, e3, st) -> ignore (expr e1); check_bool_expr e2;
