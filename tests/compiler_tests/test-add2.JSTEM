@@ -1,0 +1,7 @@
+def float add(float x, float y){
+	return x + y;
+}
+
+def void main(){
+	print ( add(17.1, 25.1) );
+}

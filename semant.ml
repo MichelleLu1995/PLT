@@ -34,6 +34,7 @@ let check (globals, functions) =
     | (TupleTyp(Int, l1), TupleTyp(Int, l2)) -> if l1 == l2 then lvaluet else if l1 == 0 then lvaluet else raise err
     | (RowTyp(Int, l1), RowTyp(Int, l2)) -> if l1 == l2 then lvaluet else if l1 == 0 then lvaluet else raise err 
     | (RowTyp(Float, l1), RowTyp(Float, l2)) -> if l1 == l2 then lvaluet else if l1 == 0 then lvaluet else raise err
+    | (RowTyp(TupleTyp(Int, d1), l1), RowTyp(TupleTyp(Int, d2), l2)) -> if d1 == d2 && l1 == l2 then lvaluet else if l1 == 0 then lvaluet else raise err
     | (MatrixTyp(Int, r1, c1), MatrixTyp(Int, r2, c2)) -> if r1 == r2 && c1 == c2 then lvaluet else raise err
     | (MatrixTyp(Float, r1, c1), MatrixTyp(Float, r2, c2)) -> if r1 == r2 && c1 == c2 then lvaluet else raise err
     | (MatrixTyp(TupleTyp(Int, d1), r1, c1), MatrixTyp(TupleTyp(Int, d2), r2, c2)) -> if d1 == d2 && r1 == r2 && c1 == c2 then lvaluet else raise err
@@ -126,13 +127,25 @@ let check_function func =
     | _ -> raise (Failure ("illegal tuple literal"))
   in
 
-(*   let access_type = function
-      TupleTyp(p, _) -> DataType(p)
-    | _ -> raise (Failure ("illegal access type")) in *)
+  let tuple_access_type = function
+      TupleTyp(p, _) -> p
+    | _ -> raise (Failure ("illegal tuple access")) in
 
-  let matrix_acces_type = function
+  let row_access_type = function
+      RowTyp(r, _) -> r
+    | _ -> raise (Failure ("illegal row access")) in
+
+  let matrix_access_type = function
       MatrixTyp(t, _, _) -> t
     | _ -> raise (Failure ("illegal matrix access") ) in
+
+  let type_of_row r l =
+    match (List.hd (List.hd r)) with
+        IntLit _ -> RowTyp(Int, l)
+      | FloatLit _ -> RowTyp(Float, l)
+      | TupleLit t -> RowTyp((type_of_tuple) t, l)
+      | _ -> raise (Failure ("illegal row type"))
+  in
 
   let type_of_matrix m r c =
     match (List.hd (List.hd m)) with
@@ -177,20 +190,25 @@ let check_function func =
   | StringLit _ -> String
   | BoolLit _ -> Bool
   | Id s -> type_of_identifier s
+  (* | RowLit r -> type_of_row r (List.length r) (List.length (List.hd m)) *)
   | TupleLit t -> check_tuple_literal (type_of_tuple t) t 0
   | MatrixLit m -> type_of_matrix m (List.length m) (List.length (List.hd m))
-  (* | TupleAccess(s, e) -> let _ = (match (expr e) with
+  | RowAccess(s, e) -> let _ = (match (expr e) with
+                                    Int -> Int
+                                  | _ -> raise (Failure ("attempting to access with non-integer and non-float type"))) in
+                            row_access_type (type_of_identifier s)
+  | TupleAccess(s, e) -> let _ = (match (expr e) with
                                     Int -> Int
                                   | _ -> raise (Failure ("attempting to access with a non-integer type"))) in
-                         access_type (type_of_identifier s)
+                         tuple_access_type (type_of_identifier s)
   | MatrixAccess(s, e1, e2) -> let _ = (match (expr e1) with
                                           Int -> Int
                                         | _ -> raise (Failure ("attempting to access with a non-integer type")))
                                and _ = (match (expr e2) with
                                           Int -> Int
                                         | _ -> raise (Failure ("attempting to access with a non-integer type"))) in
-                               matrix_acces_type (type_of_identifier s)
-  | PointerIncrement(s) -> check_pointer_type (type_of_identifier s) *)
+                               matrix_access_type (type_of_identifier s)
+(*   | PointerIncrement(s) -> check_pointer_type (type_of_identifier s) *)
 (*   | RowLit(s) -> (match (type_of_identifier s) with
                   MatrixTyp(_, _, _) -> Int
                 | _ -> raise (Failure ("cannot get the rows of non-matrix datatype"))) *)
@@ -205,7 +223,8 @@ let check_function func =
   (match op with
       Add | Sub | Mult | Div when t1 = Int && t2 = Int -> Int
     | Add | Sub | Mult | Div when t1 = Float && t2 = Float -> Float
-    | Add | Sub | Mult | Div when t1 = Int && t2 = Float -> Float (*
+    | Add | Sub | Mult | Div when t1 = Int && t2 = Float -> Float
+    | Add | Sub | Mult | Div when t1 = Float && t2 = Int -> Float (*
     | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(Int,Int,Int) && t2 = MatrixTyp(Int,Int,Int) -> MatrixTyp(Int,Int,Int)
     | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(Float) && t2 = MatrixTyp(Float) -> MatrixTyp(Float)
     | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(Int) && t2 = MatrixTyp(Float) -> MatrixTyp(Float)
@@ -234,7 +253,15 @@ let check_function func =
       string_of_typ t ^ " in " ^ string_of_expr ex)))
   | Noexpr -> Void
   | Assign(e1, e2) as ex -> let lt = (match e1 with
-                                        (* TupleAccess(s, e) -> (match (expr e) with
+                                      | RowAccess(s, _) -> (match (type_of_identifier s) with
+                                                                      RowTyp(t, _) -> (match t with
+                                                                                                    Int -> Int
+                                                                                                  | Float -> Float
+                                                                                                  | _ -> raise ( Failure ("illegal row") )
+                                                                                                )
+                                                                      | _ -> raise ( Failure ("cannot access a primitive") )
+                                                                   )
+                                      | TupleAccess(s, e) -> (match (expr e) with
                                                                 Int -> (match (type_of_identifier s) with
                                                                                     TupleTyp(p, _) -> (match p with
                                                                                                           Int -> Int
@@ -251,10 +278,18 @@ let check_function func =
                                                                                                   | _ -> raise ( Failure ("illegal matrix of matrices") )
                                                                                                 )
                                                                       | _ -> raise ( Failure ("cannot access a primitive") )
-                                                                   ) *)
+                                                                   )
                                       | _ -> expr e1)
                             and rt = (match e2 with
-                                       (*  TupleAccess(s, e) -> (match (expr e) with
+                                      | RowAccess(s, _) -> (match (type_of_identifier s) with
+                                                                      RowTyp(t, _) -> (match t with
+                                                                                                    Int -> Int
+                                                                                                  | Float -> Float
+                                                                                                  | _ -> raise ( Failure ("illegal row") )
+                                                                                                )
+                                                                      | _ -> raise ( Failure ("cannot access a primitive") )
+                                                                   )
+                                      | TupleAccess(s, e) -> (match (expr e) with
                                                                 Int -> (match (type_of_identifier s) with
                                                                                     TupleTyp(p, _) -> (match p with
                                                                                                           Int -> Int
@@ -264,14 +299,14 @@ let check_function func =
                                                                 | _ -> raise ( Failure ("expression is not of datatype int") )
                                                              )
                                       | MatrixAccess(s, _, _) -> (match (type_of_identifier s) with
-                                                                      MatrixType(t, _, _) -> (match t with
+                                                                      MatrixTyp(t, _, _) -> (match t with
                                                                                                   Int -> Int
                                                                                                 | Float -> Float
                                                                                                 | TupleTyp(p, l) -> TupleTyp(p, l)
                                                                                                 | _ -> raise ( Failure ("illegal matrix of matrices") )
                                                                                               )
                                                                       | _ -> raise ( Failure ("cannot access a primitive") )
-                                                                   ) *)
+                                                                   )
                                       | _ -> expr e2) in
   check_assign lt rt (Failure ("illegal assignment " ^ string_of_typ lt ^
     " = " ^ string_of_typ rt ^ " in " ^
