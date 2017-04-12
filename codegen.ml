@@ -145,6 +145,13 @@ let function_decls =
 		L.build_load (L.build_gep (lookup s) [| i1; i2 |] s builder) s builder
 	in
 
+	let build_tuple_access s i1 i2 builder isAssign =
+	  if isAssign
+		then L.build_gep (lookup s) [| i1; i2 |] s builder
+	  else
+		L.build_load (L.build_gep (lookup s) [| i1; i2 |] s builder) s builder
+	in
+
     (* Construct code for an expression; return its value *)
     let rec expr builder = function
         A.IntLit i -> L.const_int i32_t i
@@ -161,6 +168,7 @@ let function_decls =
                               | _ -> raise ( UnsupportedMatrixType ))
       | A.RowLit r ->  L.const_array (get_row_type r) (Array.of_list (List.map (expr builder) r))
 	  | A.RowAccess(s, e1) -> let i1 = expr builder e1 in build_row_access s (L.const_int i32_t 0) i1 builder false
+	  | A.TupleAccess(s, e1) -> let i1 = expr builder e1 in build_tuple_access s (L.const_int i32_t 0) i1 builder false
       | A.Binop (e1, op, e2) -> 
         let e1' = expr builder e1
         and e2' = expr builder e2 in
