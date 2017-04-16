@@ -8,3 +8,5 @@ exception UnsupportedUnop
 
 exception IllegalAssignment
 exception UnsupportedReturnType
+
+exception IllegalPointerType

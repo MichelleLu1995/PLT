@@ -17,7 +17,9 @@ type typ =
   | RowTyp of typ * int
   | ColumnTyp of typ * int
   | TupleTyp of typ * int
-  | File  
+  | File
+  | RowPointer of typ
+  | MatrixPointer of typ
 
 type bind = typ * string
 
@@ -29,16 +31,15 @@ type expr = IntLit of int
   | TupleLit of expr list
   | MatrixLit of expr list list 
   | RowLit of expr list
+  (*| ColumnLit of expr list*)
   | Binop of expr * op * expr 
   | Unop of uop * expr
   | Assign of expr * expr 
   | Call of string * expr list
-  | RowAccess of string * int
-  | TupleAccess of string * int
-  | MatrixAccess of string * int * int
-  | MRowAccess of string * int
-  | MColumnAccess of string * int
   | Noexpr
+  | MatrixReference of string
+  | PointerIncrement of string
+  | Dereference of string
             
 type stmt = Block of stmt list 
   | Expr of expr 
@@ -98,7 +99,7 @@ in
 
 let string_of_row r =
   let rec string_of_row_literal = function
-	[] -> ""
+	[] -> "]"
   | [hd] -> (match hd with
 	  IntLit(i) -> string_of_int i
 	| FloatLit(f) -> string_of_float f
@@ -110,7 +111,23 @@ let string_of_row r =
 	| TupleLit(t) -> string_of_tuple t ^ ", "
 	| _ -> raise( Failure("Illegal expression in row primitive") )) ^ string_of_row_literal tl
 in
-"" ^ string_of_row_literal r
+"[" ^ string_of_row_literal r
+(*
+let string_of_column c =
+  let rec string_of_column_literal = function
+	[] -> "]"
+  | [hd] -> (match hd with
+	  IntLit(i) -> string_of_int i
+	| FloatLit(f) -> string_of_float f
+	| TupleLit(t) -> string_of_tuple t
+	| _ -> raise( Failure("Illegal expression in column primitive") )) ^ string_of_column_literal []
+  | hd :: tl -> (match hd with
+	  IntLit(i) -> string_of_int i ^ "| "
+	| FloatLit(f) -> string_of_float f ^ "| "
+	| TupleLit(t) -> string_of_tuple t ^ "| "
+	| _ -> raise( Failure("Illegal expression in column primitive") )) ^ string_of_column_literal tl
+in
+"[" ^ string_of_column_literal c*)
 
 let string_of_matrix m = 
  let rec string_of_matrix_literal = function
@@ -119,7 +136,7 @@ let string_of_matrix m =
                 RowLit(r) -> string_of_row r
               | _ -> raise( Failure("Illegal expression in matrix primitive") )) ^ string_of_matrix_literal []
     | hd::tl -> (match hd with
-                    RowLit(r) -> string_of_row r ^ " | "
+                    RowLit(r) -> string_of_row r ^ ", "
                   | _ -> raise( Failure("Illegal expression in matrix primitive") )) ^ string_of_matrix_literal tl
   in
   "{" ^ string_of_matrix_literal m
@@ -132,18 +149,14 @@ let rec string_of_expr = function
   | FloatLit(f) -> string_of_float f 
   | MatrixLit(_)-> "matrix literal"
   | TupleLit(t) -> string_of_tuple t 
-  | RowLit(r) -> "[" ^ string_of_row r ^ "]" (* check this *)
+  | RowLit(r) -> string_of_row r 
+  (*| ColumnLit(c) -> string_of_column c*)
   | Binop(e1, o, e2) ->
       string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
   | Unop(o, e) -> string_of_uop o ^ string_of_expr e
   | Assign(v, e) -> string_of_expr v ^ " = " ^ string_of_expr e
   | Call(f, el) ->
       f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
-  | RowAccess(r, i) -> r ^ "[" ^ string_of_int i ^ "]"
-  | TupleAccess(t, i) -> t ^ "(%" ^ string_of_int i ^ "%)"
-  | MatrixAccess(m, i1, i2) -> m ^ "[" ^ string_of_int i1 ^ "][" ^ string_of_int i2 ^ "]"
-  | MRowAccess(r, i) -> r ^ "[" ^ string_of_int i ^ "][:]"
-  | MColumnAccess(c, i) -> c ^ "[:][" ^ string_of_int i ^ "]"
   | Noexpr -> ""
 
 let rec string_of_stmt = function
@@ -169,20 +182,28 @@ let string_of_typ = function
                         Int -> "int" ^ "[" ^ string_of_int l1 ^ "][" ^ string_of_int l2 ^ "]"
                       | Float -> "float" ^ "[" ^ string_of_int l1 ^ "][" ^ string_of_int l2 ^ "]" 
                       | TupleTyp(x, l) -> (match x with 
-                                          Int -> "int" ^ "(%" ^ string_of_int l ^ "%)"
+                                          Int -> "int" ^ "(" ^ string_of_int l ^ ")"
 										| _ -> raise( Failure("Illegal expression in tuple primitive") ))
 					  | _ -> raise( Failure("Illegal expression in matrix primitive")))
   | TupleTyp(x, l) -> (match x with 
-                      Int -> "int" ^ "(%" ^ string_of_int l ^ "%)" 
+                      Int -> "int" ^ "(" ^ string_of_int l ^ ")" 
 					 | _ -> raise( Failure("Illegal expression in tuple primitive")))
   | RowTyp(r, l1) -> (match r with 
                       Int -> "int" ^ "[" ^ string_of_int l1 ^ "]"
                      | Float -> "float" ^ "[" ^ string_of_int l1 ^ "]" 
                      | TupleTyp(x, l) -> (match x with 
-                                          Int -> "int" ^ "(%" ^ string_of_int l ^ "%)"
+                                          Int -> "int" ^ "(" ^ string_of_int l ^ ")"
 										| _ -> raise( Failure("Illegal expression in tuple primitive") ))
 					 | _ -> raise( Failure("Illegal expression in row primitive")))
 
+  (*| ColumnTyp(c, l1) -> (match c with 
+                       Int -> "int" ^ "[" ^ string_of_int l1 ^ "]"
+                     | Float -> "float" ^ "[" ^ string_of_int l1 ^ "]" 
+                     | TupleTyp(x, l) -> (match x with 
+                                          Int -> "int" ^ "(" ^ string_of_int l ^ ")"
+										| _ -> raise( Failure("Illegal expression in tuple primitive") ))
+					 | _ -> raise( Failure("Illegal expression in column primitive")))*)
+  (*| File*) 
   | _ -> raise( Failure("Illegal expression in string_of_typ"))
   
 
