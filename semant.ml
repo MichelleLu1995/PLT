@@ -56,7 +56,7 @@ let check (globals, functions) =
   if List.mem "print" (List.map (fun fd -> fd.fname) functions)
   then raise (Failure ("function print may not be defined")) else ();
 
-(*   if List.mem "prints" (List.map (fun fd -> fd.fname) functions)
+  if List.mem "prints" (List.map (fun fd -> fd.fname) functions)
   then raise (Failure ("function print may not be defined")) else ();
 
   if List.mem "printb" (List.map (fun fd -> fd.fname) functions)
@@ -64,32 +64,20 @@ let check (globals, functions) =
 
   if List.mem "printf" (List.map (fun fd -> fd.fname) functions)
   then raise (Failure ("function print may not be defined")) else ();
- *)
+
   report_duplicate (fun n -> "duplicate function " ^ n)
   (List.map (fun fd -> fd.fname) functions);
-
- let formal f =  match f with
-          [(Int, "x")] -> [(Int, "x")]
-        | [(Float, "x")] -> [(Float, "x")]
-        | [(String, "x")] -> [(String, "x")]
-        | [(Bool, "x")] -> [(Bool, "x")]
-        | _ ->  raise (Failure ("illegal print type"))
-  in
 
   let built_in_decls = StringMap.add "print"
 	{ typ = Void; fname = "print"; formals = [(Int, "x")]; 
 	  locals = []; body = [] } (StringMap.add "printf"
-  { typ = Void; fname = "print"; formals = [(Float, "x")];
+  { typ = Void; fname = "printf"; formals = [(Float, "x")];
     locals = []; body = [] } (StringMap.add "prints"
-  { typ = Void; fname = "print"; formals = [(String, "x")];
+  { typ = Void; fname = "prints"; formals = [(String, "x")];
     locals = []; body = [] } (StringMap.singleton "printb" 
-  { typ = Void; fname = "print"; formals = [(Bool, "x")];
+  { typ = Void; fname = "printb"; formals = [(Bool, "x")];
 	  locals = []; body = [] })))
 in
-
-(* let built_in_decls = StringMap.add "print"
-  { typ = Void; fname = "print"; formals = formal; locals = []; body = [] }
-in *)
 
 let function_decls = 
 	List.fold_left (fun m fd -> StringMap.add fd.fname fd m) built_in_decls functions
@@ -104,12 +92,6 @@ let _ = function_decl "main" in
 (* A function that is used to check each function *)
 let check_function func =
 
-  (* let rec print_list = function
-  [] -> ()
-  | e::l -> print_string e ; print_string " " ; print_list func.formals
-
-  in
-   *)(* List.iter(fun j -> "type" ^ string_of_typ j ^ "\n" ) func.formals; *)
 
 	List.iter(check_not_void (fun n -> 
 		"Illegal void formal " ^ n ^ " in " ^ func.fname)) func.formals;
@@ -158,7 +140,7 @@ let check_function func =
     | _ -> raise (Failure ("illegal matrix access") ) in
 
   let type_of_row r l =
-    match (List.hd (List.hd r)) with
+	match (List.hd r) with
         IntLit _ -> RowTyp(Int, l)
       | FloatLit _ -> RowTyp(Float, l)
       | TupleLit t -> RowTyp((type_of_tuple) t, l)
@@ -208,12 +190,12 @@ let check_function func =
   | StringLit _ -> String
   | BoolLit _ -> Bool
   | Id s -> type_of_identifier s
-  | RowLit r -> type_of_row r (List.length r) (List.length (List.hd r))
+  | RowLit r -> type_of_row r (List.length r)
   | TupleLit t -> check_tuple_literal (type_of_tuple t) t 0
   | MatrixLit m -> type_of_matrix m (List.length m) (List.length (List.hd m))
   | RowAccess(s, e) -> let _ = (match (expr e) with
                                     Int -> Int
-                                  | _ -> raise (Failure ("attempting to access with non-integer type"))) in
+                                  | _ -> raise (Failure ("attempting to access with non-integer and non-float type"))) in
                             row_access_type (type_of_identifier s)
   | TupleAccess(s, e) -> let _ = (match (expr e) with
                                     Int -> Int
@@ -334,13 +316,12 @@ let check_function func =
    raise (Failure ("expecting " ^ string_of_int
      (List.length fd.formals) ^ " arguments in " ^ string_of_expr call))
   else
-    (* List.iter(fun j -> print_string (string_of_typ (fst j)); print_string " ") fd.formals; *)
-    List.iter2 (fun (ft, _) e -> let et = expr e in
+   List.iter2 (fun (ft, _) e -> let et = expr e in
     ignore (check_assign ft et
       (Failure ("illegal actual argument found " ^ string_of_typ et ^
         " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e))))
-   fd.formals actuals;  
-    fd.typ
+   fd.formals actuals;
+   fd.typ
   in 
 
   let check_bool_expr e =
@@ -374,3 +355,4 @@ let check_function func =
 
   in
   List.iter check_function functions
+
