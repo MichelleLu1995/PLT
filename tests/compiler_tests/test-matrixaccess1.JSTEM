@@ -1,0 +1,16 @@
+def int main() {
+	int[3][3] m;
+	int i;
+	int j;
+	for(i=0; i<3; i=i+1) {
+		for (j=0; j<3; j=j+1) {
+			m[i][j] = i * j;
+		}
+	}	
+
+	for(i=0; i<3; i=i+1) {
+		for (j=0; j<3; j=j+1) {
+			print(m[i][j]);
+		}
+	}
+}
