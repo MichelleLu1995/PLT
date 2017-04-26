@@ -74,14 +74,14 @@ let translate (globals, functions) =
   let printf_func = L.declare_function "printf" printf_t the_module in
 
   (* Declare C functions for file inegration *)
-  (*let open_ty = L.function_type i32_t [| (L.pointer_type i8_t); i32_t |] in
-  let open_func = L.declare_function "open" open_ty the_module in 
+  let open_ty = L.function_type (pointer_t i8_t) [| (pointer_t i8_t) ; L.pointer_type i8_t |] in
+  let open_func = L.declare_function "fopen" open_ty the_module in 
   let close_ty = L.function_type i32_t [| i32_t |] in
-  let close_func = L.declare_function "close" close_ty the_module in
-  let read_ty = L.function_type i32_t [| i32_t; L.pointer_type i8_t; i32_t |] in 
-  let read_func = L.declare_function "read" read_ty the_module in
-  let write_ty = L.function_type i32_t [| i32_t; L.pointer_type i8_t; i32_t |] in
-  let write_func = L.declare_function "write" write_ty the_module in*)
+  let close_func = L.declare_function "fclose" close_ty the_module in
+  let read_ty = L.function_type i32_t [| (pointer_t i8_t); i32_t; i32_t; (pointer_t i8_t)|] in 
+  let read_func = L.declare_function "fread" read_ty the_module in
+  let fwrite_ty = L.function_type i32_t [| (pointer_t i8_t); i32_t; i32_t; (pointer_t i8_t)|] in
+  let fwrite_func = L.declare_function "fwrite" fwrite_ty the_module in
 
   (* Define each function (arguments and return type) so we can call it *)
 let function_decls =
@@ -357,10 +357,12 @@ let function_decls =
                       | _ -> raise (IllegalAssignment))
                              and e2' = expr builder e2 in
                      ignore (L.build_store e2' e1' builder); e2' 
-      (*| A.Call ("open", [e])
-      | A.Call ("write", [e])
-      | A.Call ("close", [e])
-      | A.Call ("read", [e])*)
+      | A.Call("open", e) -> let actuals = List.rev (List.map (expr builder) (List.rev e)) in
+            L.build_call open_func (Array.of_list actuals) "fopen" builder
+      | A.Call("write", e) -> let actuals = List.rev (List.map (expr builder) (List.rev e)) in
+            L.build_call fwrite_func (Array.of_list actuals) "tmpy" builder 
+      | A.Call("read", e) -> let actuals = List.rev (List.map (expr builder) (List.rev e)) in
+            L.build_call read_func (Array.of_list actuals) "tmpx" builder
       | A.Call ("print", [e]) | A.Call ("printb", [e]) ->
     L.build_call printf_func [| int_format_str ; (expr builder e) |]
       "printf" builder

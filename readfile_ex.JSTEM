@@ -1,8 +1,7 @@
-def void main() {
+def int main() {
 
-	prints("Testing File Reading Feature\n");
-
-	open("tree_1.ppm",2);
+    prints(open("file.txt","r"));
+	return 0;
 
 }
 
