@@ -1,4 +1,4 @@
-def void main() {
+def int main() {
 	int[5] r;
 	int i;
 	for (i=0; i<5; i=i+1) {

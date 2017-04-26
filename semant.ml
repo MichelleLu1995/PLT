@@ -69,15 +69,28 @@ let check (globals, functions) =
   (List.map (fun fd -> fd.fname) functions);
 
   let built_in_decls = StringMap.add "print"
-	{ typ = Void; fname = "print"; formals = [(Int, "x")]; 
-	  locals = []; body = [] } (StringMap.add "printf"
+  { typ = Void; fname = "print"; formals = [(Int, "x")]; 
+    locals = []; body = [] } (StringMap.add "printf"
   { typ = Void; fname = "printf"; formals = [(Float, "x")];
     locals = []; body = [] } (StringMap.add "prints"
   { typ = Void; fname = "prints"; formals = [(String, "x")];
-    locals = []; body = [] } (StringMap.singleton "printb" 
+    locals = []; body = [] } (StringMap.add "printb" 
   { typ = Void; fname = "printb"; formals = [(Bool, "x")];
-	  locals = []; body = [] })))
+    locals = []; body = [] } (StringMap.add "open"
+  { typ = String; fname = "open"; formals = [(String, "x"); (String,"y")];
+    locals = []; body = [] } (StringMap.add "read"
+  { typ = String; fname = "read"; formals = [(String,"w"); (Int, "x"); (Int, "y"); (String, "z")];
+    locals = []; body = [] } (StringMap.add "write"
+  { typ = Int; fname = "write"; formals = [(String, "w"); (Int,"x"); (Int,"y"); (String, "z")];
+    locals = []; body = [] } (StringMap.add "close"
+  { typ = Void; fname = "close"; formals = [(String, "x")];
+    locals = []; body = [] } (StringMap.add "fget"
+  { typ = String; fname = "fget"; formals = [(String,"x");(Int,"y");(String, "z")];
+    locals = []; body = [] } (StringMap.singleton "len"
+  { typ = Int; fname = "len"; formals = [(String, "x")];
+    locals = []; body = [] } )))))))))
 in
+
 
 let function_decls = 
 	List.fold_left (fun m fd -> StringMap.add fd.fname fd m) built_in_decls functions
@@ -139,6 +152,10 @@ let check_function func =
       MatrixTyp(t, _, _) -> t
     | _ -> raise (Failure ("illegal matrix access") ) in
 
+  let mrow_access_type = function
+	  MatrixTyp(t, _, c) -> RowTyp(t, c)
+	| _ -> raise (Failure ("illegal matrix access") ) in
+
   let type_of_row r l =
 	match (List.hd r) with
         IntLit _ -> RowTyp(Int, l)
@@ -187,7 +204,8 @@ let check_function func =
   let rec expr = function
     IntLit _ -> Int
   | FloatLit _ -> Float
-  | StringLit _ -> String
+  | StringLit _ -> String 
+  | CharLit _ -> Char
   | BoolLit _ -> Bool
   | Id s -> type_of_identifier s
   | RowLit r -> type_of_row r (List.length r)
@@ -208,6 +226,10 @@ let check_function func =
                                           Int -> Int
                                         | _ -> raise (Failure ("attempting to access with a non-integer type"))) in
                                matrix_access_type (type_of_identifier s)
+  | MRowAccess(s, e) -> let _ = (match (expr e) with
+									Int -> Int
+								  | _ -> raise (Failure ("attempting to access with non-integer type"))) in
+							mrow_access_type (type_of_identifier s)
 (*   | PointerIncrement(s) -> check_pointer_type (type_of_identifier s) *)
 (*   | RowLit(s) -> (match (type_of_identifier s) with
                   MatrixTyp(_, _, _) -> Int
@@ -347,7 +369,8 @@ let check_function func =
   | If(p, b1, b2) -> check_bool_expr p; stmt b1; stmt b2
   | For(e1, e2, e3, st) -> ignore (expr e1); check_bool_expr e2;
   ignore (expr e3); stmt st
-  | MFor(e1, e2, s) -> ignore (expr e1); ignore (expr e2); stmt s
+  (*| MFor(e1, e2, s) -> ignore (expr e1); ignore (expr e2); stmt s*)
+  | MFor(s1, s2, s) -> type_of_identifier s1; type_of_identifier s2; stmt s
   | While(p, s) -> check_bool_expr p; stmt s
   in
 
