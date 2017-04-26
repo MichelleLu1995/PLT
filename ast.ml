@@ -7,6 +7,7 @@ type typ =
 	Int
   | Float
   | String 
+  | Char
   | Bool
   | Void  
   | Tuple
@@ -17,7 +18,6 @@ type typ =
   | RowTyp of typ * int
   | ColumnTyp of typ * int
   | TupleTyp of typ * int
-  | File
   | RowPointer of typ
   | MatrixPointer of typ
 
@@ -26,6 +26,7 @@ type bind = typ * string
 type expr = IntLit of int 
   | Id of string
   | StringLit of string
+  | CharLit of char
   | BoolLit of bool
   | FloatLit of float
   | TupleLit of expr list
@@ -151,6 +152,7 @@ let rec string_of_expr = function
     IntLit(i) -> string_of_int i
   | BoolLit(b) -> string_of_bool b
   | StringLit(s) -> s
+  | CharLit(s) -> Char.escaped s
   | Id(i) -> i
   | FloatLit(f) -> string_of_float f 
   | MatrixLit(_)-> "matrix literal"
@@ -191,6 +193,7 @@ let string_of_typ = function
   | Void -> "void"
   | Float -> "float"
   | String -> "string"
+  | Char -> "char"
   | MatrixTyp(t, l1, l2) -> (match t with 
                         Int -> "int" ^ "[" ^ string_of_int l1 ^ "][" ^ string_of_int l2 ^ "]"
                       | Float -> "float" ^ "[" ^ string_of_int l1 ^ "][" ^ string_of_int l2 ^ "]" 

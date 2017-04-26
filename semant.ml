@@ -69,15 +69,28 @@ let check (globals, functions) =
   (List.map (fun fd -> fd.fname) functions);
 
   let built_in_decls = StringMap.add "print"
-	{ typ = Void; fname = "print"; formals = [(Int, "x")]; 
-	  locals = []; body = [] } (StringMap.add "printf"
+  { typ = Void; fname = "print"; formals = [(Int, "x")]; 
+    locals = []; body = [] } (StringMap.add "printf"
   { typ = Void; fname = "printf"; formals = [(Float, "x")];
     locals = []; body = [] } (StringMap.add "prints"
   { typ = Void; fname = "prints"; formals = [(String, "x")];
-    locals = []; body = [] } (StringMap.singleton "printb" 
+    locals = []; body = [] } (StringMap.add "printb" 
   { typ = Void; fname = "printb"; formals = [(Bool, "x")];
-	  locals = []; body = [] })))
+    locals = []; body = [] } (StringMap.add "open"
+  { typ = String; fname = "open"; formals = [(String, "x"); (String,"y")];
+    locals = []; body = [] } (StringMap.add "read"
+  { typ = String; fname = "read"; formals = [(String,"w"); (Int, "x"); (Int, "y"); (String, "z")];
+    locals = []; body = [] } (StringMap.add "write"
+  { typ = Int; fname = "write"; formals = [(String, "w"); (Int,"x"); (Int,"y"); (String, "z")];
+    locals = []; body = [] } (StringMap.add "close"
+  { typ = Void; fname = "close"; formals = [(String, "x")];
+    locals = []; body = [] } (StringMap.add "fget"
+  { typ = String; fname = "fget"; formals = [(String,"x");(Int,"y");(String, "z")];
+    locals = []; body = [] } (StringMap.singleton "len"
+  { typ = Int; fname = "len"; formals = [(String, "x")];
+    locals = []; body = [] } )))))))))
 in
+
 
 let function_decls = 
 	List.fold_left (fun m fd -> StringMap.add fd.fname fd m) built_in_decls functions
@@ -191,7 +204,8 @@ let check_function func =
   let rec expr = function
     IntLit _ -> Int
   | FloatLit _ -> Float
-  | StringLit _ -> String
+  | StringLit _ -> String 
+  | CharLit _ -> Char
   | BoolLit _ -> Bool
   | Id s -> type_of_identifier s
   | RowLit r -> type_of_row r (List.length r)

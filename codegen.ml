@@ -35,6 +35,7 @@ let translate (globals, functions) =
     | A.Void -> void_t
     | A.Float -> float_t
     | A.String -> pointer_t i8_t
+    | A.Char -> i8_t
     | A.MatrixTyp(typ, size1, size2) -> (match typ with
                                       A.Int    -> array_t (array_t i32_t size2) size1
                                     | A.Float  -> array_t (array_t float_t size2) size1
@@ -73,15 +74,22 @@ let translate (globals, functions) =
   let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
   let printf_func = L.declare_function "printf" printf_t the_module in
 
+  let prints_t = L.var_arg_function_type (pointer_t i8_t) [|L.pointer_type i8_t|] in
+  let prints_func = L.declare_function "puts" prints_t the_module in
+
   (* Declare C functions for file inegration *)
-  (*let open_ty = L.function_type i32_t [| (L.pointer_type i8_t); i32_t |] in
-  let open_func = L.declare_function "open" open_ty the_module in 
-  let close_ty = L.function_type i32_t [| i32_t |] in
-  let close_func = L.declare_function "close" close_ty the_module in
-  let read_ty = L.function_type i32_t [| i32_t; L.pointer_type i8_t; i32_t |] in 
-  let read_func = L.declare_function "read" read_ty the_module in
-  let write_ty = L.function_type i32_t [| i32_t; L.pointer_type i8_t; i32_t |] in
-  let write_func = L.declare_function "write" write_ty the_module in*)
+  let open_ty = L.function_type (pointer_t i8_t) [| (pointer_t i8_t) ; L.pointer_type i8_t |] in
+  let open_func = L.declare_function "fopen" open_ty the_module in 
+  let close_ty = L.function_type i32_t [| (pointer_t i8_t) |] in
+  let close_func = L.declare_function "fclose" close_ty the_module in
+  let read_ty = L.function_type i32_t [| (pointer_t i8_t); i32_t; i32_t; (pointer_t i8_t)|] in 
+  let read_func = L.declare_function "fread" read_ty the_module in
+  let get_ty = L.function_type (pointer_t i8_t) [| (pointer_t i8_t); i32_t; (pointer_t i8_t)|] in 
+  let get_func = L.declare_function "fgets" get_ty the_module in
+  let fwrite_ty = L.function_type i32_t [| (pointer_t i8_t); i32_t; i32_t; (pointer_t i8_t)|] in
+  let fwrite_func = L.declare_function "fwrite" fwrite_ty the_module in
+  let strlen_t = L.function_type i32_t [| (pointer_t i8_t) |] in
+  let strlen_func = L.declare_function "strlen" strlen_t the_module in
 
   (* Define each function (arguments and return type) so we can call it *)
 let function_decls =
@@ -97,8 +105,9 @@ let function_decls =
   let build_function_body fdecl =
     let (the_function, _) = StringMap.find fdecl.A.fname function_decls in
     let builder = L.builder_at_end context (L.entry_block the_function) in
-    let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder
-    and float_format_str = L.build_global_stringptr "%f\n" "fmt" builder in
+    let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in
+    let float_format_str = L.build_global_stringptr "%f\n" "fmt" builder in
+    let char_format_str = L.build_global_stringptr "%c\n" "fmt" builder in
     
     (* Construct the function's "locals": formal arguments and locally
        declared variables.  Allocate each on the stack, initialize their
@@ -203,7 +212,8 @@ let function_decls =
         A.IntLit i -> L.const_int i32_t i
       | A.FloatLit f -> L.const_float float_t f
       | A.BoolLit b -> L.const_int i1_t (if b then 1 else 0)
-      | A.StringLit s -> L.const_string context s
+      | A.StringLit s -> L.build_global_stringptr s "string" builder
+      | A.CharLit c -> L.const_int i8_t (Char.code c)
       | A.Noexpr -> L.const_int i32_t 0
       | A.Id s -> L.build_load (lookup s) s builder
       | A.TupleLit t -> L.const_array (get_tuple_type t) (Array.of_list (List.map (expr builder) t))
@@ -357,19 +367,30 @@ let function_decls =
                       | _ -> raise (IllegalAssignment))
                              and e2' = expr builder e2 in
                      ignore (L.build_store e2' e1' builder); e2' 
-      (*| A.Call ("open", [e])
-      | A.Call ("write", [e])
-      | A.Call ("close", [e])
-      | A.Call ("read", [e])*)
+      | A.Call("open", e) -> 
+            L.build_call open_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "fopen" builder
+      | A.Call("close", e) -> 
+            L.build_call close_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "fclose" builder
+      | A.Call("write", e) -> 
+            L.build_call fwrite_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "tmpy" builder 
+      | A.Call("read", e) -> 
+            L.build_call read_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "tmpx" builder
+      | A.Call("fget",e) -> 
+            L.build_call get_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "tmpz" builder
+      | A.Call("len", e) -> 
+            L.build_call strlen_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "len" builder
       | A.Call ("print", [e]) | A.Call ("printb", [e]) ->
     L.build_call printf_func [| int_format_str ; (expr builder e) |]
       "printf" builder
       | A.Call ("printf", [e]) ->
     L.build_call printf_func [| float_format_str ; (expr builder e) |]
       "printf" builder
-      | A.Call ("prints", [e]) -> let get_string = function A.StringLit s -> s | _ -> "" in
-      let s_ptr = L.build_global_stringptr ((get_string e)) ".str" builder in
-    L.build_call printf_func [| s_ptr |] "printf" builder
+      | A.Call("print_c",[e]) ->
+    L.build_call printf_func [| char_format_str; (expr builder e)|]
+      "printf" builder
+      | A.Call("prints",[e]) -> 
+    L.build_call prints_func [|(expr builder e)|] 
+      "puts" builder
       | A.Call (f, act) ->
          let (fdef, fdecl) = StringMap.find f function_decls in
    let actuals = List.rev (List.map (expr builder) (List.rev act)) in
