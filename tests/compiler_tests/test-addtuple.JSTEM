@@ -9,6 +9,6 @@ def void main() {
 	t3 = t1 + t2;
 
 	for (i=0; i<3; i=i+1) {
-		print(t3(%j%));
+		print(t3(%i%));
 	}
 }
