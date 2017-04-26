@@ -1,4 +1,0 @@
-def int main() {
-	print(5.0);
-
-}
