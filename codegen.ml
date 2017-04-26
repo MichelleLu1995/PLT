@@ -73,6 +73,16 @@ let translate (globals, functions) =
   let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
   let printf_func = L.declare_function "printf" printf_t the_module in
 
+  (* Declare C functions for file inegration *)
+  (*let open_ty = L.function_type i32_t [| (L.pointer_type i8_t); i32_t |] in
+  let open_func = L.declare_function "open" open_ty the_module in 
+  let close_ty = L.function_type i32_t [| i32_t |] in
+  let close_func = L.declare_function "close" close_ty the_module in
+  let read_ty = L.function_type i32_t [| i32_t; L.pointer_type i8_t; i32_t |] in 
+  let read_func = L.declare_function "read" read_ty the_module in
+  let write_ty = L.function_type i32_t [| i32_t; L.pointer_type i8_t; i32_t |] in
+  let write_func = L.declare_function "write" write_ty the_module in*)
+
   (* Define each function (arguments and return type) so we can call it *)
 let function_decls =
     let function_decl m fdecl =
@@ -83,12 +93,12 @@ let function_decls =
       StringMap.add name (L.define_function name ftype the_module, fdecl) m in
     List.fold_left function_decl StringMap.empty functions in
 
+
   (* Fill in the body of the given function *)
   let build_function_body fdecl =
     let (the_function, _) = StringMap.find fdecl.A.fname function_decls in
     let builder = L.builder_at_end context (L.entry_block the_function) in
-
-    let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder 
+    let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder
     and float_format_str = L.build_global_stringptr "%f\n" "fmt" builder in
     
     (* Construct the function's "locals": formal arguments and locally
@@ -160,6 +170,28 @@ let function_decls =
       | A.TupleLit _ -> ltype_of_typ (A.Tuple)
       | _ -> raise (UnsupportedRowType) in
 
+	let build_row_access s i1 i2 builder isAssign =
+	  if isAssign
+		then L.build_gep (lookup s) [| i1; i2 |] s builder
+	  else
+		L.build_load (L.build_gep (lookup s) [| i1; i2 |] s builder) s builder
+	in
+
+	let build_tuple_access s i1 i2 builder isAssign =
+	  if isAssign
+		then L.build_gep (lookup s) [| i1; i2 |] s builder
+	  else
+		L.build_load (L.build_gep (lookup s) [| i1; i2 |] s builder) s builder
+	in
+
+	let build_matrix_access s i1 i2 i3 builder isAssign =
+	  if isAssign
+		then L.build_gep (lookup s) [| i1; i2; i3|] s builder
+	  else
+		L.build_load (L.build_gep (lookup s) [| i1; i2; i3 |] s builder) s builder
+	in
+
+
     (* Construct code for an expression; return its value *)
     let rec expr builder = function
         A.IntLit i -> L.const_int i32_t i
@@ -176,6 +208,9 @@ let function_decls =
                               | _ -> raise ( UnsupportedMatrixType ))
       | A.MatrixReference (s) -> build_matrix_argument s builder
       | A.RowLit r ->  L.const_array (get_row_type r) (Array.of_list (List.map (expr builder) r))
+  	  | A.RowAccess(s, e1) -> let i1 = expr builder e1 in build_row_access s (L.const_int i32_t 0) i1 builder false
+	    | A.TupleAccess(s, e1) -> let i1 = expr builder e1 in build_tuple_access s (L.const_int i32_t 0) i1 builder false
+	    | A.MatrixAccess(s, e1, e2) -> let i1 = expr builder e1 and i2 = expr builder e2 in build_matrix_access s (L.const_int i32_t 0) i1 i2 builder false
       | A.PointerIncrement (s) -> build_pointer_increment s builder false
       | A.Dereference (s) -> build_pointer_dereference s builder false
       | A.Binop (e1, op, e2) -> 
@@ -304,13 +339,21 @@ let function_decls =
         build_ops_with_type e'_type 
       | A.Assign (e1, e2) -> let e1' = (match e1 with
                                             A.Id s -> lookup s
+										  | A.RowAccess(s, e1) -> let i1 = expr builder e1 in build_row_access s (L.const_int i32_t 0) i1 builder true
+										  | A.TupleAccess(s, e1) -> let i1 = expr builder e1 in build_tuple_access s (L.const_int i32_t 0) i1 builder true
+										  | A.MatrixAccess(s, e1, e2) -> let i1 = expr builder e1 and i2 = expr builder e2 in build_matrix_access s (L.const_int i32_t 0) i1 i2 builder true
                                           | A.PointerIncrement(s) -> build_pointer_increment s builder true
                                           | A.Dereference(s) -> build_pointer_dereference s builder true
                                           (* with
                                           | _ -> failwith "Unknown" *)
+
                                           | _ -> raise (IllegalAssignment))
                              and e2' = expr builder e2 in
                      ignore (L.build_store e2' e1' builder); e2' 
+      (*| A.Call ("open", [e])
+      | A.Call ("write", [e])
+      | A.Call ("close", [e])
+      | A.Call ("read", [e])*)
       | A.Call ("print", [e]) | A.Call ("printb", [e]) ->
     L.build_call printf_func [| int_format_str ; (expr builder e) |]
       "printf" builder

@@ -59,12 +59,10 @@ rule token = parse
 | "return" { RETURN }
 | "int"    { INT }
 | "bool"   { BOOL }
-| "string" { STRING }
 | "float"  { FLOAT }
 | "void"   { VOID }
 | "mx"     { MATRIX }
 | "row"    { ROW }
-| "column" { COLUMN }
 | "file"   { FILE }
 | "tuple"  { TUPLE }
 | "def"    { DEF }

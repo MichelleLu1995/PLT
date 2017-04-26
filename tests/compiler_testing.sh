@@ -79,7 +79,7 @@ Check() {
     Run "$JSTEM -c"  $1 "$SL >" "${basename}.ll" &&
     Run "$LLC" "-filetype=obj" "${basename}.ll" ">" "${basename}.o" &&
     Run "$GPP" "${basename}.o" ">" "a.out" &&
-    Run "./a.out" ">" "${basename}.out" &&
+    Run "./a.out > ${basename}.out" &&
     Compare ${basename}.out ${reffile}.out ${basename}.diff
 
     # Report the status and clean up the generated files
@@ -170,7 +170,7 @@ for file in $pfiles
 do
 	Check $file 2>> $globallog
 done
-printf "\n"
+printf "\n\n"
 for file in $ffiles
 do
     CheckFail $file 2>> $globallog

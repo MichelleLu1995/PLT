@@ -4,6 +4,7 @@ module StringMap = Map.Make(String)
 
 (* Semantic checking of a program. Returns void if successful,
    throws an exception if something is wrong.
+
    Check each global variable, then check each function *)
 
 let check (globals, functions) =
@@ -160,18 +161,22 @@ let check_function func =
     | MatrixTuplePointerType(t) -> MatrixTuplePointerType(t)
     | _ -> raise ( Failure ("cannot increment a non-pointer type") )
   in
+
   let check_tuple_pointer_type = function
       TupleType(p, _) -> TuplePointerType(p)
     | _ -> raise ( Failure ("cannot reference a non-tuple pointer type"))
   in
+
   let check_matrix_pointer_type = function
       MatrixType(DataType(p), _, _) -> MatrixPointerType(p)
     | _ -> raise ( Failure ("cannot reference a non-matrix pointer type"))
   in
+
   let check_matrix_tuple_pointer_type = function
       MatrixType(TupleType(p, _), _, _) -> MatrixTuplePointerType(p)
     | _ -> raise ( Failure ("cannot reference a non-matrix-tuple pointer type"))
   in
+
   let pointer_type = function
     | TuplePointerType(p) -> DataType(p)
     | MatrixPointerType(p) -> DataType(p)
@@ -350,3 +355,4 @@ let check_function func =
 
   in
   List.iter check_function functions
+>>>>>>> 5ae40e2cacef34190b556e5ce2f66a771fb1e09c

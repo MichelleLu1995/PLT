@@ -36,6 +36,11 @@ type expr = IntLit of int
   | Unop of uop * expr
   | Assign of expr * expr 
   | Call of string * expr list
+  | RowAccess of string * expr
+  | TupleAccess of string * expr
+  | MatrixAccess of string * expr * expr
+  | MRowAccess of string * expr
+  | MColumnAccess of string * expr
   | Noexpr
   | MatrixReference of string
   | PointerIncrement of string
@@ -157,6 +162,11 @@ let rec string_of_expr = function
   | Assign(v, e) -> string_of_expr v ^ " = " ^ string_of_expr e
   | Call(f, el) ->
       f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
+  | RowAccess(r, e) -> r ^ "[" ^ string_of_expr e ^ "]"
+  | TupleAccess(t, e) -> t ^ "(%" ^ string_of_expr e ^ "%)"
+  | MatrixAccess(m, e1, e2) -> m ^ "[" ^ string_of_expr e1 ^ "][" ^ string_of_expr e2 ^ "]"
+  | MRowAccess(r, e) -> r ^ "[" ^ string_of_expr e ^ "][:]"
+  | MColumnAccess(c, e) -> c ^ "[:][" ^ string_of_expr e ^ "]"
   | Noexpr -> ""
 
 let rec string_of_stmt = function
@@ -178,6 +188,7 @@ let string_of_typ = function
   | Bool -> "bool"
   | Void -> "void"
   | Float -> "float"
+  | String -> "string"
   | MatrixTyp(t, l1, l2) -> (match t with 
                         Int -> "int" ^ "[" ^ string_of_int l1 ^ "][" ^ string_of_int l2 ^ "]"
                       | Float -> "float" ^ "[" ^ string_of_int l1 ^ "][" ^ string_of_int l2 ^ "]" 

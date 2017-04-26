@@ -5,13 +5,12 @@ open Ast
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA BAR COLON LSQBRACE RSQBRACE LPERCENT RPERCENT LMPERCENT RMPERCENT
 %token PLUS MINUS TIMES DIVIDE ASSIGN NOT MPLUS MMINUS MTIMES MDIVIDE PLUSEQ
 %token EQ NEQ LT LEQ GT GEQ AND OR MEQ
-
 %token TRUE FALSE
-%token RETURN IF ELSE FOR WHILE INT BOOL STRING VOID MATRIX ROW FLOAT FILE TUPLE
+%token RETURN IF ELSE FOR WHILE INT BOOL VOID MATRIX ROW FLOAT FILE TUPLE
 
 %token <int> INT_LIT
-%token <string> ID
 %token <string> STRING_LIT
+%token <string> ID
 %token <float> FLOAT_LIT
 
 %token DEF
@@ -78,7 +77,6 @@ tuple_typ:
 
 primitive:
   	INT { Int }
-  | STRING { String }
   | BOOL { Bool }
   | VOID { Void }
   | FLOAT { Float }
@@ -137,11 +135,11 @@ expr:
   | expr ASSIGN expr   { Assign($1, $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | LPAREN expr RPAREN { $2 }
-  | ID LSQBRACE INT_LIT RSQBRACE %prec NOLSQBRACE { RowAccess($1, $3) }
-  | ID LPERCENT INT_LIT RPERCENT { TupleAccess($1, $3) }
-  | ID LSQBRACE INT_LIT RSQBRACE LSQBRACE INT_LIT RSQBRACE { MatrixAccess($1, $3, $6) }
-  | ID LSQBRACE INT_LIT RSQBRACE LSQBRACE COLON RSQBRACE { MRowAccess($1, $3) }
-  | ID LSQBRACE COLON RSQBRACE LSQBRACE INT_LIT RSQBRACE { MColumnAccess($1, $6) }
+  | ID LSQBRACE expr RSQBRACE %prec NOLSQBRACE { RowAccess($1, $3) }
+  | ID LPERCENT expr RPERCENT { TupleAccess($1, $3) }
+  | ID LSQBRACE expr RSQBRACE LSQBRACE expr RSQBRACE { MatrixAccess($1, $3, $6) }
+  | ID LSQBRACE expr RSQBRACE LSQBRACE COLON RSQBRACE { MRowAccess($1, $3) }
+  | ID LSQBRACE COLON RSQBRACE LSQBRACE expr RSQBRACE { MColumnAccess($1, $6) }
 
 primitives:
 	INT_LIT { IntLit($1) }
