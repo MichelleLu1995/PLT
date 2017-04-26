@@ -1,0 +1,31 @@
+
+** Conflict (shift/reduce) in state 80.
+** Token involved: RSQBRACE
+** This state is reached from program after reading:
+
+decls DEF typ ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list ID LSQBRACE INT_LIT 
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+program 
+decls EOF 
+decls fdecl 
+      DEF typ ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE 
+                                                             stmt_list stmt 
+                                                                       expr SEMI 
+                                                                       (?)
+
+** In state 80, looking ahead at RSQBRACE, shifting is permitted
+** because of the following sub-derivation:
+
+ID LSQBRACE INT_LIT . RSQBRACE LSQBRACE INT_LIT RSQBRACE 
+
+** In state 80, looking ahead at RSQBRACE, reducing production
+** primitives -> INT_LIT 
+** is permitted because of the following sub-derivation:
+
+ID LSQBRACE expr RSQBRACE // lookahead token appears
+            literals // lookahead token is inherited
+            primitives // lookahead token is inherited
+            INT_LIT . 

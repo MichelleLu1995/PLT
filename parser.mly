@@ -6,11 +6,12 @@ open Ast
 %token PLUS MINUS TIMES DIVIDE ASSIGN NOT MPLUS MMINUS MTIMES MDIVIDE PLUSEQ
 %token EQ NEQ LT LEQ GT GEQ AND OR MEQ
 %token TRUE FALSE
-%token RETURN IF ELSE FOR WHILE INT BOOL VOID MATRIX ROW FLOAT FILE TUPLE
+%token RETURN IF ELSE FOR WHILE INT BOOL VOID MATRIX ROW FLOAT TUPLE STRING CHAR
 
 %token <int> INT_LIT
-%token <string> STRING_LIT
+%token <string> STRING_LIT 
 %token <string> ID
+%token <char> CHAR_LIT
 %token <float> FLOAT_LIT
 
 %token DEF
@@ -61,8 +62,8 @@ formal_list:
 typ:
 	primitive { $1 }
   | MATRIX { Matrix }
+  | STRING { String }
   | ROW { Row }
-  | FILE { File }
   | matrix_typ { $1 }
   | row_typ { $1 }
 
@@ -79,6 +80,7 @@ primitive:
   	INT { Int }
   | BOOL { Bool }
   | VOID { Void }
+  | CHAR {Char}
   | FLOAT { Float }
   | tuple_typ { $1 }
 
@@ -102,7 +104,7 @@ stmt:
   | IF LPAREN expr RPAREN stmt ELSE stmt { If($3, $5, $7) }
   | FOR LPAREN expr_opt SEMI expr SEMI expr_opt RPAREN stmt
      { For($3, $5, $7, $9) }
-  | FOR LPAREN expr IN expr RPAREN stmt { MFor($3, $5, $7) }
+  | FOR LPAREN ID IN ID RPAREN stmt { MFor($3, $5, $7) }
   | WHILE LPAREN expr RPAREN stmt { While($3, $5) }
 
 expr_opt:
@@ -142,11 +144,12 @@ expr:
   | ID LSQBRACE COLON RSQBRACE LSQBRACE expr RSQBRACE { MColumnAccess($1, $6) }
 
 primitives:
-	INT_LIT { IntLit($1) }
-  | FLOAT_LIT { FloatLit($1) }
+	INT_LIT      { IntLit($1) }
+  | FLOAT_LIT  { FloatLit($1) }
   | STRING_LIT { StringLit($1) }
-  | TRUE      { BoolLit(true) }
-  | FALSE     { BoolLit(false) }
+  | CHAR_LIT   { CharLit($1) }
+  | TRUE       { BoolLit(true) }
+  | FALSE      { BoolLit(false) }
 
 literals:
 	primitives { $1 }
