@@ -2,9 +2,6 @@ def float add(float x, float y){
 	return x + y;
 }
 
-def int main(){
-	float z;
-	z = add(17.1, 25.1);
-	printf( z );
-	return 0;
+def void main(){
+	print ( add(17.1, 25.1) );
 }

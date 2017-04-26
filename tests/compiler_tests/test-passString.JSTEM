@@ -1,8 +1,0 @@
-def string hello(string word){
-	return word;
-}
-
-def int main(){
-	prints(hello("hi"));
-	return 0;
-}
