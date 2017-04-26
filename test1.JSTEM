@@ -1,0 +1,19 @@
+def float test(float num1, int num2) {
+	float result;
+	result = num1 + num2;
+	return result;
+}
+
+def int main() {
+	float num1;
+	int num2;
+	float result;
+	num1 = 5.5;
+	num2 = 2;
+
+	result = test(num1, num2);
+	printf(result);
+
+	return 0;
+}
+
