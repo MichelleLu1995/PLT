@@ -59,7 +59,6 @@ rule token = parse
 | "return" { RETURN }
 | "int"    { INT }
 | "bool"   { BOOL }
-| "string" { STRING }
 | "float"  { FLOAT }
 | "void"   { VOID }
 | "mx"     { MATRIX }

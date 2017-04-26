@@ -1,0 +1,9 @@
+def void main() {
+
+	prints("Testing File Reading Feature\n");
+
+	open("tree_1.ppm",2);
+
+}
+
+

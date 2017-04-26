@@ -9,8 +9,7 @@ for input_file in $INPUT_FILES; do
     if [ "$?" -eq 0 ]; then
        printf "%-65s SUCCESS\n" "  - $input_file..."
     else
-       printf "%-65s ERROR\n" "  - $input_file..." 1>&2
-       exit 1
+       printf "%-65s ERROR\n" "  - $input_file..." 
     fi
 done
 
