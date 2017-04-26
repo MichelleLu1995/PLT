@@ -1,0 +1,14 @@
+def void main() {
+	int(%3%) t1;
+	int(%3%) t2;
+	int(%3%) t3;
+	int i;
+
+	t1 = (%0,1,2%);
+	t2 = (%0,1,2%);
+	t3 = t1 + t2;
+
+	for (i=0; i<3; i=i+1) {
+		print(t3(%j%));
+	}
+}
