@@ -140,7 +140,7 @@ let check_function func =
     | _ -> raise (Failure ("illegal matrix access") ) in
 
   let type_of_row r l =
-    match (List.hd (List.hd r)) with
+	match (List.hd r) with
         IntLit _ -> RowTyp(Int, l)
       | FloatLit _ -> RowTyp(Float, l)
       | TupleLit t -> RowTyp((type_of_tuple) t, l)
@@ -190,7 +190,7 @@ let check_function func =
   | StringLit _ -> String
   | BoolLit _ -> Bool
   | Id s -> type_of_identifier s
-  (* | RowLit r -> type_of_row r (List.length r) (List.length (List.hd m)) *)
+  | RowLit r -> type_of_row r (List.length r)
   | TupleLit t -> check_tuple_literal (type_of_tuple t) t 0
   | MatrixLit m -> type_of_matrix m (List.length m) (List.length (List.hd m))
   | RowAccess(s, e) -> let _ = (match (expr e) with
@@ -355,3 +355,5 @@ let check_function func =
 
   in
   List.iter check_function functions
+>>>>>>> 5ae40e2cacef34190b556e5ce2f66a771fb1e09c
+>>>>>>> 27c61e368a05a43554a388463483dc3ff2408497

@@ -430,6 +430,7 @@ let function_decls =
       | A.Int -> L.build_ret (L.const_int i32_t 0)
       | A.Float -> L.build_ret (L.const_float float_t 0.0)
       | A.Bool -> L.build_ret (L.const_int i1_t 0)
+    (*
       | A.RowTyp(t) -> (match t with
                           A.Int -> L.build_ret(L.const_pointer_null (pointer_t i32_t))
                         | A.Float -> L.build_ret (L.const_pointer_null (pointer_t float_t))
@@ -442,6 +443,7 @@ let function_decls =
                                   A.Int -> L.build_ret (L.const_pointer_null (pointer_t i32_t))
                                 | A.Float -> L.build_ret (L.const_pointer_null (pointer_t float_t))
                                 | _ -> raise (UnsupportedReturnType))
+    *)
       | _ -> raise (UnsupportedReturnType))
   in
 
