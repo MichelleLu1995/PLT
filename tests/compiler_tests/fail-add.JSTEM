@@ -3,6 +3,8 @@ def float add(float x, int y){
 }
 
 def int main(){
-	print ( add(17.0, 25) );
+	float z;
+	z = add(17.1, 25);
+	printf(z);
 	return 0;
 }

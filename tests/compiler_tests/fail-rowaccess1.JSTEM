@@ -1,10 +1,12 @@
 def void main() {
 	float[5] r;
 	int i;
+	int j;
+
 	for (i=0; i<5; i=i+1) {
 		r[i] = i;
 	}
-	for (i=0; i<5; i=i+1) {
-		print(r[i]);
+	for (j=0; j<5; j=i+1) {
+		printf(r[i]);
 	}
 }

@@ -1,0 +1,6 @@
+def int main(){
+	string[3] row;
+	
+	row = ["a", "b", "c"];
+	return 0;
+}

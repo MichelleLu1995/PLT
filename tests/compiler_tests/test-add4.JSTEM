@@ -1,0 +1,8 @@
+def float add(float x, float y){
+	return x + y;
+}
+
+def int main(){
+	printf( add(17.0, 25.0) );
+	return 0;
+}
