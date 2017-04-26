@@ -1,0 +1,13 @@
+def void main(){
+	int(%2%) t;
+	t(%2) t1;
+
+	int(%2%) tuple;
+
+	t1 = (% (% 0, 1 %), (% 2, 3 %) %);
+	tuple = t1(%0%);
+
+	for(i=0; i<2; i=i+1){
+		print(tuple(%0%));
+	}
+}

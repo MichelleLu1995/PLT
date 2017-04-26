@@ -40,15 +40,15 @@ let translate (globals, functions) =
                                       A.Int    -> array_t (array_t i32_t size2) size1
                                     | A.Float  -> array_t (array_t float_t size2) size1
                                     | A.TupleTyp(typ1,size3) -> (match typ1 with
-                                              A.Int    -> array_t i32_t size3
-                                            | _ -> raise (UnsupportedTupleType))
+                                              A.Int    -> array_t (array_t (array_t i32_t size3) size2) size1
+                                            | _ -> raise (UnsupportedTupleType)) 
                                     | _ -> raise (UnsupportedMatrixType))
     | A.RowTyp(typ, size) -> (match typ with
                                       A.Int    -> array_t i32_t size
                                     | A.Float  -> array_t float_t size
                                     | A.TupleTyp(typ1,size1) -> (match typ1 with
-                                              A.Int    -> array_t i32_t size1
-                                            | _ -> raise (UnsupportedTupleType))
+                                                                  A.Int    -> array_t (array_t i32_t size1) size 
+                                                                | _ -> raise (UnsupportedTupleType))
                                     | _ -> raise (UnsupportedRowType))
     | A.TupleTyp(typ, size) -> (match typ with
                                       A.Int    -> array_t i32_t size
@@ -198,15 +198,13 @@ let function_decls =
 	  else
 		L.build_load (L.build_gep (lookup s) [| i1; i2; i3 |] s builder) s builder
 	in
-
+  
 	let build_mrow_access s i1 i2 builder isAssign =
 	  if isAssign
 		then L.build_gep (lookup s) [| i1; i2 |] s builder
 	  else
 		L.build_load (L.build_gep (lookup s) [| i1; i2 |] s builder) s builder
 	in
-
-
     (* Construct code for an expression; return its value *)
     let rec expr builder = function
         A.IntLit i -> L.const_int i32_t i
@@ -234,7 +232,7 @@ let function_decls =
 	    | A.MRowAccess(s, e1) -> let i1 = expr builder e1 in build_mrow_access s (L.const_int i32_t 0) i1 builder false
       | A.Binop (e1, op, e2) -> 
         let e1' = expr builder e1
-        and e2' = expr builder e2 in
+        and e2' = expr builder e2  in
           let float_bop operator = 
             (match operator with
               A.Add     -> L.build_fadd
@@ -300,7 +298,7 @@ let function_decls =
           match (typ1, typ2) with
             "int", "int" -> int_bop op
           | "float" , "float" -> float_bop op
-          | _, _ -> raise(UnsupportedBinop)
+          | _, _ -> raise(Failure ("illegal print type"))
         in
         build_ops_with_types e1'_type e2'_type
       | A.Unop(op, e) ->
@@ -367,6 +365,7 @@ let function_decls =
                       | _ -> raise (IllegalAssignment))
                              and e2' = expr builder e2 in
                      ignore (L.build_store e2' e1' builder); e2' 
+
       | A.Call("open", e) -> 
             L.build_call open_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "fopen" builder
       | A.Call("close", e) -> 

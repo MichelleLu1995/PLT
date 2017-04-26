@@ -1,0 +1,24 @@
+def int[2][2] add(int[2][2] m1, int[2][2] m2){
+	int[2][2] result;
+	result = m1 + m2;
+	return result;
+}
+
+def int main(){
+	int[2][2] x;
+	int[2][2] y;
+	int[2][2] z;
+	int i;
+	int j;
+
+	x = {% 0, 1 | 2, 3 %};
+    y = {% 0, 1 | 2, 3 %};
+
+	z = add(x, y);
+	
+	for(i=0; i<2; i=i+1){
+		for(j=0; j<2; j=j+1){
+			print(z[i][j]);
+		}
+	}
+}

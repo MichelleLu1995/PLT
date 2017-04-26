@@ -1,0 +1,5 @@
+def void main(){
+	string(%3%) t;
+
+	t = (% "a", "b", "c" %);
+}
