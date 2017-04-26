@@ -1,0 +1,10 @@
+def int main() {
+
+	int[2][2] m;
+	int[2] r;
+	m = {% 1, 2 | 3, 4 %};
+	for (r in m) {
+		prints("here");
+	}
+	return 0;
+}
