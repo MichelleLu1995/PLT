@@ -1,6 +1,21 @@
 def int main() {
 
-    prints(open("file.txt","r"));
+	File file1;
+	File file2;
+	int i;
+	String line;
+
+	file1 = open("file.txt","w+");
+	write("hello world", 1, len("hello world"), file1);
+	close(file1);
+
+	file2 = open("tree_1.ppm","r");
+	for (i=0; i<5; i=i+1) {
+		fget(line,1000,file2);
+		prints(line);
+	}
+	close(file2);
+
 	return 0;
 
 }
