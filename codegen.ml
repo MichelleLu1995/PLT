@@ -269,10 +269,11 @@ let function_decls =
 
         let build_ops_with_types typ1 typ2 =
           match (typ1, typ2) with
-            (*"int", "int" -> int_bop op
-          | "float" , "float" -> float_bop op*)
-           _,_ -> tuple_int_bop 3 op 
-         (*| _, _ -> raise(UnsupportedBinop)*)
+            "int", "int" -> (match e1 with
+              IntLit(_) -> int_bop op
+              | _ -> tuple_int_bop 3 op)
+          | "float" , "float" -> float_bop op
+          | _,_ -> raise(UnsupportedBinop)
         in
         build_ops_with_types e1'_type e2'_type
       | A.Unop(op, e) ->
