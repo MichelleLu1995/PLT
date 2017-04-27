@@ -224,20 +224,13 @@ let check_function func =
       Add | Sub | Mult | Div when t1 = Int && t2 = Int -> Int
     | Add | Sub | Mult | Div when t1 = Float && t2 = Float -> Float
     | Add | Sub | Mult | Div when t1 = Int && t2 = Float -> Float
-    | Add | Sub | Mult | Div when t1 = Float && t2 = Int -> Float (*
-    | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(Int,Int,Int) && t2 = MatrixTyp(Int,Int,Int) -> MatrixTyp(Int,Int,Int)
-    | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(Float) && t2 = MatrixTyp(Float) -> MatrixTyp(Float)
-    | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(Int) && t2 = MatrixTyp(Float) -> MatrixTyp(Float)
-    | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(TupleTyp(Int)) && t2 = MatrixType(TupleTyp(Int)) -> MatrixTyp(TupleTyp(Int))
-    | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(TupleTyp(Int)) && t2 = Int -> MatrixTyp(TupleTyp(Int))
-  *)  | Equal | Neq | Meq when t1 = t2 -> Bool
+    | Add | Sub | Mult | Div when t1 = Float && t2 = Int -> Float
+    | Add when t1 = TupleTyp(Int,3) && t2 = TupleTyp(Int,3) -> TupleTyp(Int,3)
+    | Equal | Neq | Meq when t1 = t2 -> Bool
     | Equal | Neq | Meq when t1 = t2 -> Bool
     | PlusEq when t1 = Int && t2 = Int -> Int
     | PlusEq when t1 = Int && t2 = Float -> Float
-    (* | PlusEq when t1 = MatrixTyp && MatrixTyp -> MatrixTyp
-    | PlusEq when t1 = MatrixTyp && Int -> MatrixTyp
-    | PlusEq when t1 = MatrixTyp && Float -> MatrixTyp
-    *) | Less | Leq | Greater | Geq when t1 = Int && t2 = Int -> Bool
+    | Less | Leq | Greater | Geq when t1 = Int && t2 = Int -> Bool
     | Less | Leq | Greater | Geq when t1 = Float && t2 = Float -> Float
     | And | Or when t1 = Bool && t2 = Bool -> Bool
     | _ -> raise (Failure ("illegal binary operator " ^

@@ -169,7 +169,6 @@ let function_decls =
 		L.build_load (L.build_gep (lookup s) [| i1; i2; i3 |] s builder) s builder
 	in
 
-
     (* Construct code for an expression; return its value *)
     let rec expr builder = function
         A.IntLit i -> L.const_int i32_t i
@@ -225,75 +224,21 @@ let function_decls =
             ) e1' e2' "tmp" builder
           in
 
-          let build_matrix_access1 access_i access_j s i1 i2 i3 builder isAssign =
-            let rows = L.array_length (L.type_of (L.build_load (L.build_gep (lookup s) [| L.const_int i32_t 0 |] s builder) s builder)) in
-            let cols = L.array_length (L.type_of (L.build_load (L.build_gep (lookup s) [| L.const_int i32_t 0; L.const_int i32_t 0 |] s builder) s builder)) in
-            if ((rows < access_i) && (cols > access_j)) then raise(MatrixOutOfBoundsAccess);
-            if isAssign
-                then L.build_gep (lookup s) [| i1; i2; i3 |] s builder
-                else L.build_load (L.build_gep (lookup s) [| i1; i2; i3 |] s builder) s builder
-          in
-
-          let matrix_bop iorf r_i c_i r c op e1 e2 =
-                    let lhs_str = (match e1 with A.Id(s) -> s ) in
-                    let rhs_str = (match e2 with A.Id(s) -> s ) in
-                    match iorf with
-                        "int" ->
-                            (match op with
-                                A.Add       ->
-                                    let tmp_m = L.build_alloca (array_t (array_t i32_t c_i) r_i) "tmpmat" builder in
-                                    for i=0 to (r_i-1) do
-                                        for j=0 to (c_i-1) do
-                                            let m1 = build_matrix_access1 r_i c_i lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) (L.const_int i32_t j) builder false in
-                                            let m2 = build_matrix_access1 r_i c_i rhs_str (L.const_int i32_t 0) (L.const_int i32_t i) (L.const_int i32_t j) builder false in
-                                            let add_res = L.build_add m1 m2 "tmp" builder in
-                                            let ld = L.build_gep tmp_m [| L.const_int i32_t 0; L.const_int i32_t i; L.const_int i32_t j |] "tmpmat" builder in
-                                            ignore(L.build_store add_res ld builder);
-                                        done
-                                    done;
-                                    L.build_load (L.build_gep tmp_m [| L.const_int i32_t 0 |] "tmpmat" builder) "tmpmat" builder
-                                | A.Sub     ->
-                                    let tmp_m = L.build_alloca (array_t (array_t i32_t c_i) r_i) "tmpmat" builder in
-                                    for i=0 to (r_i-1) do
-                                        for j=0 to (c_i-1) do
-                                            let m1 = build_matrix_access1 r_i c_i lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) (L.const_int i32_t j) builder false in
-                                            let m2 = build_matrix_access1 r_i c_i rhs_str (L.const_int i32_t 0) (L.const_int i32_t i) (L.const_int i32_t j) builder false in
-                                            let add_res = L.build_sub m1 m2 "tmp" builder in
-                                            let ld = L.build_gep tmp_m [| L.const_int i32_t 0; L.const_int i32_t i; L.const_int i32_t j |] "tmpmat" builder in
-                                            ignore(L.build_store add_res ld builder);
-                                        done
-                                    done;
-                                    L.build_load (L.build_gep tmp_m [| L.const_int i32_t 0 |] "tmpmat" builder) "tmpmat" builder
-                                | _         -> raise(IllegalMatrixBinop))
-                        | "float" ->
-                            (match op with
-                                A.Add       ->
-                                    let tmp_m = L.build_alloca (array_t (array_t float_t c_i) r_i) "tmpmat" builder in
-                                    for i=0 to (r_i-1) do
-                                        for j=0 to (c_i-1) do
-                                            let m1 = build_matrix_access1 r_i c_i lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) (L.const_int i32_t j) builder false in
-                                            let m2 = build_matrix_access1 r_i c_i rhs_str (L.const_int i32_t 0) (L.const_int i32_t i) (L.const_int i32_t j) builder false in
-                                            let add_res = L.build_fadd m1 m2 "tmp" builder in
-                                            let ld = L.build_gep tmp_m [| L.const_int i32_t 0; L.const_int i32_t i; L.const_int i32_t j |] "tmpmat" builder in
-                                            ignore(L.build_store add_res ld builder);
-                                        done
-                                    done;
-                                    L.build_load (L.build_gep tmp_m [| L.const_int i32_t 0 |] "tmpmat" builder) "tmpmat" builder
-                                | A.Sub     ->
-                                    let tmp_m = L.build_alloca (array_t (array_t float_t c_i) r_i) "tmpmat" builder in
-                                    for i=0 to (r_i-1) do
-                                        for j=0 to (c_i-1) do
-                                            let m1 = build_matrix_access1 r_i c_i lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) (L.const_int i32_t j) builder false in
-                                            let m2 = build_matrix_access1 r_i c_i rhs_str (L.const_int i32_t 0) (L.const_int i32_t i) (L.const_int i32_t j) builder false in
-                                            let add_res = L.build_fsub m1 m2 "tmp" builder in
-                                            let ld = L.build_gep tmp_m [| L.const_int i32_t 0; L.const_int i32_t i; L.const_int i32_t j |] "tmpmat" builder in
-                                            ignore(L.build_store add_res ld builder);
-                                        done
-                                    done;
-                                    L.build_load (L.build_gep tmp_m [| L.const_int i32_t 0 |] "tmpmat" builder) "tmpmat" builder
-                                | _         -> raise(Exceptions.IllegalMatrixBinop))
-                        | _ -> L.const_int i32_t 0
-        in
+          let tuple_int_bop n_i operator =
+            let lhs_str = (match e1 with Id(s) -> s) in
+            let rhs_str = (match e2 with Id(s) -> s) in
+              (match op with
+                A.Add       ->
+                  let tmp_v = L.build_alloca (array_t i32_t n_i) "tmpvec" builder in
+                  for i=0 to n_i do
+                    let v1 = build_tuple_access lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) builder false in
+                    let v2 = build_tuple_access rhs_str (L.const_int i32_t 0) (L.const_int i32_t i) builder false in
+                    let add_res = L.build_add v1 v2 "tmp" builder in
+                    let ld = L.build_gep tmp_v [| L.const_int i32_t 0; L.const_int i32_t i |] "tmpvec" builder in
+                  ignore(L.build_store add_res ld builder);
+                  done;
+                L.build_load (L.build_gep tmp_v [| L.const_int i32_t 0 |] "tmpvec" builder) "tmpvec" builder)
+              in
 
         let string_of_e1'_llvalue = L.string_of_llvalue e1'
         and string_of_e2'_llvalue = L.string_of_llvalue e2' in
@@ -326,7 +271,8 @@ let function_decls =
           match (typ1, typ2) with
             "int", "int" -> int_bop op
           | "float" , "float" -> float_bop op
-          | _, _ -> raise(UnsupportedBinop)
+          | _,_ -> tuple_int_bop 3 op
+         (*| _, _ -> raise(UnsupportedBinop)*)
         in
         build_ops_with_types e1'_type e2'_type
       | A.Unop(op, e) ->
