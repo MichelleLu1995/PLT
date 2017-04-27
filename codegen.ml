@@ -225,20 +225,20 @@ let function_decls =
           in
 
           let tuple_int_bop n_i operator =
-            let lhs_str = (match e1 with Id(s) -> s) in
-            let rhs_str = (match e2 with Id(s) -> s) in
-              (match op with
-                A.Add       ->
-                  let tmp_v = L.build_alloca (array_t i32_t n_i) "tmpvec" builder in
+            let lhs_str = (match e1 with A.Id(s) -> s) in
+            let rhs_str = (match e2 with A.Id(s) -> s) in
+              (match operator with
+                A.Add ->
+                  let tmp_t = L.build_alloca (array_t i32_t n_i) "tmptup" builder in
                   for i=0 to n_i do
                     let v1 = build_tuple_access lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) builder false in
                     let v2 = build_tuple_access rhs_str (L.const_int i32_t 0) (L.const_int i32_t i) builder false in
                     let add_res = L.build_add v1 v2 "tmp" builder in
-                    let ld = L.build_gep tmp_v [| L.const_int i32_t 0; L.const_int i32_t i |] "tmpvec" builder in
+                    let ld = L.build_gep tmp_t [| L.const_int i32_t 0; L.const_int i32_t i |] "tmptup" builder in
                   ignore(L.build_store add_res ld builder);
                   done;
-                L.build_load (L.build_gep tmp_v [| L.const_int i32_t 0 |] "tmpvec" builder) "tmpvec" builder)
-              in
+                L.build_load (L.build_gep tmp_t [| L.const_int i32_t 0 |] "tmptup" builder) "tmptup" builder)
+            in
 
         let string_of_e1'_llvalue = L.string_of_llvalue e1'
         and string_of_e2'_llvalue = L.string_of_llvalue e2' in
@@ -269,9 +269,9 @@ let function_decls =
 
         let build_ops_with_types typ1 typ2 =
           match (typ1, typ2) with
-            "int", "int" -> int_bop op
-          | "float" , "float" -> float_bop op
-          | _,_ -> tuple_int_bop 3 op
+            (*"int", "int" -> int_bop op
+          | "float" , "float" -> float_bop op*)
+           _,_ -> tuple_int_bop 3 op 
          (*| _, _ -> raise(UnsupportedBinop)*)
         in
         build_ops_with_types e1'_type e2'_type
