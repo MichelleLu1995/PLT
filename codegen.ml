@@ -1,5 +1,4 @@
-(* Code generation: translate takes a semantically checked AST and
-produces LLVM IR
+(* Code generation: translate takes a semantically checked AST and produces LLVM IR
 
 LLVM tutorial: Make sure to read the OCaml version of the tutorial
 
@@ -70,26 +69,39 @@ let translate (globals, functions) =
       in StringMap.add n (L.define_global n init the_module) m in
     List.fold_left global_var StringMap.empty globals in
 
-  (* Declare printf(), which the print built-in function will call *)
+  (* Printing *)
   let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
   let printf_func = L.declare_function "printf" printf_t the_module in
 
   let prints_t = L.var_arg_function_type (pointer_t i8_t) [|L.pointer_type i8_t|] in
   let prints_func = L.declare_function "puts" prints_t the_module in
 
-  (* Declare C functions for file inegration *)
+  (* file inegration *)
   let open_ty = L.function_type (pointer_t i8_t) [| (pointer_t i8_t) ; L.pointer_type i8_t |] in
   let open_func = L.declare_function "fopen" open_ty the_module in 
   let close_ty = L.function_type i32_t [| (pointer_t i8_t) |] in
   let close_func = L.declare_function "fclose" close_ty the_module in
-  let read_ty = L.function_type i32_t [| (pointer_t i8_t); i32_t; i32_t; (pointer_t i8_t)|] in 
+  let read_ty = L.function_type i32_t [| (pointer_t i8_t); i32_t; i32_t; (pointer_t i8_t) |] in 
   let read_func = L.declare_function "fread" read_ty the_module in
-  let get_ty = L.function_type (pointer_t i8_t) [| (pointer_t i8_t); i32_t; (pointer_t i8_t)|] in 
+  let get_ty = L.function_type (pointer_t i8_t) [| (pointer_t i8_t); i32_t; (pointer_t i8_t) |] in 
   let get_func = L.declare_function "fgets" get_ty the_module in
-  let fwrite_ty = L.function_type i32_t [| (pointer_t i8_t); i32_t; i32_t; (pointer_t i8_t)|] in
+  let fwrite_ty = L.function_type i32_t [| (pointer_t i8_t); i32_t; i32_t; (pointer_t i8_t) |] in
   let fwrite_func = L.declare_function "fwrite" fwrite_ty the_module in
-  let strlen_t = L.function_type i32_t [| (pointer_t i8_t) |] in
-  let strlen_func = L.declare_function "strlen" strlen_t the_module in
+
+  (* String functions *)
+  let strlen_ty = L.function_type i32_t [| (pointer_t i8_t) |] in
+  let strlen_func = L.declare_function "strlen" strlen_ty the_module in
+  let cast_str_int_ty = L.function_type i32_t [| (pointer_t i8_t) |] in
+  let cast_str_int_func = L.declare_function "atoi" cast_str_int_ty the_module in
+  let sprintf_ty = L.function_type (pointer_t i8_t) [| (pointer_t i8_t); L.pointer_type i8_t; i32_t|] in
+  let sprintf_func = L.declare_function "sprintf" sprintf_ty the_module in
+  let calloc_ty = L.function_type (pointer_t i8_t) [|i32_t; i32_t|] in
+  let calloc_func = L.declare_function "calloc" calloc_ty the_module in
+
+
+  (* Data casting *)
+
+
 
   (* Define each function (arguments and return type) so we can call it *)
 let function_decls =
@@ -232,6 +244,12 @@ let function_decls =
 	    | A.RowAccess(s, e1) -> let i1 = expr builder e1 in build_row_access s (L.const_int i32_t 0) i1 builder false
 	    | A.TupleAccess(s, e1) -> let i1 = expr builder e1 in build_tuple_access s (L.const_int i32_t 0) i1 builder false
 	    | A.MRowAccess(s, e1) -> let i1 = expr builder e1 in build_mrow_access s (L.const_int i32_t 0) i1 builder false
+      | A.Init(e1,e2) -> let cnt1=(lookup e1) and cnt2= expr builder e2 in
+        let tp= L.element_type (L.type_of cnt1) in 
+        let sz=L.size_of tp in
+        let sz1=L.build_intcast sz (i32_t) "intc" builder in
+        let dt=L.build_bitcast (L.build_call calloc_func [|cnt2;sz1|] "tmpa" builder) tp "tmpb" builder in
+        L.build_store dt cnt1 builder
       | A.Binop (e1, op, e2) -> 
         let e1' = expr builder e1
         and e2' = expr builder e2 in
@@ -368,17 +386,23 @@ let function_decls =
                              and e2' = expr builder e2 in
                      ignore (L.build_store e2' e1' builder); e2' 
       | A.Call("open", e) -> 
-            L.build_call open_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "fopen" builder
+    L.build_call open_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "fopen" builder
       | A.Call("close", e) -> 
-            L.build_call close_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "fclose" builder
+    L.build_call close_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "fclose" builder
       | A.Call("write", e) -> 
-            L.build_call fwrite_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "tmpy" builder 
+    L.build_call fwrite_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "tmpy" builder 
       | A.Call("read", e) -> 
-            L.build_call read_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "tmpx" builder
+    L.build_call read_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "tmpx" builder
       | A.Call("fget",e) -> 
-            L.build_call get_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "tmpz" builder
+    L.build_call get_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "tmpz" builder
       | A.Call("len", e) -> 
-            L.build_call strlen_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "len" builder
+    L.build_call strlen_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "len" builder
+      | A.Call ("atoi", e) ->
+    L.build_call cast_str_int_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "tmp3" builder 
+      | A.Call ("sprintff", e) ->
+    L.build_call sprintf_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "sprintf" builder 
+
+
       | A.Call ("print", [e]) | A.Call ("printb", [e]) ->
     L.build_call printf_func [| int_format_str ; (expr builder e) |]
       "printf" builder
