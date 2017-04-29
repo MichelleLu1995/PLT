@@ -1,22 +1,26 @@
 def int main() {
 	
+	
 	File file2;
-	/*int i;
+	int i;
 	String line;
 
-	line = new[1000];*/
+	line @= new[1000];
+	
 
-    String line;
-line = 	open("tree_1.ppm","r");
-	/*for (i=0; i<5; i=i+1) {
+	
+	file2 = open("tree_1.ppm","r");
+	
+	for (i=0; i<5; i=i+1) {
 		fget(line,1000,file2);
 		prints(line); 
 	}
-
+    
 	close(file2);
-	*/
+	
 	return 0;
 
 }
+
 
 

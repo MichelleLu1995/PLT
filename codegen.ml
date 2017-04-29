@@ -374,6 +374,8 @@ let function_decls =
           | _ -> raise(UnsupportedUnop)
         in
         build_ops_with_type e'_type 
+      | A.StrAssign (s, e) -> let e' = expr builder e in
+                     ignore (L.build_store e' (lookup s) builder); e'
       | A.Assign (e1, e2) -> let e1' = (match e1 with
                                             A.Id s -> lookup s
 										  | A.RowAccess(s, e1) -> let i1 = expr builder e1 in build_row_access s (L.const_int i32_t 0) i1 builder true
