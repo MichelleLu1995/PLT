@@ -109,6 +109,16 @@ let function_decls =
           (Array.to_list (L.params the_function)) in
       List.fold_left add_local formals fdecl.A.locals in
 
+	(* ADD INDEX VARIABLE TO LOCALS FOR MATRIX FOR LOOP *)
+	let local_vars =
+	let local_var = L.build_alloca (ltype_of_typ A.Int) "_i" builder in StringMap.add "_i" local_var local_vars in
+
+	(* ADD ROW TO LOCALS FOR MATRIX FOR LOOP *)
+	(*let allocate_row len =
+		let local_vars =
+		let local_var = L.build_alloca (ltype_of_typ A.RowTyp(A.Int, len)) "_r" builder in StringMap.add "_r" local_var local_vars in*)
+	
+
     (* Return the value for a variable or formal argument *)
     let lookup n = try StringMap.find n local_vars
                    with Not_found -> StringMap.find n global_vars
@@ -168,6 +178,13 @@ let function_decls =
 		L.build_load (L.build_gep (lookup s) [| i1; i2; i3 |] s builder) s builder
 	in
 
+	let build_mrow_access s i1 i2 builder isAssign =
+	  if isAssign
+		then L.build_gep (lookup s) [| i1; i2 |] s builder
+	  else
+		L.build_load (L.build_gep (lookup s) [| i1; i2 |] s builder) s builder
+	in
+
 
     (* Construct code for an expression; return its value *)
     let rec expr builder = function
@@ -187,6 +204,7 @@ let function_decls =
 	  | A.RowAccess(s, e1) -> let i1 = expr builder e1 in build_row_access s (L.const_int i32_t 0) i1 builder false
 	  | A.TupleAccess(s, e1) -> let i1 = expr builder e1 in build_tuple_access s (L.const_int i32_t 0) i1 builder false
 	  | A.MatrixAccess(s, e1, e2) -> let i1 = expr builder e1 and i2 = expr builder e2 in build_matrix_access s (L.const_int i32_t 0) i1 i2 builder false
+	  | A.MRowAccess(s, e1) -> let i1 = expr builder e1 in build_mrow_access s (L.const_int i32_t 0) i1 builder false
       | A.Binop (e1, op, e2) -> 
         let e1' = expr builder e1
         and e2' = expr builder e2 in
@@ -316,6 +334,7 @@ let function_decls =
 										  | A.RowAccess(s, e1) -> let i1 = expr builder e1 in build_row_access s (L.const_int i32_t 0) i1 builder true
 										  | A.TupleAccess(s, e1) -> let i1 = expr builder e1 in build_tuple_access s (L.const_int i32_t 0) i1 builder true
 										  | A.MatrixAccess(s, e1, e2) -> let i1 = expr builder e1 and i2 = expr builder e2 in build_matrix_access s (L.const_int i32_t 0) i1 i2 builder true
+										  | A.MRowAccess(s, e1) -> let i1 = expr builder e1 in build_mrow_access s (L.const_int i32_t 0) i1 builder true
                                           | _ -> raise (IllegalAssignment))
                              and e2' = expr builder e2 in
                      ignore (L.build_store e2' e1' builder); e2' 
@@ -388,7 +407,18 @@ let function_decls =
 
       | A.For (e1, e2, e3, body) -> stmt builder
       ( A.Block [A.Expr e1 ; A.While (e2, A.Block [body ; A.Expr e3]) ] )
-    in
+
+	  | A.MFor (s1, s2, body) ->
+		let rows = L.array_length (L.type_of (L.build_load (L.build_gep (lookup s2) [| L.const_int i32_t 0 |] s2 builder) s2 builder)) in
+		let cols = L.array_length (L.type_of (L.build_load (L.build_gep (lookup s2) [| L.const_int i32_t 0; L.const_int i32_t 0 |] s2 builder) s2 builder)) in
+		(*let lookup n = try StringMap.find n local_vars
+						with Not_found -> StringMap.find n global_vars *)
+		stmt builder
+		  ( A.Block
+			[A.Expr (A.Assign(A.Id "_i", A.IntLit 0));
+			 A.While ((A.Binop((A.Id "_i"), A.Less, (A.IntLit rows))),
+			   A.Block [A.Expr (A.Assign((A.Id s1), A.MRowAccess(s2, (A.Id "_i")))); body ; A.Expr(A.Assign((A.Id "_i"), A.Binop((A.Id "_i"), A.Add, (A.IntLit 1))))]) ] )
+	in
 
     (* Build the code for each statement in the function *)
     let builder = stmt builder (A.Block fdecl.A.body) in

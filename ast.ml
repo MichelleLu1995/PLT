@@ -44,7 +44,7 @@ type stmt = Block of stmt list
   | Expr of expr 
   | If of expr * stmt * stmt
   | For of expr * expr * expr * stmt
-  | MFor of expr * expr * stmt
+  | MFor of string * string * stmt
   | While of expr * stmt
   | Return of expr
             
@@ -157,7 +157,7 @@ let rec string_of_stmt = function
   | For(e1, e2, e3, s) ->
       "for (" ^ string_of_expr e1  ^ " ; " ^ string_of_expr e2 ^ " ; " ^
       string_of_expr e3  ^ ") " ^ string_of_stmt s
-  | MFor(e1, e2, s) -> "for (" ^ string_of_expr e1 ^ "in" ^ string_of_expr e2 ^ ")\n" ^ string_of_stmt s
+  | MFor(s1, s2, s) -> "for (" ^ s1 ^ "in" ^ s2 ^ ")\n" ^ string_of_stmt s
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
 
 let string_of_typ = function
