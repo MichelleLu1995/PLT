@@ -41,7 +41,6 @@ rule token = parse
 | "**"     { MTIMES }
 | '/'      { DIVIDE }
 | "//"     { MDIVIDE }
-| "~="     { STASSIGN }
 | "@="     { ATASSIGN }
 | '='      { ASSIGN }
 | "=="     { EQ }
