@@ -9,7 +9,8 @@ def void main() {
 	t3 = (%0,0,0%);
 	t3 = t1 + t2;
 
-	print(t3(%0%));
-	print(t3(%1%));
-	print(t3(%2%));
+	for(i=0; i<3; i=i+1) {
+		print(t3(%i%));
+	}
+	
 }

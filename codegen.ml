@@ -188,8 +188,8 @@ let function_decls =
 	  | A.TupleAccess(s, e1) -> let i1 = expr builder e1 in build_tuple_access s (L.const_int i32_t 0) i1 builder false
 	  | A.MatrixAccess(s, e1, e2) -> let i1 = expr builder e1 and i2 = expr builder e2 in build_matrix_access s (L.const_int i32_t 0) i1 i2 builder false
       | A.Binop (e1, op, e2) -> 
-        let e1' = expr builder e1
-        and e2' = expr builder e2 in
+        let e1' = expr builder e1 and
+        e2' = expr builder e2 in
           let float_bop operator = 
             (match operator with
               A.Add     -> L.build_fadd
@@ -269,9 +269,11 @@ let function_decls =
 
         let build_ops_with_types typ1 typ2 =
           match (typ1, typ2) with
-            "int", "int" -> (match e1 with
-              IntLit(_) -> int_bop op
-              | _ -> tuple_int_bop 3 op)
+            "int", "int" -> (match (e1,e2) with
+              IntLit(_),IntLit(_) -> int_bop op
+              | Id(int), IntLit(_) -> int_bop op
+              | IntLit(_), Id(int) -> int_bop op
+              | _,_ -> tuple_int_bop 3 op)
           | "float" , "float" -> float_bop op
           | _,_ -> raise(UnsupportedBinop)
         in
