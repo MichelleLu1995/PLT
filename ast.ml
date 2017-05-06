@@ -48,8 +48,9 @@ type expr = IntLit of int
   | MatrixReference of string
   | PointerIncrement of string
   | Dereference of string
-  | Array of string* expr
-  | ArrayAssign of string* expr* expr
+  | Array of string * expr
+  | ArrayAssign of string * expr* expr
+  | RowReference of string
             
 type stmt = Block of stmt list 
   | Expr of expr 
@@ -177,6 +178,10 @@ let rec string_of_expr = function
   | MColumnAccess(c, e) -> c ^ "[:][" ^ string_of_expr e ^ "]"
   | Init(v,e) -> v ^ "=" ^ "new" ^ "[" ^ string_of_expr e ^ "]"
   | Noexpr -> ""
+  | RowReference(s) -> "$" ^ s
+  | MatrixReference(s) -> "$$" ^ s
+  | Dereference(s) -> "#" ^ s
+  | PointerIncrement(s) -> "++" ^ s
 
 let rec string_of_stmt = function
     Block(stmts) ->
@@ -193,7 +198,7 @@ let rec string_of_stmt = function
   | MFor(r, m, s) -> "for (" ^ r ^ " in " ^ m ^ ")\n" ^ string_of_stmt s
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
 
-let string_of_typ = function
+let rec string_of_typ = function
     Int -> "int"
   | Bool -> "bool"
   | Void -> "void"
@@ -219,7 +224,9 @@ let string_of_typ = function
                                           Int -> "int" ^ "(" ^ string_of_int l ^ ")"
 										| _ -> raise( Failure("Illegal expression in tuple primitive") ))
 					 | _ -> raise( Failure("Illegal expression in row primitive")))
-
+  | RowPointer(t) -> string_of_typ t ^ "[]"
+  | MatrixPointer(t) -> string_of_typ t ^ "[][]"
+  (* | RowPointer(Int) -> "int[]" *)
   (*| ColumnTyp(c, l1) -> (match c with 
                        Int -> "int" ^ "[" ^ string_of_int l1 ^ "]"
                      | Float -> "float" ^ "[" ^ string_of_int l1 ^ "]" 

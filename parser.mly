@@ -6,7 +6,8 @@ open Ast
 %token PLUS MINUS TIMES DIVIDE ASSIGN NOT MPLUS MMINUS MTIMES MDIVIDE PLUSEQ ATASSIGN 
 %token EQ NEQ LT LEQ GT GEQ AND OR MEQ NEW 
 %token TRUE FALSE
-%token RETURN IF ELSE FOR WHILE INT BOOL VOID MATRIX ROW FLOAT TUPLE STRING CHAR 
+%token RETURN IF ELSE FOR WHILE INT BOOL VOID MATRIX ROW FLOAT TUPLE STRING CHAR
+%token OCTOTHORP DOLLAR
 
 %token <int> INT_LIT
 %token <string> STRING_LIT 
@@ -59,6 +60,7 @@ formal_list:
     typ ID                   { [($1,$2)] }
   | formal_list COMMA typ ID { ($3,$4) :: $1 }
 
+<<<<<<< HEAD
 typ:
 	primitive { $1 }
   | MATRIX { Matrix }
@@ -66,6 +68,8 @@ typ:
   | matrix_typ { $1 }
   | row_typ { $1 }
 
+=======
+>>>>>>> 0beb079386defa4efb8f52354a39fa69b69180f4
 matrix_typ:
   primitive LSQBRACE INT_LIT RSQBRACE LSQBRACE INT_LIT RSQBRACE { MatrixTyp($1, $3, $6) }
 	
@@ -74,6 +78,17 @@ row_typ:
 
 tuple_typ:
   primitive LPERCENT INT_LIT RPERCENT { TupleTyp($1, $3) }
+
+row_pointer_typ:
+  primitive LSQBRACE RSQBRACE { RowPointer($1) }
+
+typ:
+  primitive { $1 }
+  | MATRIX { Matrix }
+  | ROW { Row }
+  | matrix_typ { $1 }
+  | row_typ { $1 }
+  | row_pointer_typ { $1 }
 
 primitive:
   	INT { Int }
@@ -84,6 +99,8 @@ primitive:
   | STRING { String }
   | STRING TIMES { String_T }
   | tuple_typ { $1 }
+  | row_pointer_typ { $1 }
+  
 
 vdecl_list:
     /* nothing */    { [] }
@@ -141,6 +158,10 @@ expr:
   | ID LATBRACE expr RATBRACE { Array($1,$3) }
 /*  | ID LATBRACE expr RATBRACE ASSIGN expr { ArrayAssign($1,$3,$6) } */
   | ID ATASSIGN NEW LSQBRACE expr RSQBRACE { Init($1,$5) }
+  | DOLLAR ID { RowReference($2) }
+  | DOLLAR DOLLAR ID { MatrixReference($3) }
+  | OCTOTHORP ID { Dereference($2) }
+  | PLUS PLUS ID { PointerIncrement($3) }
   | ID LSQBRACE expr RSQBRACE %prec NOLSQBRACE { RowAccess($1, $3) }
   | ID LPERCENT expr RPERCENT { TupleAccess($1, $3) }
   | ID LSQBRACE expr RSQBRACE LSQBRACE expr RSQBRACE { MatrixAccess($1, $3, $6) }
