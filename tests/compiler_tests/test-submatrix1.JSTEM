@@ -1,0 +1,25 @@
+def int main() {
+	int[2][2] m1;
+	int[2][2] m2;
+	int[2][2] m3;
+	int i;
+	int j;
+
+	for(i=0; i<2; i=i+1) {
+		for (j=0; j<2; j=j+1) {
+			m1[i][j] = 2;
+		}
+	}
+	for(i=0; i<2; i=i+1) {
+		for (j=0; j<2; j=j+1) {
+			m2[i][j] = 3;
+		}
+	}
+	m3 = m2 - m1;
+	for(i=0; i<2; i=i+1) {
+		for (j=0; j<2; j=j+1) {
+			print(m3[i][j]);
+		}
+	}
+}
+
