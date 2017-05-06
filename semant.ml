@@ -77,15 +77,27 @@ let check (globals, functions) =
   report_duplicate (fun n -> "duplicate function " ^ n)
   (List.map (fun fd -> fd.fname) functions);
 
-  let built_in_decls = StringMap.add "print"
-	{ typ = Void; fname = "print"; formals = [(Int, "x")]; 
-	  locals = []; body = [] } (StringMap.add "printf"
+    let built_in_decls = StringMap.add "print"
+  { typ = Void; fname = "print"; formals = [(Int, "x")]; 
+    locals = []; body = [] } (StringMap.add "printf"
   { typ = Void; fname = "printf"; formals = [(Float, "x")];
     locals = []; body = [] } (StringMap.add "prints"
   { typ = Void; fname = "prints"; formals = [(String, "x")];
-    locals = []; body = [] } (StringMap.singleton "printb" 
+    locals = []; body = [] } (StringMap.add "printb" 
   { typ = Void; fname = "printb"; formals = [(Bool, "x")];
-	  locals = []; body = [] })))
+    locals = []; body = [] } (StringMap.add "open"
+  { typ = String; fname = "open"; formals = [(String, "x"); (String,"y")];
+    locals = []; body = [] } (StringMap.add "read"
+  { typ = String; fname = "read"; formals = [(String,"w"); (Int, "x"); (Int, "y"); (String, "z")];
+    locals = []; body = [] } (StringMap.add "write"
+  { typ = Int; fname = "write"; formals = [(String, "w"); (Int,"x"); (Int,"y"); (String, "z")];
+    locals = []; body = [] } (StringMap.add "close"
+  { typ = Void; fname = "close"; formals = [(String, "x")];
+    locals = []; body = [] } (StringMap.add "fget"
+  { typ = String; fname = "fget"; formals = [(String,"x");(Int,"y");(String, "z")];
+    locals = []; body = [] } (StringMap.singleton "len"
+  { typ = Int; fname = "len"; formals = [(String, "x")];
+    locals = []; body = [] } )))))))))
 in
 
 let function_decls = 
@@ -147,6 +159,12 @@ let check_function func =
   let matrix_access_type = function
       MatrixTyp(t, _, _) -> t
     | _ -> raise (Failure ("illegal matrix access") ) in
+    
+    
+  let mrow_access_type = function
+	    MatrixTyp(t, _, c) -> RowTyp(t, c)
+	  | _ -> raise (Failure ("illegal matrix access") ) in
+
 
   let type_of_row r l =
 	match (List.hd r) with
@@ -245,6 +263,10 @@ let check_function func =
                                           Int -> Int
                                         | _ -> raise (Failure ("attempting to access with a non-integer type"))) in
                                matrix_access_type (type_of_identifier s)
+  | MRowAccess(s, e) -> let _ = (match (expr e) with
+									Int -> Int
+								  | _ -> raise (Failure ("attempting to access with non-integer type"))) in
+							mrow_access_type (type_of_identifier s)
   | RowReference(s) -> check_row_pointer_type( type_of_identifier s )
   | PointerIncrement(s) -> check_pointer_type (type_of_identifier s)
   (*| RowLit(s) -> (match (type_of_identifier s) with
@@ -256,7 +278,7 @@ let check_function func =
   | TupleReference(s) -> check_tuple_pointer_type (type_of_identifier s) *)
   | Dereference(s) -> pointer_type (type_of_identifier s)
   | MatrixReference(s) -> check_matrix_pointer_type (type_of_identifier s)
-(*  | MatrixTupleReference(s) -> check_matrix_tuple_pointer_type (type_of_identifier s) *)
+  | MatrixTupleReference(s) -> check_matrix_tuple_pointer_type (type_of_identifier s) 
   | Binop(e1, op, e2) as e -> let t1 = expr e1 and t2 = expr e2 in
   (match op with
       Add | Sub | Mult | Div when t1 = Int && t2 = Int -> Int

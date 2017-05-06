@@ -13,6 +13,7 @@ let id = alphabet dig_or_alpha*
 
 let esc_char = '\\' ['\\' ''' '"' 'n' 'r' 't']
 let ascii_sym = ([' '-'!' '#'-'[' ']'-'~'])
+let char = '"' ( ascii_sym | digits ) '"'
 let string = '"' ( (ascii_sym | esc_char)* as s ) '"'
 
 rule token = parse
@@ -63,18 +64,21 @@ rule token = parse
 | "void"   { VOID }
 | "mx"     { MATRIX }
 | "row"    { ROW }
-| "file"   { FILE }
 | "tuple"  { TUPLE }
 | "def"    { DEF }
 | "in"     { IN }
 | "True"   { TRUE }
 | "False"  { FALSE }
-| "$"	   { DOLLAR }
-| "#"	   { OCTOTHORP }
+| "$"	     { DOLLAR }
+| "#"	     { OCTOTHORP }
+| "char"   { CHAR }
+| "String" { STRING }
+| "File"   { STRING }
 | ['0'-'9']+'.'['0'-'9']+ as lxm { FLOAT_LIT(float_of_string lxm) }
 | ['0'-'9']+ as lxm { INT_LIT(int_of_string lxm) }
 | id      as lxm { ID(lxm) }
 | string       				{ STRING_LIT(un_esc s) }
+| char as lxm {CHAR_LIT( String.get lxm 1)}
 | eof { EOF }
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
 
