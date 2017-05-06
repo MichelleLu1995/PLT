@@ -229,19 +229,21 @@ let check_function func =
       | Float,Float -> Float
       | Int,Float -> Float
       | Float,Int -> Float
-      | TupleTyp(Int,l1),TupleTyp(Int,l2) when l1=l2 -> TupleTyp(Int,l1)) 
+      | TupleTyp(Int,l1),TupleTyp(Int,l2) when l1=l2 -> TupleTyp(Int,l1)
+      | MatrixTyp(Int,r1,c1),MatrixTyp(Int,r2,c2) when r1=r2 && c1=c2 -> MatrixTyp(Int,r1,c2)) 
     | Sub -> (match t1,t2 with Int,Int -> Int
       | Float,Float -> Float
       | Int,Float -> Float
       | Float,Int -> Float
       | TupleTyp(Int,l1),TupleTyp(Int,l2) when l1=l2 -> TupleTyp(Int,l1)) 
-    (*
-      Add | Sub | Mult | Div when t1 = Int && t2 = Int -> Int
-    | Add | Sub | Mult | Div when t1 = Float && t2 = Float -> Float
-    | Add | Sub | Mult | Div when t1 = Int && t2 = Float -> Float
-    | Add | Sub | Mult | Div when t1 = Float && t2 = Int -> Float
-    | Add when t1 = TupleTyp(Int, 3) && t2 = TupleTyp(Int, 3) -> TupleTyp(Int, 3)
-  *)
+    | Mult -> (match t1,t2 with Int,Int -> Int
+      | Float,Float -> Float
+      | Int,Float -> Float
+      | Float,Int -> Float) 
+    | Div -> (match t1,t2 with Int,Int -> Int
+      | Float,Float -> Float
+      | Int,Float -> Float
+      | Float,Int -> Float) 
     | Equal | Neq | Meq when t1 = t2 -> Bool
     | Equal | Neq | Meq when t1 = t2 -> Bool
     | PlusEq when t1 = Int && t2 = Int -> Int
