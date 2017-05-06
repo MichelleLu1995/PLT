@@ -7,6 +7,7 @@ open Ast
 %token EQ NEQ LT LEQ GT GEQ AND OR MEQ
 %token TRUE FALSE
 %token RETURN IF ELSE FOR WHILE INT BOOL VOID MATRIX ROW FLOAT FILE TUPLE
+%token OCTOTHORP DOLLAR
 
 %token <int> INT_LIT
 %token <string> STRING_LIT
@@ -58,14 +59,6 @@ formal_list:
     typ ID                   { [($1,$2)] }
   | formal_list COMMA typ ID { ($3,$4) :: $1 }
 
-typ:
-	primitive { $1 }
-  | MATRIX { Matrix }
-  | ROW { Row }
-  | FILE { File }
-  | matrix_typ { $1 }
-  | row_typ { $1 }
-
 matrix_typ:
   primitive LSQBRACE INT_LIT RSQBRACE LSQBRACE INT_LIT RSQBRACE { MatrixTyp($1, $3, $6) }
 	
@@ -75,12 +68,26 @@ row_typ:
 tuple_typ:
   primitive LPERCENT INT_LIT RPERCENT { TupleTyp($1, $3) }
 
+row_pointer_typ:
+  primitive LSQBRACE RSQBRACE { RowPointer($1) }
+
+typ:
+  primitive { $1 }
+  | MATRIX { Matrix }
+  | ROW { Row }
+  | FILE { File }
+  | matrix_typ { $1 }
+  | row_typ { $1 }
+  | row_pointer_typ { $1 }
+
 primitive:
   	INT { Int }
   | BOOL { Bool }
   | VOID { Void }
   | FLOAT { Float }
   | tuple_typ { $1 }
+  | row_pointer_typ { $1 }
+  
 
 vdecl_list:
     /* nothing */    { [] }
@@ -135,6 +142,10 @@ expr:
   | expr ASSIGN expr   { Assign($1, $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | LPAREN expr RPAREN { $2 }
+  | DOLLAR ID { RowReference($2) }
+  | DOLLAR DOLLAR ID { MatrixReference($3) }
+  | OCTOTHORP ID { Dereference($2) }
+  | PLUS PLUS ID { PointerIncrement($3) }
   | ID LSQBRACE expr RSQBRACE %prec NOLSQBRACE { RowAccess($1, $3) }
   | ID LPERCENT expr RPERCENT { TupleAccess($1, $3) }
   | ID LSQBRACE expr RSQBRACE LSQBRACE expr RSQBRACE { MatrixAccess($1, $3, $6) }
