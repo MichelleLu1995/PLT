@@ -76,7 +76,6 @@ typ:
   primitive { $1 }
   | MATRIX { Matrix }
   | ROW { Row }
-  | FILE { File }
   | matrix_typ { $1 }
   | row_typ { $1 }
   | row_pointer_typ { $1 }
