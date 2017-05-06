@@ -74,6 +74,7 @@ rule token = parse
 | "char"   { CHAR }
 | "String" { STRING }
 | "File"   { STRING }
+| "~"	   { SQUIGLY }
 | ['0'-'9']+'.'['0'-'9']+ as lxm { FLOAT_LIT(float_of_string lxm) }
 | ['0'-'9']+ as lxm { INT_LIT(int_of_string lxm) }
 | id      as lxm { ID(lxm) }
