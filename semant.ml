@@ -183,6 +183,10 @@ let check_function func =
     | MatrixTuplePointerType(p) -> DataType(p)
     | _ -> raise ( Failure ("cannot dereference a non-pointer type") ) in *)
 
+  let get_int x = match x with
+  IntLit(n) -> n
+  in
+
   (* Return the type of an expression or throw an exception *)
   let rec expr = function
     IntLit _ -> Int
@@ -221,11 +225,18 @@ let check_function func =
   | MatrixTupleReference(s) -> check_matrix_tuple_pointer_type (type_of_identifier s) *)
   | Binop(e1, op, e2) as e -> let t1 = expr e1 and t2 = expr e2 in
   (match op with
+    Add -> (match t1,t2 with Int,Int -> Int
+      | Float,Float -> Float
+      | Int,Float -> Float
+      | Float,Int -> Float
+      | TupleTyp(Int,l1),TupleTyp(Int,l2) when l1=l2 -> TupleTyp(Int,l1)) 
+    (*
       Add | Sub | Mult | Div when t1 = Int && t2 = Int -> Int
     | Add | Sub | Mult | Div when t1 = Float && t2 = Float -> Float
     | Add | Sub | Mult | Div when t1 = Int && t2 = Float -> Float
     | Add | Sub | Mult | Div when t1 = Float && t2 = Int -> Float
-    | Add when t1 = TupleTyp(Int,3) && t2 = TupleTyp(Int,3) -> TupleTyp(Int,3)
+    | Add when t1 = TupleTyp(Int, 3) && t2 = TupleTyp(Int, 3) -> TupleTyp(Int, 3)
+  *)
     | Equal | Neq | Meq when t1 = t2 -> Bool
     | Equal | Neq | Meq when t1 = t2 -> Bool
     | PlusEq when t1 = Int && t2 = Int -> Int

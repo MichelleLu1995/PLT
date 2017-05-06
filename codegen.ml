@@ -76,7 +76,7 @@ let translate (globals, functions) =
   let write_func = L.declare_function "write" write_ty the_module in*)
 
   (* Define each function (arguments and return type) so we can call it *)
-let function_decls =
+  let function_decls =
     let function_decl m fdecl =
       let name = fdecl.A.fname
       and formal_types =
@@ -115,7 +115,7 @@ let function_decls =
                    with Not_found -> StringMap.find n global_vars
     in
 
-    let check_function =
+        let check_function =
         List.fold_left (fun m (t, n) -> StringMap.add n t m)
         StringMap.empty (globals @ fdecl.A.formals @ fdecl.A.locals)
     in
@@ -148,26 +148,72 @@ let function_decls =
       | A.TupleLit _ -> ltype_of_typ (A.Tuple)
       | _ -> raise (UnsupportedRowType) in
 
-	let build_row_access s i1 i2 builder isAssign =
-	  if isAssign
-		then L.build_gep (lookup s) [| i1; i2 |] s builder
-	  else
-		L.build_load (L.build_gep (lookup s) [| i1; i2 |] s builder) s builder
-	in
+  let build_row_access s i1 i2 builder isAssign =
+    if isAssign
+    then L.build_gep (lookup s) [| i1; i2 |] s builder
+    else
+    L.build_load (L.build_gep (lookup s) [| i1; i2 |] s builder) s builder
+  in
 
-	let build_tuple_access s i1 i2 builder isAssign =
-	  if isAssign
-		then L.build_gep (lookup s) [| i1; i2 |] s builder
-	  else
-		L.build_load (L.build_gep (lookup s) [| i1; i2 |] s builder) s builder
-	in
+  let build_tuple_access s i1 i2 builder isAssign =
+    if isAssign
+    then L.build_gep (lookup s) [| i1; i2 |] s builder
+    else
+    L.build_load (L.build_gep (lookup s) [| i1; i2 |] s builder) s builder
+  in
 
-	let build_matrix_access s i1 i2 i3 builder isAssign =
-	  if isAssign
-		then L.build_gep (lookup s) [| i1; i2; i3|] s builder
-	  else
-		L.build_load (L.build_gep (lookup s) [| i1; i2; i3 |] s builder) s builder
-	in
+  let build_matrix_access s i1 i2 i3 builder isAssign =
+    if isAssign
+    then L.build_gep (lookup s) [| i1; i2; i3|] s builder
+    else
+    L.build_load (L.build_gep (lookup s) [| i1; i2; i3 |] s builder) s builder
+  in
+
+    (* New code/supporting functions for getting type *)
+    (* A function that is used to check each function *)
+      let check_not_void exceptf = function
+      (A.Void, n) -> raise (Failure (exceptf n))
+    | _ -> ()
+  in
+
+ let type_of_tuple1 t =
+    match (List.hd t) with
+      A.IntLit _ -> A.TupleTyp(Int, List.length t)
+    | _ -> raise (Failure ("illegal tuple type")) in
+
+  let rec check_tuple_literal1 tt l i =
+    let length = List.length l in
+    match (tt, List.nth l i) with
+      (A.TupleTyp(Int, _), A.IntLit _) -> if i == length - 1 then A.TupleTyp(Int, length) else check_tuple_literal1 (A.TupleTyp(Int, length)) l (succ i)
+    | _ -> raise (Failure ("illegal tuple literal"))
+  in
+
+  let type_of_row1 r l =
+  match (List.hd r) with
+        A.IntLit _ -> A.RowTyp(Int, l)
+      | A.FloatLit _ -> A.RowTyp(Float, l)
+      | A.TupleLit t -> A.RowTyp((type_of_tuple1) t, l)
+      | _ -> raise (Failure ("illegal row type"))
+  in
+
+  let type_of_matrix1 m r c =
+    match (List.hd (List.hd m)) with
+        A.IntLit _ -> A.MatrixTyp(Int, r, c)
+      | A.FloatLit _ -> A.MatrixTyp(Float, r, c)
+      | A.TupleLit t -> A.MatrixTyp((type_of_tuple1) t, r, c)
+      | _ -> raise (Failure ("illegal matrix type"))
+  in
+
+  let rec expr1 = function
+    A.IntLit _ -> A.Int
+  | A.FloatLit _ -> A.Float
+  | A.StringLit _ -> A.String
+  | A.BoolLit _ -> A.Bool
+  | A.Id s -> type_of_identifier s
+  | A.RowLit r -> type_of_row1 r (List.length r)
+  | A.TupleLit t -> check_tuple_literal1 (type_of_tuple1 t) t 0
+  | A.MatrixLit m -> type_of_matrix1 m (List.length m) (List.length (List.hd m))
+  in
 
     (* Construct code for an expression; return its value *)
     let rec expr builder = function
@@ -184,12 +230,14 @@ let function_decls =
                               | A.TupleLit t -> let realOrder=List.map List.rev m in let i32Lists = List.map (List.map (expr builder)) realOrder in let listOfArrays=List.map Array.of_list i32Lists in let i32ListOfArrays = List.map (L.const_array (array_t (get_tuple_type t) (List.length t))) listOfArrays in let arrayOfArrays=Array.of_list i32ListOfArrays in L.const_array (array_t (array_t (get_tuple_type t) (List.length t)) (List.length (List.hd m))) arrayOfArrays
                               | _ -> raise ( UnsupportedMatrixType ))
       | A.RowLit r ->  L.const_array (get_row_type r) (Array.of_list (List.map (expr builder) r))
-	  | A.RowAccess(s, e1) -> let i1 = expr builder e1 in build_row_access s (L.const_int i32_t 0) i1 builder false
-	  | A.TupleAccess(s, e1) -> let i1 = expr builder e1 in build_tuple_access s (L.const_int i32_t 0) i1 builder false
-	  | A.MatrixAccess(s, e1, e2) -> let i1 = expr builder e1 and i2 = expr builder e2 in build_matrix_access s (L.const_int i32_t 0) i1 i2 builder false
+	   | A.RowAccess(s, e1) -> let i1 = expr builder e1 in build_row_access s (L.const_int i32_t 0) i1 builder false
+	   | A.TupleAccess(s, e1) -> let i1 = expr builder e1 in build_tuple_access s (L.const_int i32_t 0) i1 builder false
+	   | A.MatrixAccess(s, e1, e2) -> let i1 = expr builder e1 and i2 = expr builder e2 in build_matrix_access s (L.const_int i32_t 0) i1 i2 builder false
       | A.Binop (e1, op, e2) -> 
         let e1' = expr builder e1 and
-        e2' = expr builder e2 in
+        e2' = expr builder e2 and
+        t1 = expr1 e1 and
+        t2 = expr1 e2 in
           let float_bop operator = 
             (match operator with
               A.Add     -> L.build_fadd
@@ -273,7 +321,7 @@ let function_decls =
               IntLit(_),IntLit(_) -> int_bop op
               | Id(int), IntLit(_) -> int_bop op
               | IntLit(_), Id(int) -> int_bop op
-              | _,_ -> tuple_int_bop 3 op)
+              | _,_ -> match t1,t2 with TupleTyp(Int,l1),TupleTyp(Int,l2) when l1=l2->tuple_int_bop l1 op)
           | "float" , "float" -> float_bop op
           | _,_ -> raise(UnsupportedBinop)
         in
