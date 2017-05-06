@@ -47,7 +47,6 @@ let tokenize = function
 | VOID -> "VOID"
 | MATRIX -> "MATRIX"
 | ROW -> "ROW"
-| FILE -> "FILE"
 | TUPLE -> "TUPLE"
 | DEF -> "DEF"
 | IN -> "IN"
