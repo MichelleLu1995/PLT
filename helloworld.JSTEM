@@ -1,5 +1,7 @@
 def int main() {
 	
-	prints("Hello World\n");
+	prints("Hello World");
+
+	return 0;
 
 }
