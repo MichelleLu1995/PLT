@@ -2,7 +2,7 @@
 open Ast
 %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA BAR COLON LSQBRACE RSQBRACE LPERCENT RPERCENT LMPERCENT RMPERCENT
+%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA BAR COLON LSQBRACE RSQBRACE LPERCENT RPERCENT LMPERCENT RMPERCENT LATBRACE RATBRACE 
 %token PLUS MINUS TIMES DIVIDE ASSIGN NOT MPLUS MMINUS MTIMES MDIVIDE PLUSEQ ATASSIGN 
 %token EQ NEQ LT LEQ GT GEQ AND OR MEQ NEW 
 %token TRUE FALSE
@@ -62,7 +62,6 @@ formal_list:
 typ:
 	primitive { $1 }
   | MATRIX { Matrix }
-  | STRING { String }
   | ROW { Row }
   | matrix_typ { $1 }
   | row_typ { $1 }
@@ -80,8 +79,10 @@ primitive:
   	INT { Int }
   | BOOL { Bool }
   | VOID { Void }
-  | CHAR {Char}
+  | CHAR { Char }
   | FLOAT { Float }
+  | STRING { String }
+  | STRING TIMES { String_T }
   | tuple_typ { $1 }
 
 vdecl_list:
@@ -137,12 +138,17 @@ expr:
   | expr ASSIGN expr   { Assign($1, $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | LPAREN expr RPAREN { $2 }
+  | ID LATBRACE expr RATBRACE { Array($1,$3) }
+/*  | ID LATBRACE expr RATBRACE ASSIGN expr { ArrayAssign($1,$3,$6) } */
   | ID ATASSIGN NEW LSQBRACE expr RSQBRACE { Init($1,$5) }
   | ID LSQBRACE expr RSQBRACE %prec NOLSQBRACE { RowAccess($1, $3) }
   | ID LPERCENT expr RPERCENT { TupleAccess($1, $3) }
   | ID LSQBRACE expr RSQBRACE LSQBRACE expr RSQBRACE { MatrixAccess($1, $3, $6) }
   | ID LSQBRACE expr RSQBRACE LSQBRACE COLON RSQBRACE { MRowAccess($1, $3) }
   | ID LSQBRACE COLON RSQBRACE LSQBRACE expr RSQBRACE { MColumnAccess($1, $6) }
+
+
+
 
 
 primitives:

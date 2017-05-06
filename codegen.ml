@@ -34,6 +34,7 @@ let translate (globals, functions) =
     | A.Void -> void_t
     | A.Float -> float_t
     | A.String -> pointer_t i8_t
+    | A.String_T -> L.pointer_type (pointer_t i8_t)
     | A.Char -> i8_t
     | A.MatrixTyp(typ, size1, size2) -> (match typ with
                                       A.Int    -> array_t (array_t i32_t size2) size1
@@ -97,8 +98,9 @@ let translate (globals, functions) =
   let sprintf_func = L.declare_function "sprintf" sprintf_ty the_module in
   let calloc_ty = L.function_type (pointer_t i8_t) [|i32_t; i32_t|] in
   let calloc_func = L.declare_function "calloc" calloc_ty the_module in
-
-
+  let strtok_ty = L.function_type (pointer_t i8_t) [| (pointer_t i8_t) ; L.pointer_type i8_t |] in
+  let strtok_fun = L.declare_function "strtok" strtok_ty the_module in
+  
   (* Data casting *)
 
 
@@ -244,6 +246,10 @@ let function_decls =
 	    | A.RowAccess(s, e1) -> let i1 = expr builder e1 in build_row_access s (L.const_int i32_t 0) i1 builder false
 	    | A.TupleAccess(s, e1) -> let i1 = expr builder e1 in build_tuple_access s (L.const_int i32_t 0) i1 builder false
 	    | A.MRowAccess(s, e1) -> let i1 = expr builder e1 in build_mrow_access s (L.const_int i32_t 0) i1 builder false
+      | A.Array(e1, e2) -> let para1=(expr builder (A.Id e1)) 
+        and para2=(expr builder e2) in 
+        let k=L.build_in_bounds_gep para1 [|para2|] "tmpp" builder in
+        L.build_load k "deref" builder
       | A.Init(e1,e2) -> let cnt1=(lookup e1) and cnt2= expr builder e2 in
         let tp= L.element_type (L.type_of cnt1) in 
         let sz=L.size_of tp in
@@ -393,15 +399,16 @@ let function_decls =
     L.build_call fwrite_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "tmpy" builder 
       | A.Call("read", e) -> 
     L.build_call read_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "tmpx" builder
-      | A.Call("fget",e) -> 
+      | A.Call("fget", e) -> 
     L.build_call get_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "tmpz" builder
       | A.Call("len", e) -> 
     L.build_call strlen_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "len" builder
       | A.Call ("atoi", e) ->
     L.build_call cast_str_int_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "tmp3" builder 
-      | A.Call ("sprintff", e) ->
+      | A.Call ("itos", e) ->
     L.build_call sprintf_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "sprintf" builder 
-
+      | A.Call("splitstr", e)->
+     L.build_call strtok_fun (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "tmp5" builder 
 
       | A.Call ("print", [e]) | A.Call ("printb", [e]) ->
     L.build_call printf_func [| int_format_str ; (expr builder e) |]

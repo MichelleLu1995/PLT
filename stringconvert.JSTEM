@@ -1,23 +1,17 @@
 def int main() {	
 	String line;
-	int num;
 	String temp;
-	File file2;
-
-	temp = new[1000000];
-	/*file2 = open("tree_1.ppm","r");*/
+	
+	int num;
     
-    /*
     num = 1234;
     line = "1234";
 	print(atoi(line));
 
-	(line = itoa(num);
-	prints(line);
+	temp @= new[3];
+	itos(temp,"%d",num);
+	prints(temp);
 
-	sprintff(line, "%d", num);
-	prints(line);
-	*/
 
 	return 0;
 }

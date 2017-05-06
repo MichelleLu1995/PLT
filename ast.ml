@@ -7,6 +7,7 @@ type typ =
 	Int
   | Float
   | String 
+  | String_T
   | Char
   | Bool
   | Void  
@@ -47,6 +48,8 @@ type expr = IntLit of int
   | MatrixReference of string
   | PointerIncrement of string
   | Dereference of string
+  | Array of string* expr
+  | ArrayAssign of string* expr* expr
             
 type stmt = Block of stmt list 
   | Expr of expr 
@@ -164,6 +167,7 @@ let rec string_of_expr = function
       string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
   | Unop(o, e) -> string_of_uop o ^ string_of_expr e
   | Assign(v, e) -> string_of_expr v ^ " = " ^ string_of_expr e
+  | Array(v,e) -> v ^ "[" ^ string_of_expr e ^ "]"
   | Call(f, el) ->
       f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
   | RowAccess(r, e) -> r ^ "[" ^ string_of_expr e ^ "]"
@@ -195,6 +199,7 @@ let string_of_typ = function
   | Void -> "void"
   | Float -> "float"
   | String -> "string"
+  | String_T -> "string *"
   | Char -> "char"
   | MatrixTyp(t, l1, l2) -> (match t with 
                         Int -> "int" ^ "[" ^ string_of_int l1 ^ "][" ^ string_of_int l2 ^ "]"
@@ -209,6 +214,7 @@ let string_of_typ = function
   | RowTyp(r, l1) -> (match r with 
                       Int -> "int" ^ "[" ^ string_of_int l1 ^ "]"
                      | Float -> "float" ^ "[" ^ string_of_int l1 ^ "]" 
+                     | String -> "string" ^ "[" ^ string_of_int l1 ^ "]"
                      | TupleTyp(x, l) -> (match x with 
                                           Int -> "int" ^ "(" ^ string_of_int l ^ ")"
 										| _ -> raise( Failure("Illegal expression in tuple primitive") ))
