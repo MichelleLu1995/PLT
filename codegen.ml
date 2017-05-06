@@ -316,6 +316,24 @@ let translate (globals, functions) =
                 L.build_load (L.build_gep tmp_m [| L.const_int i32_t 0 |] "tmpmat" builder) "tmpmat" builder)
           in
 
+          let matrix_float_bop r_i c_i operator =
+            let lhs_str = (match e1 with A.Id(s) -> s) in
+            let rhs_str = (match e2 with A.Id(s) -> s) in
+              (match operator with
+                A.Add ->
+                  let tmp_m = L.build_alloca (array_t (array_t float_t c_i) r_i) "tmpmat" builder in
+                  for i=0 to (r_i-1) do
+                    for j=0 to (c_i-1) do
+                      let m1 = build_matrix_access lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) (L.const_int i32_t j) builder false in
+                      let m2 = build_matrix_access rhs_str (L.const_int i32_t 0) (L.const_int i32_t i) (L.const_int i32_t j) builder false in
+                      let add_res = L.build_fadd m1 m2 "tmp" builder in
+                      let ld = L.build_gep tmp_m [| L.const_int i32_t 0; L.const_int i32_t i; L.const_int i32_t j |] "tmpmat" builder in
+                    ignore(L.build_store add_res ld builder);
+                    done
+                  done;
+                L.build_load (L.build_gep tmp_m [| L.const_int i32_t 0 |] "tmpmat" builder) "tmpmat" builder)
+          in
+
         let string_of_e1'_llvalue = L.string_of_llvalue e1'
         and string_of_e2'_llvalue = L.string_of_llvalue e2' in
 
@@ -350,11 +368,12 @@ let translate (globals, functions) =
               | Id(int), IntLit(_) -> int_bop op
               | IntLit(_), Id(int) -> int_bop op
               | _,_ -> match t1,t2 with TupleTyp(Int,l1),TupleTyp(Int,l2) when l1=l2->tuple_int_bop l1 op
-            | MatrixTyp(Int,r1,c1),MatrixTyp(Int,r2,c2) when r1=r2 && c1=c2 -> matrix_int_bop r1 c1 op)
+                                      | MatrixTyp(Int,r1,c1),MatrixTyp(Int,r2,c2) when r1=r2 && c1=c2 -> matrix_int_bop r1 c1 op)
           | "float" , "float" -> (match (e1,e2) with
               FloatLit(_),FloatLit(_) -> float_bop op
               | Id(float), FloatLit(_) -> float_bop op
-              | FloatLit(_), Id(float) -> float_bop op)
+              | FloatLit(_), Id(float) -> float_bop op
+              | _,_ -> match t1,t2 with MatrixTyp(Float,r1,c1),MatrixTyp(Float,r2,c2) when r1=r2 && c1=c2 -> matrix_float_bop r1 c1 op)
           | _,_ -> raise(UnsupportedBinop)
         in
         build_ops_with_types e1'_type e2'_type
