@@ -1,4 +1,4 @@
-def string hello(string word){
+def String hello(string word){
 	return word;
 }
 

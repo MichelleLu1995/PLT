@@ -213,7 +213,7 @@ let check_function func =
   | MatrixLit m -> type_of_matrix m (List.length m) (List.length (List.hd m))
   | RowAccess(s, e) -> let _ = (match (expr e) with
                                     Int -> Int
-                                  | _ -> raise (Failure ("attempting to access with non-integer and non-float type"))) in
+                                  | _ -> raise (Failure ("attempting to access with non-integer type"))) in
                             row_access_type (type_of_identifier s)
   | TupleAccess(s, e) -> let _ = (match (expr e) with
                                     Int -> Int
@@ -245,9 +245,11 @@ let check_function func =
   (match op with
       Add | Sub | Mult | Div when t1 = Int && t2 = Int -> Int
     | Add | Sub | Mult | Div when t1 = Float && t2 = Float -> Float
-     (*
+    | Add | Sub | Mult | Div when t1 = Int && t2 = Float -> Float
+    | Add | Sub | Mult | Div when t1 = Float && t2 = Int -> Float (*
     | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(Int,Int,Int) && t2 = MatrixTyp(Int,Int,Int) -> MatrixTyp(Int,Int,Int)
     | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(Float) && t2 = MatrixTyp(Float) -> MatrixTyp(Float)
+    | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(Int) && t2 = MatrixTyp(Float) -> MatrixTyp(Float)
     | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(TupleTyp(Int)) && t2 = MatrixType(TupleTyp(Int)) -> MatrixTyp(TupleTyp(Int))
     | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(TupleTyp(Int)) && t2 = Int -> MatrixTyp(TupleTyp(Int))
   *)  | Equal | Neq | Meq when t1 = t2 -> Bool
@@ -277,7 +279,7 @@ let check_function func =
                                                                       RowTyp(t, _) -> (match t with
                                                                                                     Int -> Int
                                                                                                   | Float -> Float
-                                                                                                  | TupleTyp(p, l) -> TupleTyp(p, l)
+                                                                                                  | TupleTyp(p, l) -> TupleTyp(p, l) 
                                                                                                   | _ -> raise ( Failure ("illegal row") )
                                                                                                 )
                                                                       | _ -> raise ( Failure ("cannot access a primitive") )

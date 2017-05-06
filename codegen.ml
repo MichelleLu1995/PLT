@@ -36,23 +36,23 @@ let translate (globals, functions) =
     | A.Float -> float_t
     | A.String -> pointer_t i8_t
     | A.Char -> i8_t
+    | A.TupleTyp(typ, size) -> (match typ with
+                                  A.Int    -> array_t i32_t size
+                                | _ -> raise (UnsupportedTupleType))
     | A.MatrixTyp(typ, size1, size2) -> (match typ with
                                       A.Int    -> array_t (array_t i32_t size2) size1
                                     | A.Float  -> array_t (array_t float_t size2) size1
                                     | A.TupleTyp(typ1,size3) -> (match typ1 with
-                                              A.Int    -> array_t (array_t (array_t i32_t size3) size2) size1
-                                            | _ -> raise (UnsupportedTupleType)) 
+                                              A.Int    -> array_t (array_t i32_t size3) size2 
+                                            | _ -> raise (UnsupportedTupleType))
                                     | _ -> raise (UnsupportedMatrixType))
     | A.RowTyp(typ, size) -> (match typ with
                                       A.Int    -> array_t i32_t size
                                     | A.Float  -> array_t float_t size
                                     | A.TupleTyp(typ1,size1) -> (match typ1 with
-                                                                  A.Int    -> array_t (array_t i32_t size1) size 
-                                                                | _ -> raise (UnsupportedTupleType))
+                                              A.Int    -> array_t (array_t i32_t size1) size 
+                                            | _ -> raise (UnsupportedTupleType))
                                     | _ -> raise (UnsupportedRowType))
-    | A.TupleTyp(typ, size) -> (match typ with
-                                      A.Int    -> array_t i32_t size
-                                    | _ -> raise (UnsupportedTupleType))
     | A.RowPointer(t) -> (match t with
                               A.Int -> pointer_t i32_t
                             | A.Float -> pointer_t float_t
@@ -61,7 +61,10 @@ let translate (globals, functions) =
                               A.Int -> pointer_t i32_t
                             | A.Float -> pointer_t float_t
                             | _ -> raise (IllegalPointerType))
+    | _ -> raise (Failure("TypeNotFound"))
+    (* | _ -> raise (Failure ("illegal type " ^ A.string_of_typ )) *)
   in
+ 
 
   (* Declare each global variable; remember its value in a map *)
   let global_vars =
@@ -115,11 +118,17 @@ let function_decls =
     let local_vars =
       let add_formal m (t, n) p = L.set_value_name n p;
   let local = L.build_alloca (ltype_of_typ t) n builder in
-  ignore (L.build_store p local builder);
+  ignore (L.build_store p local builder); 
   StringMap.add n local m in
 
-      let add_local m (t, n) =
-  let local_var = L.build_alloca (ltype_of_typ t) n builder
+      let add_local m (t, n) = print_endline(A.string_of_typ t);
+  let local_var = (* L.build_alloca (ltype_of_typ t) n builder *)
+   (match t with
+       A.MatrixTyp(A.TupleTyp(_, l), r, c) -> if r * c * l > 1000
+                                                  then L.build_malloc (ltype_of_typ t) n builder
+                                                else
+                                                  L.build_alloca (ltype_of_typ t) n builder
+     | _ -> L.build_alloca (ltype_of_typ t) n builder)
   in StringMap.add n local_var m in
 
       let formals = List.fold_left2 add_formal StringMap.empty fdecl.A.formals
@@ -206,6 +215,7 @@ let function_decls =
 		L.build_load (L.build_gep (lookup s) [| i1; i2 |] s builder) s builder
 	in
 
+
     (* Construct code for an expression; return its value *)
     let rec expr builder = function
         A.IntLit i -> L.const_int i32_t i
@@ -223,8 +233,6 @@ let function_decls =
                               | _ -> raise ( UnsupportedMatrixType ))
       | A.MatrixReference (s) -> build_matrix_argument s builder
       | A.RowLit r ->  L.const_array (get_row_type r) (Array.of_list (List.map (expr builder) r))
-  	  | A.RowAccess(s, e1) -> let i1 = expr builder e1 in build_row_access s (L.const_int i32_t 0) i1 builder false
-	    | A.TupleAccess(s, e1) -> let i1 = expr builder e1 in build_tuple_access s (L.const_int i32_t 0) i1 builder false
 	    | A.MatrixAccess(s, e1, e2) -> let i1 = expr builder e1 and i2 = expr builder e2 in build_matrix_access s (L.const_int i32_t 0) i1 i2 builder false
       | A.PointerIncrement (s) -> build_pointer_increment s builder false
       | A.Dereference (s) -> build_pointer_dereference s builder false
@@ -233,7 +241,7 @@ let function_decls =
 	    | A.MRowAccess(s, e1) -> let i1 = expr builder e1 in build_mrow_access s (L.const_int i32_t 0) i1 builder false
       | A.Binop (e1, op, e2) -> 
         let e1' = expr builder e1
-        and e2' = expr builder e2  in
+        and e2' = expr builder e2 in
           let float_bop operator = 
             (match operator with
               A.Add     -> L.build_fadd
@@ -299,7 +307,7 @@ let function_decls =
           match (typ1, typ2) with
             "int", "int" -> int_bop op
           | "float" , "float" -> float_bop op
-          | _, _ -> raise(Failure ("illegal print type"))
+          | _, _ -> raise(UnsupportedBinop)
         in
         build_ops_with_types e1'_type e2'_type
       | A.Unop(op, e) ->
