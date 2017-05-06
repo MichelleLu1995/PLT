@@ -285,7 +285,17 @@ let translate (globals, functions) =
                     let ld = L.build_gep tmp_t [| L.const_int i32_t 0; L.const_int i32_t i |] "tmptup" builder in
                   ignore(L.build_store add_res ld builder);
                   done;
-                L.build_load (L.build_gep tmp_t [| L.const_int i32_t 0 |] "tmptup" builder) "tmptup" builder)
+                L.build_load (L.build_gep tmp_t [| L.const_int i32_t 0 |] "tmptup" builder) "tmptup" builder
+                | A.Sub  ->
+                    let tmp_t = L.build_alloca (array_t i32_t n_i) "tmptup" builder in
+                    for i=0 to n_i do
+                      let v1 = build_tuple_access lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) builder false in
+                      let v2 = build_tuple_access rhs_str (L.const_int i32_t 0) (L.const_int i32_t i) builder false in
+                      let add_res = L.build_sub v1 v2 "tmp" builder in
+                      let ld = L.build_gep tmp_t [| L.const_int i32_t 0; L.const_int i32_t i |] "tmptup" builder in
+                    ignore(L.build_store add_res ld builder);
+                    done;
+                  L.build_load (L.build_gep tmp_t [| L.const_int i32_t 0 |] "tmptup" builder) "tmptup" builder)
             in
 
         let string_of_e1'_llvalue = L.string_of_llvalue e1'
@@ -322,7 +332,10 @@ let translate (globals, functions) =
               | Id(int), IntLit(_) -> int_bop op
               | IntLit(_), Id(int) -> int_bop op
               | _,_ -> match t1,t2 with TupleTyp(Int,l1),TupleTyp(Int,l2) when l1=l2->tuple_int_bop l1 op)
-          | "float" , "float" -> float_bop op
+          | "float" , "float" -> (match (e1,e2) with
+              FloatLit(_),FloatLit(_) -> float_bop op
+              | Id(float), FloatLit(_) -> float_bop op
+              | FloatLit(_), Id(float) -> float_bop op)
           | _,_ -> raise(UnsupportedBinop)
         in
         build_ops_with_types e1'_type e2'_type

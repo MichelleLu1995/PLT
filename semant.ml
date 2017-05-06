@@ -230,6 +230,11 @@ let check_function func =
       | Int,Float -> Float
       | Float,Int -> Float
       | TupleTyp(Int,l1),TupleTyp(Int,l2) when l1=l2 -> TupleTyp(Int,l1)) 
+    | Sub -> (match t1,t2 with Int,Int -> Int
+      | Float,Float -> Float
+      | Int,Float -> Float
+      | Float,Int -> Float
+      | TupleTyp(Int,l1),TupleTyp(Int,l2) when l1=l2 -> TupleTyp(Int,l1)) 
     (*
       Add | Sub | Mult | Div when t1 = Int && t2 = Int -> Int
     | Add | Sub | Mult | Div when t1 = Float && t2 = Float -> Float
