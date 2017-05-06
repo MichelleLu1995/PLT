@@ -391,12 +391,14 @@ let translate (globals, functions) =
               IntLit(_),IntLit(_) -> int_bop op
               | Id(int), IntLit(_) -> int_bop op
               | IntLit(_), Id(int) -> int_bop op
+              | Id(_), Id(_) -> int_bop op
               | _,_ -> match t1,t2 with TupleTyp(Int,l1),TupleTyp(Int,l2) when l1=l2->tuple_int_bop l1 op
                                       | MatrixTyp(Int,r1,c1),MatrixTyp(Int,r2,c2) when r1=r2 && c1=c2 -> matrix_int_bop r1 c1 op)
           | "float" , "float" -> (match (e1,e2) with
               FloatLit(_),FloatLit(_) -> float_bop op
               | Id(float), FloatLit(_) -> float_bop op
               | FloatLit(_), Id(float) -> float_bop op
+              | Id(_), Id(_) -> float_bop op
               | _,_ -> match t1,t2 with MatrixTyp(Float,r1,c1),MatrixTyp(Float,r2,c2) when r1=r2 && c1=c2 -> matrix_float_bop r1 c1 op)
           | _,_ -> raise(UnsupportedBinop)
         in
