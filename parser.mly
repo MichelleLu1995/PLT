@@ -60,16 +60,6 @@ formal_list:
     typ ID                   { [($1,$2)] }
   | formal_list COMMA typ ID { ($3,$4) :: $1 }
 
-<<<<<<< HEAD
-typ:
-	primitive { $1 }
-  | MATRIX { Matrix }
-  | ROW { Row }
-  | matrix_typ { $1 }
-  | row_typ { $1 }
-
-=======
->>>>>>> 0beb079386defa4efb8f52354a39fa69b69180f4
 matrix_typ:
   primitive LSQBRACE INT_LIT RSQBRACE LSQBRACE INT_LIT RSQBRACE { MatrixTyp($1, $3, $6) }
 	
