@@ -121,6 +121,14 @@ let function_decls =
       let add_local m (t, n) =
   let local_var = L.build_alloca (ltype_of_typ t) n builder
   in StringMap.add n local_var m in
+   (* let local_var =
+      (match t with
+       A.MatrixTyp(A.TupleTyp(_, l), r, c) -> if r * c * l > 1000
+                                                  then L.build_malloc (ltype_of_typ t) n builder
+                                                else
+                                                  L.build_alloca (ltype_of_typ t) n builder
+     | _ -> L.build_alloca (ltype_of_typ t) n builder)
+  in StringMap.add n local_var m in*)
 
       let formals = List.fold_left2 add_formal StringMap.empty fdecl.A.formals
           (Array.to_list (L.params the_function)) in
@@ -139,6 +147,10 @@ let function_decls =
     let type_of_identifier s =
       let symbols = check_function in
       StringMap.find s symbols
+    in
+
+    let build_row_argument s builder =
+      L.build_in_bounds_gep (lookup s) [| L.const_int i32_t 0; L.const_int i32_t 0 |] s builder
     in
 
     let build_matrix_argument s builder =
@@ -222,6 +234,7 @@ let function_decls =
                               | A.IntLit _ -> let realOrder=List.map List.rev m in let i32Lists = List.map (List.map (expr builder)) realOrder in let listOfArrays=List.map Array.of_list i32Lists in let i32ListOfArrays = List.map (L.const_array i32_t) listOfArrays in let arrayOfArrays=Array.of_list i32ListOfArrays in L.const_array (array_t i32_t (List.length (List.hd m))) arrayOfArrays
                               | A.TupleLit t -> let realOrder=List.map List.rev m in let i32Lists = List.map (List.map (expr builder)) realOrder in let listOfArrays=List.map Array.of_list i32Lists in let i32ListOfArrays = List.map (L.const_array (array_t (get_tuple_type t) (List.length t))) listOfArrays in let arrayOfArrays=Array.of_list i32ListOfArrays in L.const_array (array_t (array_t (get_tuple_type t) (List.length t)) (List.length (List.hd m))) arrayOfArrays
                               | _ -> raise ( UnsupportedMatrixType ))
+      | A.RowReference (s) -> build_row_argument s builder
       | A.MatrixReference (s) -> build_matrix_argument s builder
       | A.RowLit r ->  L.const_array (get_row_type r) (Array.of_list (List.map (expr builder) r))
   	  | A.RowAccess(s, e1) -> let i1 = expr builder e1 in build_row_access s (L.const_int i32_t 0) i1 builder false
@@ -477,8 +490,7 @@ let function_decls =
       | A.Int -> L.build_ret (L.const_int i32_t 0)
       | A.Float -> L.build_ret (L.const_float float_t 0.0)
       | A.Bool -> L.build_ret (L.const_int i1_t 0)
-    (*
-      | A.RowTyp(t) -> (match t with
+    (*  | A.RowTyp(t) -> (match t with
                           A.Int -> L.build_ret(L.const_pointer_null (pointer_t i32_t))
                         | A.Float -> L.build_ret (L.const_pointer_null (pointer_t float_t))
                         | _ -> raise (UnsupportedReturnType))
@@ -489,8 +501,7 @@ let function_decls =
       | A.MatrixPointer(t) -> (match t with
                                   A.Int -> L.build_ret (L.const_pointer_null (pointer_t i32_t))
                                 | A.Float -> L.build_ret (L.const_pointer_null (pointer_t float_t))
-                                | _ -> raise (UnsupportedReturnType))
-    *)
+                                | _ -> raise (UnsupportedReturnType)) *)
       | _ -> raise (UnsupportedReturnType))
   in
 

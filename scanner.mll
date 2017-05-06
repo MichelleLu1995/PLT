@@ -69,6 +69,8 @@ rule token = parse
 | "in"     { IN }
 | "True"   { TRUE }
 | "False"  { FALSE }
+| "$"	     { DOLLAR }
+| "#"	     { OCTOTHORP }
 | "char"   { CHAR }
 | "String" { STRING }
 | "File"   { STRING }
