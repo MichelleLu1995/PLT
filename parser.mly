@@ -80,6 +80,7 @@ typ:
   | FILE { File }
   | matrix_typ { $1 }
   | row_typ { $1 }
+  | row_pointer_typ { $1 }
 
 primitive:
   	INT { Int }

@@ -556,11 +556,12 @@ let translate (globals, functions) =
         build_ops_with_type e'_type 
       | A.Assign (e1, e2) -> let e1' = (match e1 with
                                             A.Id s -> lookup s
-                      | A.RowAccess(s, e1) -> let i1 = expr builder e1 in build_row_access s (L.const_int i32_t 0) i1 builder true
-                      | A.MForRowAccess(e1) -> let i1 = expr builder e1 in build_row_access "row" (L.const_int i32_t 0) i1 builder true
-                      | A.TupleAccess(s, e1) -> let i1 = expr builder e1 in build_tuple_access s (L.const_int i32_t 0) i1 builder true
-                      | A.MatrixAccess(s, e1, e2) -> let i1 = expr builder e1 and i2 = expr builder e2 in build_matrix_access s (L.const_int i32_t 0) i1 i2 builder true
-                      | A.MRowAccess(s, e1) -> let i1 = expr builder e1 in build_mrow_access s (L.const_int i32_t 0) i1 builder true
+										  | A.RowAccess(s, e1) -> let i1 = expr builder e1 in build_row_access s (L.const_int i32_t 0) i1 builder true
+										  | A.MForRowAccess(e1) -> let i1 = expr builder e1 in build_row_access "row" (L.const_int i32_t 0) i1 builder true
+										  | A.TupleAccess(s, e1) -> let i1 = expr builder e1 in build_tuple_access s (L.const_int i32_t 0) i1 builder true
+										  | A.MatrixAccess(s, e1, e2) -> let i1 = expr builder e1 and i2 = expr builder e2 in build_matrix_access s (L.const_int i32_t 0) i1 i2 builder true
+										  | A.MRowAccess(s, e1) -> let i1 = expr builder e1 in build_mrow_access s (L.const_int i32_t 0) i1 builder true
+                                          | _ -> raise (IllegalAssignment))
                       | A.PointerIncrement(s) -> build_pointer_increment s builder true
                       | A.Dereference(s) -> build_pointer_dereference s builder true
                       | _ -> raise (IllegalAssignment))
