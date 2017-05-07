@@ -63,7 +63,7 @@ rule token = parse
 | "float"  { FLOAT }
 | "void"   { VOID }
 | "mx"     { MATRIX }
-| "row"    { ROW }
+| "file"   { FILE }
 | "tuple"  { TUPLE }
 | "def"    { DEF }
 | "in"     { IN }

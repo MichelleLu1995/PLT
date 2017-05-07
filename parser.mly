@@ -18,7 +18,6 @@ open Ast
 %token DEF
 %token IN
 %token EOF
-%token ROW
 
 %nonassoc NOELSE
 %nonassoc NOLSQBRACE
@@ -76,7 +75,6 @@ row_pointer_typ:
 typ:
   primitive { $1 }
   | MATRIX { Matrix }
-  | ROW { Row }
   | matrix_typ { $1 }
   | row_typ { $1 }
 
@@ -110,7 +108,7 @@ stmt:
   | IF LPAREN expr RPAREN stmt ELSE stmt { If($3, $5, $7) }
   | FOR LPAREN expr_opt SEMI expr SEMI expr_opt RPAREN stmt
      { For($3, $5, $7, $9) }
-  | FOR LPAREN ROW IN ID RPAREN stmt { MFor($5, $7) }
+  | FOR LPAREN ID IN ID RPAREN stmt { MFor($3, $5, $7) }
   | WHILE LPAREN expr RPAREN stmt { While($3, $5) }
 
 expr_opt:
@@ -148,8 +146,6 @@ expr:
   | OCTOTHORP ID { Dereference($2) }
   | PLUS PLUS ID { PointerIncrement($3) }
   | ID LSQBRACE expr RSQBRACE %prec NOLSQBRACE { RowAccess($1, $3) }
-
-  | ROW LSQBRACE expr RSQBRACE %prec NOLSQBRACE { MForRowAccess($3) }
 
   | ID LPERCENT expr RPERCENT { TupleAccess($1, $3) }
   | ID LSQBRACE expr RSQBRACE LSQBRACE expr RSQBRACE { MatrixAccess($1, $3, $6) }
