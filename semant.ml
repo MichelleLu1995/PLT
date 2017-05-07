@@ -119,7 +119,7 @@ let check_function func =
     | _ -> raise (Failure ("illegal tuple type")) in
 
 
-let find_rowtyp m =
+let find_rowtyp name m =
 	let m = StringMap.find m !symbols in
 	let typ = match m with
 		MatrixTyp(Int, _, _) -> Int
@@ -129,7 +129,7 @@ let find_rowtyp m =
 	let cols = match m with
 		MatrixTyp(_, _, c) -> c
 	  | _ -> raise (Failure ("illegal matrix type")) in
-	symbols := StringMap.add "row" (RowTyp(typ, cols)) !symbols in
+	symbols := StringMap.add name (RowTyp(typ, cols)) !symbols in
 
 
 
@@ -221,11 +221,6 @@ let find_rowtyp m =
                                     Int -> Int
                                   | _ -> raise (Failure ("attempting to access with non-integer and non-float type"))) in
                             row_access_type (type_of_identifier s)
-
-  | MForRowAccess(e) -> let _ = (match (expr e) with
-                                    Int -> Int
-                                  | _ -> raise (Failure ("attempting to access with non-integer and non-float type"))) in
-                            row_access_type (type_of_identifier "row")
   | TupleAccess(s, e) -> let _ = (match (expr e) with
                                     Int -> Int
                                   | _ -> raise (Failure ("attempting to access with a non-integer type"))) in
@@ -376,7 +371,7 @@ let find_rowtyp m =
   | If(p, b1, b2) -> check_bool_expr p; stmt b1; stmt b2
   | For(e1, e2, e3, st) -> ignore (expr e1); check_bool_expr e2;
   ignore (expr e3); stmt st
-  | MFor(s2, s) -> find_rowtyp s2; ignore (s2); stmt s
+  | MFor(s1, s2, s) -> find_rowtyp s1 s2; ignore(s1); ignore(s2); stmt s
   | While(p, s) -> check_bool_expr p; stmt s
   in
 
