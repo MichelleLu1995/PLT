@@ -35,23 +35,32 @@ let translate (globals, functions) =
     | A.Void -> void_t
     | A.Float -> float_t
     | A.String -> pointer_t i8_t
+    | A.Char -> i8_t
     | A.MatrixTyp(typ, size1, size2) -> (match typ with
                                       A.Int    -> array_t (array_t i32_t size2) size1
                                     | A.Float  -> array_t (array_t float_t size2) size1
                                     | A.TupleTyp(typ1,size3) -> (match typ1 with
-                                              A.Int    -> array_t (array_t (array_t i32_t size3) size2) size1
+                                              A.Int    -> array_t i32_t size3
                                             | _ -> raise (UnsupportedTupleType))
                                     | _ -> raise (UnsupportedMatrixType))
     | A.RowTyp(typ, size) -> (match typ with
                                       A.Int    -> array_t i32_t size
                                     | A.Float  -> array_t float_t size
                                     | A.TupleTyp(typ1,size1) -> (match typ1 with
-                                              A.Int    -> array_t (array_t i32_t size1) size
+                                              A.Int    -> array_t i32_t size1
                                             | _ -> raise (UnsupportedTupleType))
                                     | _ -> raise (UnsupportedRowType))
     | A.TupleTyp(typ, size) -> (match typ with
                                       A.Int    -> array_t i32_t size
                                     | _ -> raise (UnsupportedTupleType))
+    | A.RowPointer(t) -> (match t with
+                              A.Int -> pointer_t i32_t
+                            | A.Float -> pointer_t float_t
+                            | _ -> raise (IllegalPointerType))
+    | A.MatrixPointer(t) -> (match t with
+                              A.Int -> pointer_t i32_t
+                            | A.Float -> pointer_t float_t
+                            | _ -> raise (IllegalPointerType))
   in
 
   (* Declare each global variable; remember its value in a map *)
@@ -65,18 +74,25 @@ let translate (globals, functions) =
   let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
   let printf_func = L.declare_function "printf" printf_t the_module in
 
+  let prints_t = L.var_arg_function_type (pointer_t i8_t) [|L.pointer_type i8_t|] in
+  let prints_func = L.declare_function "puts" prints_t the_module in
+
   (* Declare C functions for file inegration *)
-  (*let open_ty = L.function_type i32_t [| (L.pointer_type i8_t); i32_t |] in
-  let open_func = L.declare_function "open" open_ty the_module in 
-  let close_ty = L.function_type i32_t [| i32_t |] in
-  let close_func = L.declare_function "close" close_ty the_module in
-  let read_ty = L.function_type i32_t [| i32_t; L.pointer_type i8_t; i32_t |] in 
-  let read_func = L.declare_function "read" read_ty the_module in
-  let write_ty = L.function_type i32_t [| i32_t; L.pointer_type i8_t; i32_t |] in
-  let write_func = L.declare_function "write" write_ty the_module in*)
+  let open_ty = L.function_type (pointer_t i8_t) [| (pointer_t i8_t) ; L.pointer_type i8_t |] in
+  let open_func = L.declare_function "fopen" open_ty the_module in 
+  let close_ty = L.function_type i32_t [| (pointer_t i8_t) |] in
+  let close_func = L.declare_function "fclose" close_ty the_module in
+  let read_ty = L.function_type i32_t [| (pointer_t i8_t); i32_t; i32_t; (pointer_t i8_t)|] in 
+  let read_func = L.declare_function "fread" read_ty the_module in
+  let get_ty = L.function_type (pointer_t i8_t) [| (pointer_t i8_t); i32_t; (pointer_t i8_t)|] in 
+  let get_func = L.declare_function "fgets" get_ty the_module in
+  let fwrite_ty = L.function_type i32_t [| (pointer_t i8_t); i32_t; i32_t; (pointer_t i8_t)|] in
+  let fwrite_func = L.declare_function "fwrite" fwrite_ty the_module in
+  let strlen_t = L.function_type i32_t [| (pointer_t i8_t) |] in
+  let strlen_func = L.declare_function "strlen" strlen_t the_module in
 
   (* Define each function (arguments and return type) so we can call it *)
-let function_decls =
+  let function_decls =
     let function_decl m fdecl =
       let name = fdecl.A.fname
       and formal_types =
@@ -89,8 +105,9 @@ let function_decls =
   let build_function_body fdecl =
     let (the_function, _) = StringMap.find fdecl.A.fname function_decls in
     let builder = L.builder_at_end context (L.entry_block the_function) in
-    let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder
-    and float_format_str = L.build_global_stringptr "%f\n" "fmt" builder in
+    let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in
+    let float_format_str = L.build_global_stringptr "%f\n" "fmt" builder in
+    let char_format_str = L.build_global_stringptr "%c\n" "fmt" builder in
     
     (* Construct the function's "locals": formal arguments and locally
        declared variables.  Allocate each on the stack, initialize their
@@ -111,6 +128,14 @@ let function_decls =
 
   let local_var = L.build_alloca (ltype_of_typ t) n builder
   in StringMap.add n local_var m in
+   (* let local_var =
+      (match t with
+       A.MatrixTyp(A.TupleTyp(_, l), r, c) -> if r * c * l > 1000
+                                                  then L.build_malloc (ltype_of_typ t) n builder
+                                                else
+                                                  L.build_alloca (ltype_of_typ t) n builder
+     | _ -> L.build_alloca (ltype_of_typ t) n builder)
+  in StringMap.add n local_var m in*)
 
       let formals = List.fold_left2 add_formal StringMap.empty fdecl.A.formals
           (Array.to_list (L.params the_function)) in
@@ -140,7 +165,7 @@ let function_decls =
                    with Not_found -> StringMap.find n global_vars
     in
 
-    let check_function =
+        let check_function =
         List.fold_left (fun m (t, n) -> StringMap.add n t m)
         StringMap.empty (globals @ fdecl.A.formals @ fdecl.A.locals)
     in
@@ -150,8 +175,26 @@ let function_decls =
       StringMap.find s symbols
     in
 
+    let build_row_argument s builder =
+      L.build_in_bounds_gep (lookup s) [| L.const_int i32_t 0; L.const_int i32_t 0 |] s builder
+    in
+
     let build_matrix_argument s builder =
       L.build_in_bounds_gep (lookup s) [| L.const_int i32_t 0; L.const_int i32_t 0; L.const_int i32_t 0 |] s builder
+    in
+
+    let build_pointer_dereference s builder isAssign = 
+      if isAssign
+        then L.build_load (lookup s) s builder
+      else
+        L.build_load (L.build_load (lookup s) s builder) s builder
+    in
+
+    let build_pointer_increment s builder isAssign = 
+      if isAssign
+        then L.build_load (L.build_in_bounds_gep (lookup s) [| L.const_int i32_t 1 |] s builder) s builder
+      else
+        L.build_in_bounds_gep (L.build_load (L.build_in_bounds_gep (lookup s) [| L.const_int i32_t 0 |] s builder) s builder) [| L.const_int i32_t 1 |] s builder
     in
 
     let get_tuple_type tuple =
@@ -173,14 +216,74 @@ let function_decls =
       | A.TupleLit _ -> ltype_of_typ (A.Tuple)
       | _ -> raise (UnsupportedRowType) in
 
-	let build_row_access s i1 i2 builder isAssign =
-	  if isAssign
-		then L.build_gep (lookup s) [| i1; i2 |] s builder
-	  else
-		L.build_load (L.build_gep (lookup s) [| i1; i2 |] s builder) s builder
-	in
+  let build_row_access s i1 i2 builder isAssign =
+    if isAssign
+    then L.build_gep (lookup s) [| i1; i2 |] s builder
+    else
+    L.build_load (L.build_gep (lookup s) [| i1; i2 |] s builder) s builder
+  in
 
-	let build_tuple_access s i1 i2 builder isAssign =
+  let build_tuple_access s i1 i2 builder isAssign =
+    if isAssign
+    then L.build_gep (lookup s) [| i1; i2 |] s builder
+    else
+    L.build_load (L.build_gep (lookup s) [| i1; i2 |] s builder) s builder
+  in
+
+  let build_matrix_access s i1 i2 i3 builder isAssign =
+    if isAssign
+    then L.build_gep (lookup s) [| i1; i2; i3|] s builder
+    else
+    L.build_load (L.build_gep (lookup s) [| i1; i2; i3 |] s builder) s builder
+  in
+
+    (* New code/supporting functions for getting type *)
+    (* A function that is used to check each function *)
+      let check_not_void exceptf = function
+      (A.Void, n) -> raise (Failure (exceptf n))
+    | _ -> ()
+  in
+
+ let type_of_tuple1 t =
+    match (List.hd t) with
+      A.IntLit _ -> A.TupleTyp(Int, List.length t)
+    | _ -> raise (Failure ("illegal tuple type")) in
+
+  let rec check_tuple_literal1 tt l i =
+    let length = List.length l in
+    match (tt, List.nth l i) with
+      (A.TupleTyp(Int, _), A.IntLit _) -> if i == length - 1 then A.TupleTyp(Int, length) else check_tuple_literal1 (A.TupleTyp(Int, length)) l (succ i)
+    | _ -> raise (Failure ("illegal tuple literal"))
+  in
+
+  let type_of_row1 r l =
+  match (List.hd r) with
+        A.IntLit _ -> A.RowTyp(Int, l)
+      | A.FloatLit _ -> A.RowTyp(Float, l)
+      | A.TupleLit t -> A.RowTyp((type_of_tuple1) t, l)
+      | _ -> raise (Failure ("illegal row type"))
+  in
+
+  let type_of_matrix1 m r c =
+    match (List.hd (List.hd m)) with
+        A.IntLit _ -> A.MatrixTyp(Int, r, c)
+      | A.FloatLit _ -> A.MatrixTyp(Float, r, c)
+      | A.TupleLit t -> A.MatrixTyp((type_of_tuple1) t, r, c)
+      | _ -> raise (Failure ("illegal matrix type"))
+  in
+
+  let rec expr1 = function
+    A.IntLit _ -> A.Int
+  | A.FloatLit _ -> A.Float
+  | A.StringLit _ -> A.String
+  | A.BoolLit _ -> A.Bool
+  | A.Id s -> type_of_identifier s
+  | A.RowLit r -> type_of_row1 r (List.length r)
+  | A.TupleLit t -> check_tuple_literal1 (type_of_tuple1 t) t 0
+  | A.MatrixLit m -> type_of_matrix1 m (List.length m) (List.length (List.hd m))
+  in
+
+	let build_mrow_access s i1 i2 builder isAssign =
 	  if isAssign
 		then L.build_gep (lookup s) [| i1; i2 |] s builder
 	  else
@@ -201,13 +304,13 @@ let function_decls =
 		L.build_load (L.build_gep (lookup s) [| i1; i2 |] s builder) s builder
 	in
 
-
     (* Construct code for an expression; return its value *)
     let rec expr builder = function
         A.IntLit i -> L.const_int i32_t i
       | A.FloatLit f -> L.const_float float_t f
       | A.BoolLit b -> L.const_int i1_t (if b then 1 else 0)
-      | A.StringLit s -> L.const_string context s
+      | A.StringLit s -> L.build_global_stringptr s "string" builder
+      | A.CharLit c -> L.const_int i8_t (Char.code c)
       | A.Noexpr -> L.const_int i32_t 0
       | A.Id s -> L.build_load (lookup s) s builder
       | A.TupleLit t -> L.const_array (get_tuple_type t) (Array.of_list (List.map (expr builder) t))
@@ -216,15 +319,23 @@ let function_decls =
                               | A.IntLit _ -> let realOrder=List.map List.rev m in let i32Lists = List.map (List.map (expr builder)) realOrder in let listOfArrays=List.map Array.of_list i32Lists in let i32ListOfArrays = List.map (L.const_array i32_t) listOfArrays in let arrayOfArrays=Array.of_list i32ListOfArrays in L.const_array (array_t i32_t (List.length (List.hd m))) arrayOfArrays
                               | A.TupleLit t -> let realOrder=List.map List.rev m in let i32Lists = List.map (List.map (expr builder)) realOrder in let listOfArrays=List.map Array.of_list i32Lists in let i32ListOfArrays = List.map (L.const_array (array_t (get_tuple_type t) (List.length t))) listOfArrays in let arrayOfArrays=Array.of_list i32ListOfArrays in L.const_array (array_t (array_t (get_tuple_type t) (List.length t)) (List.length (List.hd m))) arrayOfArrays
                               | _ -> raise ( UnsupportedMatrixType ))
+      | A.RowReference (s) -> build_row_argument s builder
+      | A.MatrixReference (s) -> build_matrix_argument s builder
       | A.RowLit r ->  L.const_array (get_row_type r) (Array.of_list (List.map (expr builder) r))
-	  | A.RowAccess(s, e1) -> let i1 = expr builder e1 in build_row_access s (L.const_int i32_t 0) i1 builder false
-	  | A.MForRowAccess(e1) -> let i1 = expr builder e1 in build_row_access "row" (L.const_int i32_t 0) i1 builder false
-	  | A.TupleAccess(s, e1) -> let i1 = expr builder e1 in build_tuple_access s (L.const_int i32_t 0) i1 builder false
-	  | A.MatrixAccess(s, e1, e2) -> let i1 = expr builder e1 and i2 = expr builder e2 in build_matrix_access s (L.const_int i32_t 0) i1 i2 builder false
-	  | A.MRowAccess(s, e1) -> let i1 = expr builder e1 in build_mrow_access s (L.const_int i32_t 0) i1 builder false
+	    | A.MForRowAccess(e1) -> let i1 = expr builder e1 in build_row_access "row" (L.const_int i32_t 0) i1 builder false
+  	  | A.RowAccess(s, e1) -> let i1 = expr builder e1 in build_row_access s (L.const_int i32_t 0) i1 builder false
+	    | A.TupleAccess(s, e1) -> let i1 = expr builder e1 in build_tuple_access s (L.const_int i32_t 0) i1 builder false
+	    | A.MatrixAccess(s, e1, e2) -> let i1 = expr builder e1 and i2 = expr builder e2 in build_matrix_access s (L.const_int i32_t 0) i1 i2 builder false
+      | A.PointerIncrement (s) -> build_pointer_increment s builder false
+      | A.Dereference (s) -> build_pointer_dereference s builder false
+	    | A.RowAccess(s, e1) -> let i1 = expr builder e1 in build_row_access s (L.const_int i32_t 0) i1 builder false
+	    | A.TupleAccess(s, e1) -> let i1 = expr builder e1 in build_tuple_access s (L.const_int i32_t 0) i1 builder false
+	    | A.MRowAccess(s, e1) -> let i1 = expr builder e1 in build_mrow_access s (L.const_int i32_t 0) i1 builder false
       | A.Binop (e1, op, e2) -> 
-        let e1' = expr builder e1
-        and e2' = expr builder e2 in
+        let e1' = expr builder e1 and
+        e2' = expr builder e2 and
+        t1 = expr1 e1 and
+        t2 = expr1 e2 in
           let float_bop operator = 
             (match operator with
               A.Add     -> L.build_fadd
@@ -259,6 +370,92 @@ let function_decls =
             ) e1' e2' "tmp" builder
           in
 
+          let tuple_int_bop n_i operator =
+            let lhs_str = (match e1 with A.Id(s) -> s) in
+            let rhs_str = (match e2 with A.Id(s) -> s) in
+              (match operator with
+                A.Add ->
+                  let tmp_t = L.build_alloca (array_t i32_t n_i) "tmptup" builder in
+                  for i=0 to n_i do
+                    let v1 = build_tuple_access lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) builder false in
+                    let v2 = build_tuple_access rhs_str (L.const_int i32_t 0) (L.const_int i32_t i) builder false in
+                    let add_res = L.build_add v1 v2 "tmp" builder in
+                    let ld = L.build_gep tmp_t [| L.const_int i32_t 0; L.const_int i32_t i |] "tmptup" builder in
+                  ignore(L.build_store add_res ld builder);
+                  done;
+                L.build_load (L.build_gep tmp_t [| L.const_int i32_t 0 |] "tmptup" builder) "tmptup" builder
+                | A.Sub ->
+                    let tmp_t = L.build_alloca (array_t i32_t n_i) "tmptup" builder in
+                    for i=0 to n_i do
+                      let v1 = build_tuple_access lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) builder false in
+                      let v2 = build_tuple_access rhs_str (L.const_int i32_t 0) (L.const_int i32_t i) builder false in
+                      let add_res = L.build_sub v1 v2 "tmp" builder in
+                      let ld = L.build_gep tmp_t [| L.const_int i32_t 0; L.const_int i32_t i |] "tmptup" builder in
+                    ignore(L.build_store add_res ld builder);
+                    done;
+                  L.build_load (L.build_gep tmp_t [| L.const_int i32_t 0 |] "tmptup" builder) "tmptup" builder)
+            in
+
+          let matrix_int_bop r_i c_i operator =
+            let lhs_str = (match e1 with A.Id(s) -> s) in
+            let rhs_str = (match e2 with A.Id(s) -> s) in
+              (match operator with
+                A.Add ->
+                  let tmp_m = L.build_alloca (array_t (array_t i32_t c_i) r_i) "tmpmat" builder in
+                  for i=0 to (r_i-1) do
+                    for j=0 to (c_i-1) do
+                      let m1 = build_matrix_access lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) (L.const_int i32_t j) builder false in
+                      let m2 = build_matrix_access rhs_str (L.const_int i32_t 0) (L.const_int i32_t i) (L.const_int i32_t j) builder false in
+                      let add_res = L.build_add m1 m2 "tmp" builder in
+                      let ld = L.build_gep tmp_m [| L.const_int i32_t 0; L.const_int i32_t i; L.const_int i32_t j |] "tmpmat" builder in
+                    ignore(L.build_store add_res ld builder);
+                    done
+                  done;
+                L.build_load (L.build_gep tmp_m [| L.const_int i32_t 0 |] "tmpmat" builder) "tmpmat" builder
+              | A.Sub -> 
+                  let tmp_m = L.build_alloca (array_t (array_t i32_t c_i) r_i) "tmpmat" builder in
+                  for i=0 to (r_i-1) do
+                    for j=0 to (c_i-1) do
+                      let m1 = build_matrix_access lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) (L.const_int i32_t j) builder false in
+                      let m2 = build_matrix_access rhs_str (L.const_int i32_t 0) (L.const_int i32_t i) (L.const_int i32_t j) builder false in
+                      let add_res = L.build_sub m1 m2 "tmp" builder in
+                      let ld = L.build_gep tmp_m [| L.const_int i32_t 0; L.const_int i32_t i; L.const_int i32_t j |] "tmpmat" builder in
+                    ignore(L.build_store add_res ld builder);
+                    done
+                  done;
+                L.build_load (L.build_gep tmp_m [| L.const_int i32_t 0 |] "tmpmat" builder) "tmpmat" builder)
+          in
+
+          let matrix_float_bop r_i c_i operator =
+            let lhs_str = (match e1 with A.Id(s) -> s) in
+            let rhs_str = (match e2 with A.Id(s) -> s) in
+              (match operator with
+                A.Add ->
+                  let tmp_m = L.build_alloca (array_t (array_t float_t c_i) r_i) "tmpmat" builder in
+                  for i=0 to (r_i-1) do
+                    for j=0 to (c_i-1) do
+                      let m1 = build_matrix_access lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) (L.const_int i32_t j) builder false in
+                      let m2 = build_matrix_access rhs_str (L.const_int i32_t 0) (L.const_int i32_t i) (L.const_int i32_t j) builder false in
+                      let add_res = L.build_fadd m1 m2 "tmp" builder in
+                      let ld = L.build_gep tmp_m [| L.const_int i32_t 0; L.const_int i32_t i; L.const_int i32_t j |] "tmpmat" builder in
+                    ignore(L.build_store add_res ld builder);
+                    done
+                  done;
+                L.build_load (L.build_gep tmp_m [| L.const_int i32_t 0 |] "tmpmat" builder) "tmpmat" builder
+              | A.Sub ->
+                  let tmp_m = L.build_alloca (array_t (array_t float_t c_i) r_i) "tmpmat" builder in
+                  for i=0 to (r_i-1) do
+                    for j=0 to (c_i-1) do
+                      let m1 = build_matrix_access lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) (L.const_int i32_t j) builder false in
+                      let m2 = build_matrix_access rhs_str (L.const_int i32_t 0) (L.const_int i32_t i) (L.const_int i32_t j) builder false in
+                      let add_res = L.build_fsub m1 m2 "tmp" builder in
+                      let ld = L.build_gep tmp_m [| L.const_int i32_t 0; L.const_int i32_t i; L.const_int i32_t j |] "tmpmat" builder in
+                    ignore(L.build_store add_res ld builder);
+                    done
+                  done;
+                L.build_load (L.build_gep tmp_m [| L.const_int i32_t 0 |] "tmpmat" builder) "tmpmat" builder)
+          in
+
         let string_of_e1'_llvalue = L.string_of_llvalue e1'
         and string_of_e2'_llvalue = L.string_of_llvalue e2' in
 
@@ -288,9 +485,20 @@ let function_decls =
 
         let build_ops_with_types typ1 typ2 =
           match (typ1, typ2) with
-            "int", "int" -> int_bop op
-          | "float" , "float" -> float_bop op
-          | _, _ -> raise(UnsupportedBinop)
+            "int", "int" -> (match (e1,e2) with
+              IntLit(_),IntLit(_) -> int_bop op
+              | Id(int), IntLit(_) -> int_bop op
+              | IntLit(_), Id(int) -> int_bop op
+              | Id(_), Id(_) -> int_bop op
+              | _,_ -> match t1,t2 with TupleTyp(Int,l1),TupleTyp(Int,l2) when l1=l2->tuple_int_bop l1 op
+                                      | MatrixTyp(Int,r1,c1),MatrixTyp(Int,r2,c2) when r1=r2 && c1=c2 -> matrix_int_bop r1 c1 op)
+          | "float" , "float" -> (match (e1,e2) with
+              FloatLit(_),FloatLit(_) -> float_bop op
+              | Id(float), FloatLit(_) -> float_bop op
+              | FloatLit(_), Id(float) -> float_bop op
+              | Id(_), Id(_) -> float_bop op
+              | _,_ -> match t1,t2 with MatrixTyp(Float,r1,c1),MatrixTyp(Float,r2,c2) when r1=r2 && c1=c2 -> matrix_float_bop r1 c1 op)
+          | _,_ -> raise(UnsupportedBinop)
         in
         build_ops_with_types e1'_type e2'_type
       | A.Unop(op, e) ->
@@ -354,21 +562,35 @@ let function_decls =
 										  | A.MatrixAccess(s, e1, e2) -> let i1 = expr builder e1 and i2 = expr builder e2 in build_matrix_access s (L.const_int i32_t 0) i1 i2 builder true
 										  | A.MRowAccess(s, e1) -> let i1 = expr builder e1 in build_mrow_access s (L.const_int i32_t 0) i1 builder true
                                           | _ -> raise (IllegalAssignment))
+                      | A.PointerIncrement(s) -> build_pointer_increment s builder true
+                      | A.Dereference(s) -> build_pointer_dereference s builder true
+                      | _ -> raise (IllegalAssignment))
                              and e2' = expr builder e2 in
                      ignore (L.build_store e2' e1' builder); e2' 
-      (*| A.Call ("open", [e])
-      | A.Call ("write", [e])
-      | A.Call ("close", [e])
-      | A.Call ("read", [e])*)
+      | A.Call("open", e) -> 
+            L.build_call open_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "fopen" builder
+      | A.Call("close", e) -> 
+            L.build_call close_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "fclose" builder
+      | A.Call("write", e) -> 
+            L.build_call fwrite_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "tmpy" builder 
+      | A.Call("read", e) -> 
+            L.build_call read_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "tmpx" builder
+      | A.Call("fget",e) -> 
+            L.build_call get_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "tmpz" builder
+      | A.Call("len", e) -> 
+            L.build_call strlen_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "len" builder
       | A.Call ("print", [e]) | A.Call ("printb", [e]) ->
     L.build_call printf_func [| int_format_str ; (expr builder e) |]
       "printf" builder
       | A.Call ("printf", [e]) ->
     L.build_call printf_func [| float_format_str ; (expr builder e) |]
       "printf" builder
-      | A.Call ("prints", [e]) -> let get_string = function A.StringLit s -> s | _ -> "" in
-      let s_ptr = L.build_global_stringptr ((get_string e)) ".str" builder in
-    L.build_call printf_func [| s_ptr |] "printf" builder
+      | A.Call("print_c",[e]) ->
+    L.build_call printf_func [| char_format_str; (expr builder e)|]
+      "printf" builder
+      | A.Call("prints",[e]) -> 
+    L.build_call prints_func [|(expr builder e)|] 
+      "puts" builder
       | A.Call (f, act) ->
          let (fdef, fdecl) = StringMap.find f function_decls in
    let actuals = List.rev (List.map (expr builder) (List.rev act)) in
@@ -452,6 +674,18 @@ let function_decls =
       | A.Int -> L.build_ret (L.const_int i32_t 0)
       | A.Float -> L.build_ret (L.const_float float_t 0.0)
       | A.Bool -> L.build_ret (L.const_int i1_t 0)
+    (*  | A.RowTyp(t) -> (match t with
+                          A.Int -> L.build_ret(L.const_pointer_null (pointer_t i32_t))
+                        | A.Float -> L.build_ret (L.const_pointer_null (pointer_t float_t))
+                        | _ -> raise (UnsupportedReturnType))
+      | A.MatrixTyp(t) -> (match t with
+                            A.Int -> L.build_ret (L.const_pointer_null (pointer_t i32_t))
+                          | A.Float -> L.build_ret (L.const_pointer_null (pointer_t float_t))
+                          | _ -> raise (UnsupportedReturnType))
+      | A.MatrixPointer(t) -> (match t with
+                                  A.Int -> L.build_ret (L.const_pointer_null (pointer_t i32_t))
+                                | A.Float -> L.build_ret (L.const_pointer_null (pointer_t float_t))
+                                | _ -> raise (UnsupportedReturnType)) *)
       | _ -> raise (UnsupportedReturnType))
   in
 

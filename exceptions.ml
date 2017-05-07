@@ -8,3 +8,8 @@ exception UnsupportedUnop
 
 exception IllegalAssignment
 exception UnsupportedReturnType
+
+exception MatrixOutOfBoundsAccess
+exception IllegalMatrixBinop
+exception IllegalPointerType
+
