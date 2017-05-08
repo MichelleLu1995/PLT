@@ -3,5 +3,5 @@ def float add(float x, float y){
 }
 
 def void main(){
-	printf( add(17.1, 25.1) );
+	print ( add(17.1, 25.1) );
 }

@@ -66,10 +66,10 @@ matrix_typ:
   primitive LSQBRACE INT_LIT RSQBRACE LSQBRACE INT_LIT RSQBRACE { MatrixTyp($1, $3, $6) }
 	
 row_typ:
-    primitive LSQBRACE INT_LIT RSQBRACE { RowTyp($1, $3) }
+  primitive LSQBRACE INT_LIT RSQBRACE { RowTyp($1, $3) }
 
 tuple_typ:
-  typ LPERCENT INT_LIT RPERCENT { TupleTyp($1, $3) }
+  primitive LPERCENT INT_LIT RPERCENT { TupleTyp($1, $3) }
 
 row_pointer_typ:
   primitive LSQBRACE RSQBRACE { RowPointer($1) }
@@ -182,6 +182,12 @@ literals:
   | LMPERCENT primitive_matrixlit RMPERCENT { MatrixLit(List.rev $2) }
   | LMPERCENT tuple_matrixlit RMPERCENT { MatrixLit(List.rev $2) }
 
+array_literal:
+	primitives { [$1] } 
+  | array_literal COMMA primitives { $3 :: $1 }
+
+tuple_literal:
+	LPERCENT array_literal RPERCENT { TupleLit(List.rev $2) }
 
 primitive_rowlit:
 	primitives { [$1] }
@@ -198,13 +204,6 @@ tuple_matrixlit:
 primitive_matrixlit:
 	primitive_rowlit { [$1] }
   | primitive_matrixlit BAR primitive_rowlit { $3 :: $1 }
-
-tuple_literal:
-  LPERCENT array_literal RPERCENT { TupleLit(List.rev $2) }
-
-array_literal:
-  primitives { [$1] } 
-  | array_literal COMMA primitives { $3 :: $1 }
 
 actuals_opt:
     /* nothing */ { [] }

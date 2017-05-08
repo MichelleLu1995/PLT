@@ -1,12 +1,10 @@
-def int main() {
+def void main() {
 	float[5] r;
 	int i;
 	
-	r = [0.0, 1.0, 2.0, 3.0, 4.0];
+	r = [0.0, 1.0, 2.0, 3.0. 4.0];
 	
 	for (i=0; i<5; i=i+1) {
-		printf(r[i]);
+		print(r[i]);
 	}
-
-	return 0;
 }

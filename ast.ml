@@ -122,6 +122,22 @@ let string_of_row r =
 	| _ -> raise( Failure("Illegal expression in row primitive") )) ^ string_of_row_literal tl
 in
 "[" ^ string_of_row_literal r
+(*
+let string_of_column c =
+  let rec string_of_column_literal = function
+	[] -> "]"
+  | [hd] -> (match hd with
+	  IntLit(i) -> string_of_int i
+	| FloatLit(f) -> string_of_float f
+	| TupleLit(t) -> string_of_tuple t
+	| _ -> raise( Failure("Illegal expression in column primitive") )) ^ string_of_column_literal []
+  | hd :: tl -> (match hd with
+	  IntLit(i) -> string_of_int i ^ "| "
+	| FloatLit(f) -> string_of_float f ^ "| "
+	| TupleLit(t) -> string_of_tuple t ^ "| "
+	| _ -> raise( Failure("Illegal expression in column primitive") )) ^ string_of_column_literal tl
+in
+"[" ^ string_of_column_literal c*)
 
 let string_of_matrix m = 
  let rec string_of_matrix_literal = function
@@ -190,18 +206,18 @@ let rec string_of_typ = function
                         Int -> "int" ^ "[" ^ string_of_int l1 ^ "][" ^ string_of_int l2 ^ "]"
                       | Float -> "float" ^ "[" ^ string_of_int l1 ^ "][" ^ string_of_int l2 ^ "]" 
                       | TupleTyp(x, l) -> (match x with 
-                                           Int -> "int" ^ "(%" ^ string_of_int l ^ "%)[" ^ string_of_int l1 ^ "][" ^ string_of_int l2 ^ "]" 
+                                          Int -> "int" ^ "(" ^ string_of_int l ^ ")"
 										| _ -> raise( Failure("Illegal expression in tuple primitive") ))
 					  | _ -> raise( Failure("Illegal expression in matrix primitive")))
   | TupleTyp(x, l) -> (match x with 
-                      Int -> "int" ^ "(%" ^ string_of_int l ^ "%)" 
+                      Int -> "int" ^ "(" ^ string_of_int l ^ ")" 
 					 | _ -> raise( Failure("Illegal expression in tuple primitive")))
   | RowTyp(r, l1) -> (match r with 
                       Int -> "int" ^ "[" ^ string_of_int l1 ^ "]"
                      | Float -> "float" ^ "[" ^ string_of_int l1 ^ "]" 
                      | String -> "string" ^ "[" ^ string_of_int l1 ^ "]"
                      | TupleTyp(x, l) -> (match x with 
-                                          Int -> "int" ^ "(%" ^ string_of_int l ^ "%)[" ^ string_of_int l1 ^ "]" 
+                                          Int -> "int" ^ "(" ^ string_of_int l ^ ")"
 										| _ -> raise( Failure("Illegal expression in tuple primitive") ))
 					 | _ -> raise( Failure("Illegal expression in row primitive")))
   | RowPointer(t) -> string_of_typ t ^ "[]"
