@@ -43,6 +43,7 @@ let check (globals, functions) =
     | (MatrixPointerType(Float), MatrixPointerType(Float)) -> lvaluet
     | (MatrixTuplePointerType(Int), MatrixTuplePointerType(Int)) -> lvaluet *)
     | (RowPointer(Int), RowPointer(Int)) -> lvaluet
+    | (MatrixPointer(Int), MatrixPointer(Int)) -> lvaluet
     | _ -> raise err
   in
 (*
