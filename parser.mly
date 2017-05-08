@@ -72,13 +72,15 @@ tuple_typ:
 row_pointer_typ:
   primitive LSQBRACE RSQBRACE { RowPointer($1) }
 
+matrix_pointer_typ:
+  primitive LSQBRACE RSQBRACE LSQBRACE RSQBRACE { MatrixPointer($1) }
+
 typ:
   primitive { $1 }
   | MATRIX { Matrix }
   | ROW { Row }
   | matrix_typ { $1 }
   | row_typ { $1 }
-  | row_pointer_typ { $1 }
 
 primitive:
   	INT { Int }
@@ -88,7 +90,7 @@ primitive:
   | FLOAT { Float }
   | tuple_typ { $1 }
   | row_pointer_typ { $1 }
-  
+  | matrix_pointer_typ { $1 }
 
 vdecl_list:
     /* nothing */    { [] }
