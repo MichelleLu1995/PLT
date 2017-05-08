@@ -304,10 +304,6 @@ let translate (globals, functions) =
 	    | A.RowAccess(s, e1) -> let i1 = expr builder e1 in build_row_access s (L.const_int i32_t 0) i1 builder false
 	    | A.TupleAccess(s, e1) -> let i1 = expr builder e1 in build_tuple_access s (L.const_int i32_t 0) i1 builder false
 	    | A.MRowAccess(s, e1) -> let i1 = expr builder e1 in build_mrow_access s (L.const_int i32_t 0) i1 builder false
-      | A.Array(e1, e2) -> let para1=(expr builder (A.Id e1)) 
-        and para2=(expr builder e2) in 
-        let k=L.build_in_bounds_gep para1 [|para2|] "tmpp" builder in
-        L.build_load k "deref" builder
       | A.Init(e1,e2) -> let cnt1=(lookup e1) and cnt2= expr builder e2 in
         let tp= L.element_type (L.type_of cnt1) in 
         let sz=L.size_of tp in

@@ -335,9 +335,6 @@ let check_function func =
     | Not when t = Bool -> Bool
     | _ -> raise (Failure ("illegal unary operator " ^ string_of_uop op ^
       string_of_typ t ^ " in " ^ string_of_expr ex)))
-  | Array(var,_) -> let k=function String -> String
-                                    | _->raise(Failure("illegal ID as array"))
-      in k (type_of_identifier var)
   | Init(var, lit) -> let a = type_of_identifier var and b= expr lit in
     (match b with Int -> a
     | _ -> raise (Failure("illegal "^ string_of_typ b ^", expected int")))
