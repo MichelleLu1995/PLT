@@ -1,0 +1,8 @@
+def int main() {	
+	String test_array;
+	test_array = new[2];
+	
+
+
+	return 0;
+}
