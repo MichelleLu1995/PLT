@@ -7,7 +7,7 @@ open Ast
 %token EQ NEQ LT LEQ GT GEQ AND OR MEQ
 %token TRUE FALSE
 %token RETURN IF ELSE FOR WHILE INT BOOL VOID MATRIX FLOAT TUPLE STRING CHAR
-%token OCTOTHORP DOLLAR
+%token OCTOTHORP DOLLAR SQUIGLY
 
 %token <int> INT_LIT
 %token <string> STRING_LIT 
@@ -72,6 +72,9 @@ tuple_typ:
 row_pointer_typ:
   primitive LSQBRACE RSQBRACE { RowPointer($1) }
 
+matrix_pointer_typ:
+  primitive LSQBRACE RSQBRACE LSQBRACE RSQBRACE { MatrixPointer($1) }
+
 typ:
   primitive { $1 }
   | MATRIX { Matrix }
@@ -86,7 +89,7 @@ primitive:
   | FLOAT { Float }
   | tuple_typ { $1 }
   | row_pointer_typ { $1 }
-  
+  | matrix_pointer_typ { $1 }
 
 vdecl_list:
     /* nothing */    { [] }
@@ -144,7 +147,7 @@ expr:
   | DOLLAR ID { RowReference($2) }
   | DOLLAR DOLLAR ID { MatrixReference($3) }
   | OCTOTHORP ID { Dereference($2) }
-  | PLUS PLUS ID { PointerIncrement($3) }
+  | SQUIGLY SQUIGLY ID { PointerIncrement($3) }
   | ID LSQBRACE expr RSQBRACE %prec NOLSQBRACE { RowAccess($1, $3) }
 
   | ID LPERCENT expr RPERCENT { TupleAccess($1, $3) }

@@ -174,7 +174,7 @@ let rec string_of_expr = function
   | RowReference(s) -> "$" ^ s
   | MatrixReference(s) -> "$$" ^ s
   | Dereference(s) -> "#" ^ s
-  | PointerIncrement(s) -> "++" ^ s
+  | PointerIncrement(s) -> "~~" ^ s
 
 let rec string_of_stmt = function
     Block(stmts) ->
