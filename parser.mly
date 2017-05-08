@@ -75,7 +75,7 @@ row_pointer_typ:
   primitive LSQBRACE RSQBRACE { RowPointer($1) }
 
 matrix_pointer_typ:
-  primitive LSQBRACE RSQBRACE LSQBRACE RSQBRACE { MatrixPointer($1) }
+  primitive LSQBRACE LSQBRACE RSQBRACE RSQBRACE { MatrixPointer($1) }
 
 typ:
   primitive { $1 }
@@ -155,7 +155,7 @@ expr:
   | DOLLAR DOLLAR ID { MatrixReference($3) }
   | OCTOTHORP ID { Dereference($2) }
   | SQUIGLY SQUIGLY ID { PointerIncrement($3) }
-  | ID LSQBRACE expr RSQBRACE %prec NOLSQBRACE { RowAccess($1, $3) }
+  | ID LSQBRACE expr RSQBRACE { RowAccess($1, $3) }
   | ID LPERCENT expr RPERCENT { TupleAccess($1, $3) }
   | ID LSQBRACE expr RSQBRACE LSQBRACE expr RSQBRACE { MatrixAccess($1, $3, $6) }
   | ID LSQBRACE expr RSQBRACE LSQBRACE COLON RSQBRACE { MRowAccess($1, $3) }

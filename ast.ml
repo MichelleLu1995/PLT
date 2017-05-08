@@ -205,7 +205,7 @@ let rec string_of_typ = function
 										| _ -> raise( Failure("Illegal expression in tuple primitive") ))
 					 | _ -> raise( Failure("Illegal expression in row primitive")))
   | RowPointer(t) -> string_of_typ t ^ "[]"
-  | MatrixPointer(t) -> string_of_typ t ^ "[][]"
+  | MatrixPointer(t) -> string_of_typ t ^ "[[]]"
   (* | RowPointer(Int) -> "int[]" *)
   (*| ColumnTyp(c, l1) -> (match c with 
                        Int -> "int" ^ "[" ^ string_of_int l1 ^ "]"
