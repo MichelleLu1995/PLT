@@ -118,10 +118,10 @@ let translate (globals, functions) =
   (* Fill in the body of the given function *)
   let build_function_body fdecl =
     let (the_function, _) = StringMap.find fdecl.A.fname function_decls in
-    let builder = L.builder_at_end context (L.entry_block the_function) in
-    let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in
-    let float_format_str = L.build_global_stringptr "%f\n" "fmt" builder in
-    let char_format_str = L.build_global_stringptr "%c\n" "fmt" builder in
+    let builder = L.builder_at_end context (L.entry_block the_function) in	
+    let int_format_str = L.build_global_stringptr "%d" "fmt" builder in
+    let float_format_str = L.build_global_stringptr "%f" "fmt" builder in
+    let char_format_str = L.build_global_stringptr "%c" "fmt" builder in
     
     (* Construct the function's "locals": formal arguments and locally
        declared variables.  Allocate each on the stack, initialize their
@@ -314,6 +314,9 @@ let translate (globals, functions) =
 	let get_length s =
 		L.array_length (L.type_of (L.build_load (L.build_gep (lookup s) [| L.const_int i32_t 0 |] s builder) s builder)) in
 
+	let get_width s =
+		L.array_length (L.type_of (L.build_load (L.build_gep (lookup s) [| L.const_int i32_t 0; L.const_int i32_t 0 |] s builder) s builder)) in
+
 	let get_type s =
 		let temp = (match (type_of_identifier s) with
 			A.MatrixTyp(A.Int, _, _) -> "int"
@@ -349,6 +352,7 @@ let translate (globals, functions) =
       | A.Dereference (s) -> build_pointer_dereference s builder false
 	    | A.MRowAccess(s, e1) -> let i1 = expr builder e1 in build_mrow_access s (L.const_int i32_t 0) i1 builder false
 	    | A.Length(s) -> L.const_int i32_t (get_length s)
+		| A.Width(s) -> L.const_int i32_t (get_width s)
 		| A.Type(s) -> L.build_global_stringptr (get_type s) "string" builder
       | A.Init(e1,e2) -> let cnt1=(lookup e1) and cnt2= expr builder e2 in
         let tp= L.element_type (L.type_of cnt1) in 
@@ -627,9 +631,9 @@ let translate (globals, functions) =
       | A.Call("print_c",[e]) ->
     L.build_call printf_func [| char_format_str; (expr builder e)|]
       "printf" builder
-      | A.Call("prints",[e]) -> 
-    L.build_call prints_func [|(expr builder e)|] 
-      "puts" builder
+      | A.Call("prints",[e]) -> let get_string = function A.StringLit s -> s | _ -> "" in
+	let s_ptr = L.build_global_stringptr (get_string e) ".str" builder in
+	L.build_call printf_func [| s_ptr |] "printf" builder 
       | A.Call (f, act) ->
          let (fdef, fdecl) = StringMap.find f function_decls in
    let actuals = List.rev (List.map (expr builder) (List.rev act)) in

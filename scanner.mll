@@ -66,6 +66,7 @@ rule token = parse
 | "float"  { FLOAT }
 | "void"   { VOID }
 | "length" { LENGTH }
+| "width"  { WIDTH }
 | "type"   { TYPE }
 | "mx"     { MATRIX }
 | "tuple"  { TUPLE }

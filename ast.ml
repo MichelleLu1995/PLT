@@ -49,6 +49,7 @@ type expr = IntLit of int
   | Dereference of string
   | RowReference of string
   | Length of string
+  | Width of string
   | Type of string
             
 type stmt = Block of stmt list 
@@ -178,6 +179,7 @@ let rec string_of_expr = function
   | MatrixReference(s) -> "$$" ^ s
   | Dereference(s) -> "#" ^ s
   | Length(s) -> s ^ ".length"
+  | Width(s) -> s ^ ".width"
   | Type(s) -> s ^ ".type"
   | PointerIncrement(s) -> "~~" ^ s
 
