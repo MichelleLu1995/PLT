@@ -1,0 +1,17 @@
+def int main() {	
+	String line;
+	String temp;
+	
+	int num;
+    
+    num = 1234;
+    line = "1234";
+	print(atoi(line));
+
+	temp @= new[3];
+	itos(temp,"%d",num);
+	prints(temp);
+
+
+	return 0;
+}
