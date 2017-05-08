@@ -18,7 +18,7 @@ open Ast
 %token DEF
 %token IN
 %token DOT
-%token LENGTH
+%token LENGTH TYPE
 %token EOF
 
 %nonassoc NOELSE
@@ -71,12 +71,6 @@ row_typ:
 tuple_typ:
   primitive LPERCENT INT_LIT RPERCENT { TupleTyp($1, $3) }
 
-row_pointer_typ:
-  primitive LSQBRACE RSQBRACE { RowPointer($1) }
-
-matrix_pointer_typ:
-  primitive LSQBRACE RSQBRACE LSQBRACE RSQBRACE { MatrixPointer($1) }
-
 typ:
   primitive { $1 }
   | MATRIX { Matrix }
@@ -90,10 +84,7 @@ primitive:
   | CHAR { Char }
   | FLOAT { Float }
   | STRING { String }
-  /*| STRING TIMES { String_T }*/
   | tuple_typ { $1 }
-  | row_pointer_typ { $1 }
-  | matrix_pointer_typ { $1 }
 
 vdecl_list:
     /* nothing */    { [] }
@@ -148,22 +139,14 @@ expr:
   | expr ASSIGN expr   { Assign($1, $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | LPAREN expr RPAREN { $2 }
-/*  | ID LATBRACE expr RATBRACE { Array($1,$3) } */
-/*  | ID LATBRACE expr RATBRACE ASSIGN expr { ArrayAssign($1,$3,$6) } */
   | ID ATASSIGN NEW LSQBRACE expr RSQBRACE { Init($1,$5) }
-  | DOLLAR ID { RowReference($2) }
-  | DOLLAR DOLLAR ID { MatrixReference($3) }
-  | OCTOTHORP ID { Dereference($2) }
-  | SQUIGLY SQUIGLY ID { PointerIncrement($3) }
   | ID LSQBRACE expr RSQBRACE %prec NOLSQBRACE { RowAccess($1, $3) }
   | ID LPERCENT expr RPERCENT { TupleAccess($1, $3) }
   | ID LSQBRACE expr RSQBRACE LSQBRACE expr RSQBRACE { MatrixAccess($1, $3, $6) }
   | ID LSQBRACE expr RSQBRACE LSQBRACE COLON RSQBRACE { MRowAccess($1, $3) }
   | ID LSQBRACE COLON RSQBRACE LSQBRACE expr RSQBRACE { MColumnAccess($1, $6) }
   | ID DOT LENGTH { Length($1) }
-
-
-
+  | ID DOT TYPE { Type($1) }
 
 
 primitives:

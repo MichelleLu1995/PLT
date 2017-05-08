@@ -296,6 +296,10 @@ let find_rowtyp name m =
 							MatrixTyp(_, _, _) -> Int
 						  |	RowTyp(_, _) -> Int
 						  | _ -> raise (Failure ("attempting to get length of wrong type"))) in typ
+  | Type(s) -> let typ = (match (type_of_identifier s) with
+							MatrixTyp(_, _, _) -> String
+						  | RowTyp(_, _) -> String
+						  | _ -> raise (Failure ("attempting to get type of a non-matrix or row"))) in typ
   | RowReference(s) -> check_row_pointer_type( type_of_identifier s )
   | PointerIncrement(s) -> check_pointer_type (type_of_identifier s)
   (*| RowLit(s) -> (match (type_of_identifier s) with

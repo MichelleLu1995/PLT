@@ -314,6 +314,16 @@ let translate (globals, functions) =
 	let get_length s =
 		L.array_length (L.type_of (L.build_load (L.build_gep (lookup s) [| L.const_int i32_t 0 |] s builder) s builder)) in
 
+	let get_type s =
+		let temp = (match (type_of_identifier s) with
+			A.MatrixTyp(A.Int, _, _) -> "int"
+		  | A.MatrixTyp(A.Float, _, _) -> "float"
+		  | A.MatrixTyp(A.TupleTyp(_, _), _, _) -> "tuple"
+		  | A.RowTyp(A.Int, _) -> "int"
+		  | A.RowTyp(A.Float, _) -> "float"
+		  | A.RowTyp(A.TupleTyp(_, _), _) -> "tuple"
+		  | _ -> raise (Failure("illegal type"))) in temp in
+
     (* Construct code for an expression; return its value *)
     let rec expr builder = function
         A.IntLit i -> L.const_int i32_t i
@@ -339,6 +349,7 @@ let translate (globals, functions) =
       | A.Dereference (s) -> build_pointer_dereference s builder false
 	    | A.MRowAccess(s, e1) -> let i1 = expr builder e1 in build_mrow_access s (L.const_int i32_t 0) i1 builder false
 	    | A.Length(s) -> L.const_int i32_t (get_length s)
+		| A.Type(s) -> L.build_global_stringptr (get_type s) "string" builder
       | A.Init(e1,e2) -> let cnt1=(lookup e1) and cnt2= expr builder e2 in
         let tp= L.element_type (L.type_of cnt1) in 
         let sz=L.size_of tp in
