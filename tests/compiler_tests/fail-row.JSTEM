@@ -1,7 +1,8 @@
 def int main(){
 	String[2] row;
-
-	row = ["a", "b", "c"];
 	
+	row = ["a", "b", "c"];
+
 	return 0;
+
 }

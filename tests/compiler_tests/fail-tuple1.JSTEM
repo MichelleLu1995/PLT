@@ -1,6 +1,6 @@
 def void main(){
 	int(%2%) t;
-	t(%2) t1;
+	t(%2%) t1;
 
 	int(%2%) tuple;
 

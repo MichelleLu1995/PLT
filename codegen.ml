@@ -43,7 +43,7 @@ let translate (globals, functions) =
                                       A.Int    -> array_t (array_t i32_t size2) size1
                                     | A.Float  -> array_t (array_t float_t size2) size1
                                     | A.TupleTyp(typ1,size3) -> (match typ1 with
-                                              A.Int    -> array_t (array_t i32_t size3) size2 
+                                              A.Int    -> array_t (array_t (array_t i32_t size3) size2) size1
                                             | _ -> raise (UnsupportedTupleType))
                                     | _ -> raise (UnsupportedMatrixType))
     | A.RowTyp(typ, size) -> (match typ with
@@ -121,7 +121,7 @@ let function_decls =
   ignore (L.build_store p local builder); 
   StringMap.add n local m in
 
-      let add_local m (t, n) = print_endline(A.string_of_typ t);
+      let add_local m (t, n) = (* print_endline(A.string_of_typ t); *)
   let local_var = (* L.build_alloca (ltype_of_typ t) n builder *)
    (match t with
        A.MatrixTyp(A.TupleTyp(_, l), r, c) -> if r * c * l > 1000
@@ -484,7 +484,7 @@ let function_decls =
       | A.Int -> L.build_ret (L.const_int i32_t 0)
       | A.Float -> L.build_ret (L.const_float float_t 0.0)
       | A.Bool -> L.build_ret (L.const_int i1_t 0)
-    (*
+     (*
       | A.RowTyp(t) -> (match t with
                           A.Int -> L.build_ret(L.const_pointer_null (pointer_t i32_t))
                         | A.Float -> L.build_ret (L.const_pointer_null (pointer_t float_t))
