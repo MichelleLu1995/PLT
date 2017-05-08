@@ -6,7 +6,7 @@ open Ast
 %token PLUS MINUS TIMES DIVIDE ASSIGN NOT MPLUS MMINUS MTIMES MDIVIDE PLUSEQ
 %token EQ NEQ LT LEQ GT GEQ AND OR MEQ
 %token TRUE FALSE
-%token RETURN IF ELSE FOR WHILE INT BOOL VOID MATRIX ROW FLOAT TUPLE STRING CHAR
+%token RETURN IF ELSE FOR WHILE INT BOOL VOID MATRIX FLOAT TUPLE STRING CHAR
 %token OCTOTHORP DOLLAR SQUIGLY
 
 %token <int> INT_LIT
@@ -78,7 +78,6 @@ matrix_pointer_typ:
 typ:
   primitive { $1 }
   | MATRIX { Matrix }
-  | ROW { Row }
   | matrix_typ { $1 }
   | row_typ { $1 }
 
@@ -150,6 +149,7 @@ expr:
   | OCTOTHORP ID { Dereference($2) }
   | SQUIGLY SQUIGLY ID { PointerIncrement($3) }
   | ID LSQBRACE expr RSQBRACE %prec NOLSQBRACE { RowAccess($1, $3) }
+
   | ID LPERCENT expr RPERCENT { TupleAccess($1, $3) }
   | ID LSQBRACE expr RSQBRACE LSQBRACE expr RSQBRACE { MatrixAccess($1, $3, $6) }
   | ID LSQBRACE expr RSQBRACE LSQBRACE COLON RSQBRACE { MRowAccess($1, $3) }

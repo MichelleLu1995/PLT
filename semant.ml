@@ -127,19 +127,37 @@ let check_function func =
 		"Duplicate local " ^ n ^ " in " ^ func.fname)(List.map snd func.locals);
 
 (* Check variables *)
-    let symbols = List.fold_left (fun m (t, n) -> StringMap.add n t m)
-	StringMap.empty (globals @ func.formals @ func.locals )
-	in
+  let symbols = List.fold_left (fun m (t, n) -> StringMap.add n t m) (* name type map *)
+    StringMap.empty (globals @ func.formals @ func.locals )
+  in
 
- let type_of_identifier s =
-      try StringMap.find s symbols
-    with Not_found -> raise (Failure ("undeclared identifier " ^ s))
- in
+  let symbols = ref symbols in
+
 
  let type_of_tuple t =
     match (List.hd t) with
       IntLit _ -> TupleTyp(Int, List.length t)
     | _ -> raise (Failure ("illegal tuple type")) in
+
+
+let find_rowtyp name m =
+	let m = StringMap.find m !symbols in
+	let typ = match m with
+		MatrixTyp(Int, _, _) -> Int
+	  | MatrixTyp(Float, _, _) -> Float
+	  | MatrixTyp(TupleTyp(Int, len), _, _) -> TupleTyp(Int, len)
+	  | _ -> raise (Failure ("illegal matrix type")) in
+	let cols = match m with
+		MatrixTyp(_, _, c) -> c
+	  | _ -> raise (Failure ("illegal matrix type")) in
+	symbols := StringMap.add name (RowTyp(typ, cols)) !symbols in
+
+
+
+ let type_of_identifier s =
+      try StringMap.find s !symbols
+    with Not_found -> raise (Failure ("undeclared identifier " ^ s))
+   in
 
   let rec check_tuple_literal tt l i =
     let length = List.length l in
@@ -278,7 +296,7 @@ let check_function func =
   | TupleReference(s) -> check_tuple_pointer_type (type_of_identifier s) *)
   | Dereference(s) -> pointer_type (type_of_identifier s)
   | MatrixReference(s) -> check_matrix_pointer_type (type_of_identifier s)
-  | MatrixTupleReference(s) -> check_matrix_tuple_pointer_type (type_of_identifier s) 
+  (*| MatrixTupleReference(s) -> check_matrix_tuple_pointer_type (type_of_identifier s) *)
   | Binop(e1, op, e2) as e -> let t1 = expr e1 and t2 = expr e2 in
   (match op with
       Add | Sub | Mult | Div when t1 = Int && t2 = Int -> Int
@@ -407,7 +425,7 @@ let check_function func =
   | If(p, b1, b2) -> check_bool_expr p; stmt b1; stmt b2
   | For(e1, e2, e3, st) -> ignore (expr e1); check_bool_expr e2;
   ignore (expr e3); stmt st
-  | MFor(e1, e2, s) -> ignore (expr e1); ignore (expr e2); stmt s
+  | MFor(s1, s2, s) -> find_rowtyp s1 s2; ignore(s1); ignore(s2); stmt s
   | While(p, s) -> check_bool_expr p; stmt s
   in
 
@@ -415,3 +433,4 @@ let check_function func =
 
   in
   List.iter check_function functions
+
