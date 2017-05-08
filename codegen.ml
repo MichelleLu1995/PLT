@@ -323,12 +323,8 @@ let translate (globals, functions) =
 	    | A.MatrixAccess(s, e1, e2) -> let i1 = expr builder e1 and i2 = expr builder e2 in build_matrix_access s (L.const_int i32_t 0) i1 i2 builder false
       | A.PointerIncrement (s) -> build_pointer_increment s builder false
       | A.Dereference (s) -> build_pointer_dereference s builder false
-<<<<<<< HEAD
 	  | A.MRowAccess(s, e1) -> let i1 = expr builder e1 in build_mrow_access s (L.const_int i32_t 0) i1 builder false
 	  | A.Length(s) -> L.const_int i32_t (get_length s)
-=======
-	    | A.MRowAccess(s, e1) -> let i1 = expr builder e1 in build_mrow_access s (L.const_int i32_t 0) i1 builder false
->>>>>>> 05ce045563edcba52eedd6b9ee9dde6028f0718e
       | A.Binop (e1, op, e2) -> 
         let e1' = expr builder e1 and
         e2' = expr builder e2 and
