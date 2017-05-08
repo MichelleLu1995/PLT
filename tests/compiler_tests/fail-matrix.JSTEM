@@ -1,0 +1,14 @@
+def void main(){
+	String a;
+	String[2][2] m;
+	int i;
+	int j;
+
+	m = {% "a", "b" | "c", "d" %};
+
+	for(i=0; i<2; i=i+1){
+		for(j=0; j<2; j=j+1){
+			print(m[i][j]);
+		}
+	}
+} 

@@ -2,9 +2,9 @@
 open Ast
 %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA BAR COLON LSQBRACE RSQBRACE LPERCENT RPERCENT LMPERCENT RMPERCENT
-%token PLUS MINUS TIMES DIVIDE ASSIGN NOT MPLUS MMINUS MTIMES MDIVIDE PLUSEQ
-%token EQ NEQ LT LEQ GT GEQ AND OR MEQ
+%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA BAR COLON LSQBRACE RSQBRACE LPERCENT RPERCENT LMPERCENT RMPERCENT LATBRACE RATBRACE 
+%token PLUS MINUS TIMES DIVIDE ASSIGN NOT MPLUS MMINUS MTIMES MDIVIDE PLUSEQ ATASSIGN 
+%token EQ NEQ LT LEQ GT GEQ AND OR MEQ NEW 
 %token TRUE FALSE
 %token RETURN IF ELSE FOR WHILE INT BOOL VOID MATRIX FLOAT TUPLE STRING CHAR
 %token OCTOTHORP DOLLAR SQUIGLY
@@ -17,6 +17,8 @@ open Ast
 
 %token DEF
 %token IN
+%token DOT
+%token LENGTH
 %token EOF
 
 %nonassoc NOELSE
@@ -64,10 +66,10 @@ matrix_typ:
   primitive LSQBRACE INT_LIT RSQBRACE LSQBRACE INT_LIT RSQBRACE { MatrixTyp($1, $3, $6) }
 	
 row_typ:
-  primitive LSQBRACE INT_LIT RSQBRACE { RowTyp($1, $3) }
+    primitive LSQBRACE INT_LIT RSQBRACE { RowTyp($1, $3) }
 
 tuple_typ:
-  primitive LPERCENT INT_LIT RPERCENT { TupleTyp($1, $3) }
+  typ LPERCENT INT_LIT RPERCENT { TupleTyp($1, $3) }
 
 row_pointer_typ:
   primitive LSQBRACE RSQBRACE { RowPointer($1) }
@@ -85,8 +87,10 @@ primitive:
   	INT { Int }
   | BOOL { Bool }
   | VOID { Void }
-  | CHAR {Char}
+  | CHAR { Char }
   | FLOAT { Float }
+  | STRING { String }
+  /*| STRING TIMES { String_T }*/
   | tuple_typ { $1 }
   | row_pointer_typ { $1 }
   | matrix_pointer_typ { $1 }
@@ -144,16 +148,23 @@ expr:
   | expr ASSIGN expr   { Assign($1, $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | LPAREN expr RPAREN { $2 }
+/*  | ID LATBRACE expr RATBRACE { Array($1,$3) } */
+/*  | ID LATBRACE expr RATBRACE ASSIGN expr { ArrayAssign($1,$3,$6) } */
+  | ID ATASSIGN NEW LSQBRACE expr RSQBRACE { Init($1,$5) }
   | DOLLAR ID { RowReference($2) }
   | DOLLAR DOLLAR ID { MatrixReference($3) }
   | OCTOTHORP ID { Dereference($2) }
   | SQUIGLY SQUIGLY ID { PointerIncrement($3) }
   | ID LSQBRACE expr RSQBRACE { RowAccess($1, $3) }
-
   | ID LPERCENT expr RPERCENT { TupleAccess($1, $3) }
   | ID LSQBRACE expr RSQBRACE LSQBRACE expr RSQBRACE { MatrixAccess($1, $3, $6) }
   | ID LSQBRACE expr RSQBRACE LSQBRACE COLON RSQBRACE { MRowAccess($1, $3) }
   | ID LSQBRACE COLON RSQBRACE LSQBRACE expr RSQBRACE { MColumnAccess($1, $6) }
+  | ID DOT LENGTH { Length($1) }
+
+
+
+
 
 primitives:
 	INT_LIT      { IntLit($1) }
@@ -171,12 +182,6 @@ literals:
   | LMPERCENT primitive_matrixlit RMPERCENT { MatrixLit(List.rev $2) }
   | LMPERCENT tuple_matrixlit RMPERCENT { MatrixLit(List.rev $2) }
 
-array_literal:
-	primitives { [$1] } 
-  | array_literal COMMA primitives { $3 :: $1 }
-
-tuple_literal:
-	LPERCENT array_literal RPERCENT { TupleLit(List.rev $2) }
 
 primitive_rowlit:
 	primitives { [$1] }
@@ -193,6 +198,13 @@ tuple_matrixlit:
 primitive_matrixlit:
 	primitive_rowlit { [$1] }
   | primitive_matrixlit BAR primitive_rowlit { $3 :: $1 }
+
+tuple_literal:
+  LPERCENT array_literal RPERCENT { TupleLit(List.rev $2) }
+
+array_literal:
+  primitives { [$1] } 
+  | array_literal COMMA primitives { $3 :: $1 }
 
 actuals_opt:
     /* nothing */ { [] }

@@ -78,7 +78,8 @@ let check (globals, functions) =
   report_duplicate (fun n -> "duplicate function " ^ n)
   (List.map (fun fd -> fd.fname) functions);
 
-    let built_in_decls = StringMap.add "print"
+
+  let built_in_decls = StringMap.add "print"
   { typ = Void; fname = "print"; formals = [(Int, "x")]; 
     locals = []; body = [] } (StringMap.add "printf"
   { typ = Void; fname = "printf"; formals = [(Float, "x")];
@@ -91,14 +92,21 @@ let check (globals, functions) =
     locals = []; body = [] } (StringMap.add "read"
   { typ = String; fname = "read"; formals = [(String,"w"); (Int, "x"); (Int, "y"); (String, "z")];
     locals = []; body = [] } (StringMap.add "write"
-  { typ = Int; fname = "write"; formals = [(String, "w"); (Int,"x"); (Int,"y"); (String, "z")];
+  { typ = Int; fname = "write"; formals = [(String, "w"); (Int, "x"); (Int, "y"); (String, "z")];
     locals = []; body = [] } (StringMap.add "close"
   { typ = Void; fname = "close"; formals = [(String, "x")];
     locals = []; body = [] } (StringMap.add "fget"
-  { typ = String; fname = "fget"; formals = [(String,"x");(Int,"y");(String, "z")];
+  { typ = String; fname = "fget"; formals = [(String, "x"); (Int, "y"); (String, "z")];
+    locals = []; body = [] } (StringMap.add "atoi"
+  { typ = Int ; fname = "atoi"; formals = [(String, "x")];
+    locals = []; body = [] } (StringMap.add "itos"
+  { typ = Void ; fname = "itos"; formals = [(String, "x"); (String,"y"); (Int, "z")];
+    locals = []; body = [] } (StringMap.add "splitstr"
+  { typ = String ; fname = "splitstr"; formals = [(String, "x"); (String,"y")];
     locals = []; body = [] } (StringMap.singleton "len"
   { typ = Int; fname = "len"; formals = [(String, "x")];
-    locals = []; body = [] } )))))))))
+    locals = []; body = [] } ))))))))))))
+
 in
 
 let function_decls = 
@@ -178,8 +186,7 @@ let find_rowtyp name m =
   let matrix_access_type = function
       MatrixTyp(t, _, _) -> t
     | _ -> raise (Failure ("illegal matrix access") ) in
-    
-    
+
   let mrow_access_type = function
 	    MatrixTyp(t, _, c) -> RowTyp(t, c)
 	  | _ -> raise (Failure ("illegal matrix access") ) in
@@ -261,7 +268,8 @@ let find_rowtyp name m =
   let rec expr = function
     IntLit _ -> Int
   | FloatLit _ -> Float
-  | StringLit _ -> String
+  | StringLit _ -> String 
+  | CharLit _ -> Char
   | BoolLit _ -> Bool
   | Id s -> type_of_identifier s
   | RowLit r -> type_of_row r (List.length r)
@@ -269,7 +277,7 @@ let find_rowtyp name m =
   | MatrixLit m -> type_of_matrix m (List.length m) (List.length (List.hd m))
   | RowAccess(s, e) -> let _ = (match (expr e) with
                                     Int -> Int
-                                  | _ -> raise (Failure ("attempting to access with non-integer and non-float type"))) in
+                                  | _ -> raise (Failure ("attempting to access with non-integer type"))) in
                             row_access_type (type_of_identifier s)
   | TupleAccess(s, e) -> let _ = (match (expr e) with
                                     Int -> Int
@@ -286,9 +294,14 @@ let find_rowtyp name m =
 									Int -> Int
 								  | _ -> raise (Failure ("attempting to access with non-integer type"))) in
 							mrow_access_type (type_of_identifier s)
+  | Length(s) -> let typ = (match (type_of_identifier s) with
+							MatrixTyp(_, _, _) -> Int
+						  |	RowTyp(_, _) -> Int
+						  | _ -> raise (Failure ("attempting to get length of wrong type"))) in typ
   | RowReference(s) -> check_row_pointer_type( type_of_identifier s )
   | PointerIncrement(s) -> check_pointer_type (type_of_identifier s)
-  (*| RowLit(s) -> (match (type_of_identifier s) with
+(*   | PointerIncrement(s) -> check_pointer_type (type_of_identifier s) *)
+(*   | RowLit(s) -> (match (type_of_identifier s) with
                   MatrixTyp(_, _, _) -> Int
                 | _ -> raise (Failure ("cannot get the rows of non-matrix datatype"))) *)
 (*   | Free(s) -> (match (type_of_identifier s) with
@@ -330,12 +343,16 @@ let find_rowtyp name m =
     | Not when t = Bool -> Bool
     | _ -> raise (Failure ("illegal unary operator " ^ string_of_uop op ^
       string_of_typ t ^ " in " ^ string_of_expr ex)))
+  | Init(var, lit) -> let a = type_of_identifier var and b= expr lit in
+    (match b with Int -> a
+    | _ -> raise (Failure("illegal "^ string_of_typ b ^", expected int")))
   | Noexpr -> Void
   | Assign(e1, e2) as ex -> let lt = (match e1 with
                                       | RowAccess(s, _) -> (match (type_of_identifier s) with
                                                                       RowTyp(t, _) -> (match t with
                                                                                                     Int -> Int
                                                                                                   | Float -> Float
+                                                                                                  | TupleTyp(p, l) -> TupleTyp(p, l) 
                                                                                                   | _ -> raise ( Failure ("illegal row") )
                                                                                                 )
                                                                       | _ -> raise ( Failure ("cannot access a primitive") )
@@ -364,6 +381,7 @@ let find_rowtyp name m =
                                                                       RowTyp(t, _) -> (match t with
                                                                                                     Int -> Int
                                                                                                   | Float -> Float
+                                                                                                  | TupleTyp(p, l) -> TupleTyp(p, l)
                                                                                                   | _ -> raise ( Failure ("illegal row") )
                                                                                                 )
                                                                       | _ -> raise ( Failure ("cannot access a primitive") )
