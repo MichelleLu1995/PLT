@@ -1,0 +1,15 @@
+def int main() {	
+	String line;
+	String tempL;
+
+    line = "12";
+    tempL @= new[3];
+
+    tempL = splitstr(line, "2");
+
+    /*for (i = 0; i < 2; i=i+1) {
+		prints(temp[i]);
+	}*/
+
+	return 0;
+}

@@ -29,6 +29,8 @@ rule token = parse
 | "%)"	   { RPERCENT }
 | "{%"     { LMPERCENT }
 | "%}"	   { RMPERCENT }
+| "@["	   { LATBRACE }
+| "]@"     { RATBRACE }
 | ';'      { SEMI }
 | ':'      { COLON }
 | ','      { COMMA }
@@ -41,6 +43,7 @@ rule token = parse
 | "**"     { MTIMES }
 | '/'      { DIVIDE }
 | "//"     { MDIVIDE }
+| "@="     { ATASSIGN }
 | '='      { ASSIGN }
 | "=="     { EQ }
 | "!="     { NEQ }
@@ -72,14 +75,16 @@ rule token = parse
 | "$"	     { DOLLAR }
 | "#"	     { OCTOTHORP }
 | "char"   { CHAR }
+| "new"    { NEW }
 | "String" { STRING }
 | "File"   { STRING }
+| "~"	   { SQUIGLY }
 | ['0'-'9']+'.'['0'-'9']+ as lxm { FLOAT_LIT(float_of_string lxm) }
 | '.'	   { DOT }
 | ['0'-'9']+ as lxm { INT_LIT(int_of_string lxm) }
-| id      as lxm { ID(lxm) }
+| id as lxm { ID(lxm) }
 | string       				{ STRING_LIT(un_esc s) }
-| char as lxm {CHAR_LIT( String.get lxm 1)}
+| char   as lxm {CHAR_LIT( String.get lxm 1)}
 | eof { EOF }
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
 
