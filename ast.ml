@@ -41,7 +41,6 @@ type expr = IntLit of int
   | TupleAccess of string * expr
   | MatrixAccess of string * expr * expr
   | MRowAccess of string * expr
-  | MForRowAccess of expr
   | MColumnAccess of string * expr
   | Noexpr
   | MatrixReference of string
@@ -53,7 +52,7 @@ type stmt = Block of stmt list
   | Expr of expr 
   | If of expr * stmt * stmt
   | For of expr * expr * expr * stmt
-  | MFor of string * stmt
+  | MFor of string * string * stmt
   | While of expr * stmt
   | Return of expr
             
@@ -167,7 +166,6 @@ let rec string_of_expr = function
   | Call(f, el) ->
       f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
   | RowAccess(r, e) -> r ^ "[" ^ string_of_expr e ^ "]"
-  | MForRowAccess(e) -> "row[" ^ string_of_expr e ^ "]"
   | TupleAccess(t, e) -> t ^ "(%" ^ string_of_expr e ^ "%)"
   | MatrixAccess(m, e1, e2) -> m ^ "[" ^ string_of_expr e1 ^ "][" ^ string_of_expr e2 ^ "]"
   | MRowAccess(r, e) -> r ^ "[" ^ string_of_expr e ^ "][:]"
@@ -189,7 +187,7 @@ let rec string_of_stmt = function
   | For(e1, e2, e3, s) ->
       "for (" ^ string_of_expr e1  ^ " ; " ^ string_of_expr e2 ^ " ; " ^
       string_of_expr e3  ^ ") " ^ string_of_stmt s
-  | MFor(s1, s) -> "for (row in " ^ s1 ^ ")\n" ^ string_of_stmt s
+  | MFor(s1, s2, s) -> "for (" ^ s1 ^ " in " ^ s2 ^ ")\n" ^ string_of_stmt s
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
 
 let rec string_of_typ = function

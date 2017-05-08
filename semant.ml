@@ -139,19 +139,22 @@ let check_function func =
       IntLit _ -> TupleTyp(Int, List.length t)
     | _ -> raise (Failure ("illegal tuple type")) in
 
-  let find_rowtyp m =
-    let m = StringMap.find m !symbols in
-    let typ = match m with
-      MatrixTyp(Int, _, _) -> Int
-      | MatrixTyp(Float, _, _) -> Float
-      | MatrixTyp(TupleTyp(Int, len), _, _) -> TupleTyp(Int, len)
-      | _ -> raise (Failure ("illegal matrix type")) in
-    let cols = match m with
-      MatrixTyp(_, _, c) -> c
-      | _ -> raise (Failure ("illegal matrix type")) in
-    symbols := StringMap.add "row" (RowTyp(typ, cols)) !symbols in
 
-   let type_of_identifier s =
+let find_rowtyp name m =
+	let m = StringMap.find m !symbols in
+	let typ = match m with
+		MatrixTyp(Int, _, _) -> Int
+	  | MatrixTyp(Float, _, _) -> Float
+	  | MatrixTyp(TupleTyp(Int, len), _, _) -> TupleTyp(Int, len)
+	  | _ -> raise (Failure ("illegal matrix type")) in
+	let cols = match m with
+		MatrixTyp(_, _, c) -> c
+	  | _ -> raise (Failure ("illegal matrix type")) in
+	symbols := StringMap.add name (RowTyp(typ, cols)) !symbols in
+
+
+
+ let type_of_identifier s =
       try StringMap.find s !symbols
     with Not_found -> raise (Failure ("undeclared identifier " ^ s))
    in
@@ -422,7 +425,7 @@ let check_function func =
   | If(p, b1, b2) -> check_bool_expr p; stmt b1; stmt b2
   | For(e1, e2, e3, st) -> ignore (expr e1); check_bool_expr e2;
   ignore (expr e3); stmt st
-  | MFor(s2, s) -> find_rowtyp s2; ignore (s2); stmt s
+  | MFor(s1, s2, s) -> find_rowtyp s1 s2; ignore(s1); ignore(s2); stmt s
   | While(p, s) -> check_bool_expr p; stmt s
   in
 
