@@ -137,18 +137,6 @@ let translate (globals, functions) =
 
 	(* ADD INDEX VARIABLE TO LOCALS FOR MATRIX FOR LOOP *)
 	local_vars := StringMap.add "_i" (L.build_alloca (ltype_of_typ A.Int) "_i" builder) !local_vars;
-
-
-     let check_function =
-        List.fold_left (fun m (t, n) -> StringMap.add n t m)
-        StringMap.empty (globals @ fdecl.A.formals @ fdecl.A.locals)
-    in
-
-    let type_of_identifier s =
-      let symbols = check_function in
-      StringMap.find s symbols
-    in
-
 	
 	let check_function = List.fold_left (fun m (t, n) -> StringMap.add n t m)
 		StringMap.empty (globals @ fdecl.A.formals @ fdecl.A.locals) in
@@ -309,6 +297,8 @@ let translate (globals, functions) =
 		L.build_load (L.build_gep (lookup s) [| i1; i2 |] s builder) s builder
 	in
 
+	let get_length s =
+		L.array_length (L.type_of (L.build_load (L.build_gep (lookup s) [| L.const_int i32_t 0 |] s builder) s builder)) in
 
     (* Construct code for an expression; return its value *)
     let rec expr builder = function
@@ -334,6 +324,7 @@ let translate (globals, functions) =
       | A.PointerIncrement (s) -> build_pointer_increment s builder false
       | A.Dereference (s) -> build_pointer_dereference s builder false
 	  | A.MRowAccess(s, e1) -> let i1 = expr builder e1 in build_mrow_access s (L.const_int i32_t 0) i1 builder false
+	  | A.Length(s) -> L.const_int i32_t (get_length s)
       | A.Binop (e1, op, e2) -> 
         let e1' = expr builder e1 and
         e2' = expr builder e2 and
