@@ -42,8 +42,17 @@ let check (globals, functions) =
     | (MatrixPointerType(Int), MatrixPointerType(Int)) -> lvaluet
     | (MatrixPointerType(Float), MatrixPointerType(Float)) -> lvaluet
     | (MatrixTuplePointerType(Int), MatrixTuplePointerType(Int)) -> lvaluet *)
+    | (RowPointer(Int), RowPointer(Int)) -> lvaluet
     | _ -> raise err
   in
+(*
+  let _ print_c1 print_c2  = match (value1, value2) with
+  println(c1)-> value1
+    | println(c2)) -> value2
+
+  in*)
+
+  (*List.iter(fun j -> print_string (string_of_typ (fst j)); print_string " ") fd.formals;*)
 
   (**** Checking Global Variables ****)
 
@@ -68,7 +77,7 @@ let check (globals, functions) =
   report_duplicate (fun n -> "duplicate function " ^ n)
   (List.map (fun fd -> fd.fname) functions);
 
-  let built_in_decls = StringMap.add "print"
+    let built_in_decls = StringMap.add "print"
   { typ = Void; fname = "print"; formals = [(Int, "x")]; 
     locals = []; body = [] } (StringMap.add "printf"
   { typ = Void; fname = "printf"; formals = [(Float, "x")];
@@ -90,7 +99,6 @@ let check (globals, functions) =
   { typ = Int; fname = "len"; formals = [(String, "x")];
     locals = []; body = [] } )))))))))
 in
-
 
 let function_decls = 
 	List.fold_left (fun m fd -> StringMap.add fd.fname fd m) built_in_decls functions
@@ -153,8 +161,9 @@ let check_function func =
     | _ -> raise (Failure ("illegal matrix access") ) in
 
   let mrow_access_type = function
-	  MatrixTyp(t, _, c) -> RowTyp(t, c)
-	| _ -> raise (Failure ("illegal matrix access") ) in
+	    MatrixTyp(t, _, c) -> RowTyp(t, c)
+	  | _ -> raise (Failure ("illegal matrix access") ) in
+
 
   let type_of_row r l =
 	match (List.hd r) with
@@ -172,33 +181,65 @@ let check_function func =
       | _ -> raise (Failure ("illegal matrix type"))
   in
 
- (*  let check_pointer_type = function
-      TuplePointerType(t) -> TuplePointerType(t)
+ let check_pointer_type = function
+    (*  TuplePointerType(t) -> TuplePointerType(t)
     | MatrixPointerType(t) -> MatrixPointerType(t)
-    | MatrixTuplePointerType(t) -> MatrixTuplePointerType(t)
+    | MatrixTuplePointerType(t) -> MatrixTuplePointerType(t)*)
+      RowPointer(t) -> RowPointer(t)
+    | MatrixPointer(t) -> MatrixPointer(t)
     | _ -> raise ( Failure ("cannot increment a non-pointer type") )
   in
 
+    let matrix_type s = match (List.hd s) with
+    | IntLit _ -> RowTyp(Int, List.length s)
+    | FloatLit _ -> RowTyp(Float, List.length s)
+    | BoolLit _ -> RowTyp(Bool, List.length s)
+    | _ -> raise ( Failure ("Cannot instantiate a matrix of that type")) in
+
+    let rec check_all_matrix_literal m ty idx =
+      let length = List.length m in
+        match (ty, List.nth m idx) with
+      (RowTyp(Int, _), IntLit _) -> if idx == length - 1 then RowTyp(Int, length) else check_all_matrix_literal m (RowTyp(Int, length)) (succ idx)
+    | (RowTyp(Float, _), FloatLit _) -> if idx == length - 1 then RowTyp(Float, length) else check_all_matrix_literal m (RowTyp(Float, length)) (succ idx)
+    | (RowTyp(Bool, _), BoolLit _) -> if idx == length - 1 then RowTyp(Bool, length) else check_all_matrix_literal m (RowTyp(Bool, length)) (succ idx)
+    | _ -> raise (Failure ("illegal matrix literal"))
+  in
+
+
+  let check_row_pointer_type = function
+    RowTyp(p, _) -> RowPointer(p)
+    | _ -> raise ( Failure ("cannot reference non-row pointer type"))
+  in
+
+(*
   let check_tuple_pointer_type = function
       TupleType(p, _) -> TuplePointerType(p)
     | _ -> raise ( Failure ("cannot reference a non-tuple pointer type"))
-  in
+  in *)
 
   let check_matrix_pointer_type = function
-      MatrixType(DataType(p), _, _) -> MatrixPointerType(p)
+      MatrixTyp(p, _, _) -> MatrixPointer(p)
     | _ -> raise ( Failure ("cannot reference a non-matrix pointer type"))
   in
 
+(*
   let check_matrix_tuple_pointer_type = function
       MatrixType(TupleType(p, _), _, _) -> MatrixTuplePointerType(p)
     | _ -> raise ( Failure ("cannot reference a non-matrix-tuple pointer type"))
   in
+*)
 
   let pointer_type = function
-    | TuplePointerType(p) -> DataType(p)
+   (* | TuplePointerType(p) -> DataType(p)
     | MatrixPointerType(p) -> DataType(p)
-    | MatrixTuplePointerType(p) -> DataType(p)
-    | _ -> raise ( Failure ("cannot dereference a non-pointer type") ) in *)
+    | MatrixTuplePointerType(p) -> DataType(p) *)
+    | RowPointer(t) -> t
+    | MatrixPointer(t) -> t
+    | _ -> raise ( Failure ("cannot dereference a non-pointer type") ) in
+    
+  let get_int x = match x with
+    IntLit(n) -> n
+  in
 
   (* Return the type of an expression or throw an exception *)
   let rec expr = function
@@ -230,36 +271,50 @@ let check_function func =
 									Int -> Int
 								  | _ -> raise (Failure ("attempting to access with non-integer type"))) in
 							mrow_access_type (type_of_identifier s)
-(*   | PointerIncrement(s) -> check_pointer_type (type_of_identifier s) *)
-(*   | RowLit(s) -> (match (type_of_identifier s) with
+  | RowReference(s) -> check_row_pointer_type( type_of_identifier s )
+  | PointerIncrement(s) -> check_pointer_type (type_of_identifier s)
+  (*| RowLit(s) -> (match (type_of_identifier s) with
                   MatrixTyp(_, _, _) -> Int
                 | _ -> raise (Failure ("cannot get the rows of non-matrix datatype"))) *)
 (*   | Free(s) -> (match (type_of_identifier s) with
                   MatrixTyp(TupleTyp(_, _), _, _) -> Void
                 | _ -> raise (Failure ("cannot free a non-matrix-tuple type")))
-  | TupleReference(s) -> check_tuple_pointer_type (type_of_identifier s)
+  | TupleReference(s) -> check_tuple_pointer_type (type_of_identifier s) *)
   | Dereference(s) -> pointer_type (type_of_identifier s)
   | MatrixReference(s) -> check_matrix_pointer_type (type_of_identifier s)
-  | MatrixTupleReference(s) -> check_matrix_tuple_pointer_type (type_of_identifier s) *)
+  (*| MatrixTupleReference(s) -> check_matrix_tuple_pointer_type (type_of_identifier s) *)
   | Binop(e1, op, e2) as e -> let t1 = expr e1 and t2 = expr e2 in
   (match op with
-      Add | Sub | Mult | Div when t1 = Int && t2 = Int -> Int
-    | Add | Sub | Mult | Div when t1 = Float && t2 = Float -> Float
-    | Add | Sub | Mult | Div when t1 = Int && t2 = Float -> Float
-    | Add | Sub | Mult | Div when t1 = Float && t2 = Int -> Float (*
-    | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(Int,Int,Int) && t2 = MatrixTyp(Int,Int,Int) -> MatrixTyp(Int,Int,Int)
-    | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(Float) && t2 = MatrixTyp(Float) -> MatrixTyp(Float)
-    | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(Int) && t2 = MatrixTyp(Float) -> MatrixTyp(Float)
-    | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(TupleTyp(Int)) && t2 = MatrixType(TupleTyp(Int)) -> MatrixTyp(TupleTyp(Int))
-    | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(TupleTyp(Int)) && t2 = Int -> MatrixTyp(TupleTyp(Int))
-  *)  | Equal | Neq | Meq when t1 = t2 -> Bool
+    Add -> (match t1,t2 with Int,Int -> Int
+      | Float,Float -> Float
+      | Int,Float -> Float
+      | Float,Int -> Float
+      | TupleTyp(Int,l1),TupleTyp(Int,l2) when l1=l2 -> TupleTyp(Int,l1)
+      | MatrixTyp(Int,r1,c1),MatrixTyp(Int,r2,c2) when r1=r2 && c1=c2 -> MatrixTyp(Int,r1,c1)
+      | MatrixTyp(Float,r1,c1),MatrixTyp(Float,r2,c2) when r1=r2 && c1=c2 -> MatrixTyp(Float,r1,c1)
+      | MatrixTyp(Int,r1,c1),MatrixTyp(Float,r2,c2) when r1=r2 && c1=c2 -> MatrixTyp(Float,r1,c1)
+      | MatrixTyp(Float,r1,c1),MatrixTyp(Int,r2,c2) when r1=r2 && c1=c2 -> MatrixTyp(Float,r1,c1)) 
+    | Sub -> (match t1,t2 with Int,Int -> Int
+      | Float,Float -> Float
+      | Int,Float -> Float
+      | Float,Int -> Float
+      | TupleTyp(Int,l1),TupleTyp(Int,l2) when l1=l2 -> TupleTyp(Int,l1)
+      | MatrixTyp(Int,r1,c1),MatrixTyp(Int,r2,c2) when r1=r2 && c1=c2 -> MatrixTyp(Int,r1,c1)
+      | MatrixTyp(Float,r1,c1),MatrixTyp(Float,r2,c2) when r1=r2 && c1=c2 -> MatrixTyp(Float,r1,c1)
+      | MatrixTyp(Int,r1,c1),MatrixTyp(Float,r2,c2) when r1=r2 && c1=c2 -> MatrixTyp(Float,r1,c1)
+      | MatrixTyp(Float,r1,c1),MatrixTyp(Int,r2,c2) when r1=r2 && c1=c2 -> MatrixTyp(Float,r1,c1)) 
+    | Mult -> (match t1,t2 with Int,Int -> Int
+      | Float,Float -> Float
+      | Int,Float -> Float
+      | Float,Int -> Float) 
+    | Div -> (match t1,t2 with Int,Int -> Int
+      | Float,Float -> Float
+      | Int,Float -> Float
+      | Float,Int -> Float) 
     | Equal | Neq | Meq when t1 = t2 -> Bool
     | PlusEq when t1 = Int && t2 = Int -> Int
     | PlusEq when t1 = Int && t2 = Float -> Float
-    (* | PlusEq when t1 = MatrixTyp && MatrixTyp -> MatrixTyp
-    | PlusEq when t1 = MatrixTyp && Int -> MatrixTyp
-    | PlusEq when t1 = MatrixTyp && Float -> MatrixTyp
-    *) | Less | Leq | Greater | Geq when t1 = Int && t2 = Int -> Bool
+    | Less | Leq | Greater | Geq when t1 = Int && t2 = Int -> Bool
     | Less | Leq | Greater | Geq when t1 = Float && t2 = Float -> Float
     | And | Or when t1 = Bool && t2 = Bool -> Bool
     | _ -> raise (Failure ("illegal binary operator " ^
@@ -324,6 +379,7 @@ let check_function func =
                                                              )
                                       | MatrixAccess(s, _, _) -> (match (type_of_identifier s) with
                                                                       MatrixTyp(t, _, _) -> (match t with
+
                                                                                                   Int -> Int
                                                                                                 | Float -> Float
                                                                                                 | TupleTyp(p, l) -> TupleTyp(p, l)
@@ -371,7 +427,6 @@ let check_function func =
   | If(p, b1, b2) -> check_bool_expr p; stmt b1; stmt b2
   | For(e1, e2, e3, st) -> ignore (expr e1); check_bool_expr e2;
   ignore (expr e3); stmt st
-  (*| MFor(e1, e2, s) -> ignore (expr e1); ignore (expr e2); stmt s*)
   | MFor(s1, s2, s) -> type_of_identifier s1; type_of_identifier s2; stmt s
   | While(p, s) -> check_bool_expr p; stmt s
   in
@@ -380,4 +435,3 @@ let check_function func =
 
   in
   List.iter check_function functions
-

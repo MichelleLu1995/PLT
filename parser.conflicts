@@ -1,31 +1,29 @@
 
-** Conflict (shift/reduce) in state 80.
-** Token involved: RSQBRACE
+** Conflict (shift/reduce) in state 16.
+** Token involved: LSQBRACE
 ** This state is reached from program after reading:
 
-decls DEF typ ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list ID LSQBRACE INT_LIT 
+decls typ LSQBRACE INT_LIT RSQBRACE 
 
 ** The derivations that appear below have the following common factor:
 ** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
 
 program 
 decls EOF 
-decls fdecl 
-      DEF typ ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE 
-                                                             stmt_list stmt 
-                                                                       expr SEMI 
-                                                                       (?)
+decls vdecl 
+      typ ID SEMI 
+      matrix_typ 
+      (?)
 
-** In state 80, looking ahead at RSQBRACE, shifting is permitted
+** In state 16, looking ahead at LSQBRACE, shifting is permitted
 ** because of the following sub-derivation:
 
-ID LSQBRACE INT_LIT . RSQBRACE LSQBRACE INT_LIT RSQBRACE 
+typ LSQBRACE INT_LIT RSQBRACE . LSQBRACE INT_LIT RSQBRACE 
 
-** In state 80, looking ahead at RSQBRACE, reducing production
-** primitives -> INT_LIT 
+** In state 16, looking ahead at LSQBRACE, reducing production
+** row_typ -> typ LSQBRACE INT_LIT RSQBRACE 
 ** is permitted because of the following sub-derivation:
 
-ID LSQBRACE expr RSQBRACE // lookahead token appears
-            literals // lookahead token is inherited
-            primitives // lookahead token is inherited
-            INT_LIT . 
+typ LSQBRACE INT_LIT RSQBRACE LSQBRACE INT_LIT RSQBRACE // lookahead token appears
+row_typ // lookahead token is inherited
+typ LSQBRACE INT_LIT RSQBRACE . 

@@ -10,12 +10,31 @@ diff -b test-add1.out compiler_tests/test-add1.out > test-add1.diff
 
 ###### Testing test-add2
 ../JSTEM.native -c compiler_tests/test-add2.JSTEM ../stdlib.JSTEM > test-add2.ll
-Fatal error: exception Failure("illegal actual argument found float expected int in add(17.1, 25.1)")
-###### FAILURE
+llc -filetype=obj test-add2.ll > test-add2.o
+g++ test-add2.o > a.out
+./a.out > test-add2.out
+diff -b test-add2.out compiler_tests/test-add2.out > test-add2.diff
+###### SUCCESS
 
-###### Testing test-add3
-../JSTEM.native -c compiler_tests/test-add3.JSTEM ../stdlib.JSTEM > test-add3.ll
-Fatal error: exception Parsing.Parse_error
+###### Testing test-add4
+../JSTEM.native -c compiler_tests/test-add4.JSTEM ../stdlib.JSTEM > test-add4.ll
+llc -filetype=obj test-add4.ll > test-add4.o
+g++ test-add4.o > a.out
+./a.out > test-add4.out
+diff -b test-add4.out compiler_tests/test-add4.out > test-add4.diff
+###### SUCCESS
+
+###### Testing test-add5
+../JSTEM.native -c compiler_tests/test-add5.JSTEM ../stdlib.JSTEM > test-add5.ll
+llc -filetype=obj test-add5.ll > test-add5.o
+g++ test-add5.o > a.out
+./a.out > test-add5.out
+diff -b test-add5.out compiler_tests/test-add5.out > test-add5.diff
+###### SUCCESS
+
+###### Testing test-addmatrix
+../JSTEM.native -c compiler_tests/test-addmatrix.JSTEM ../stdlib.JSTEM > test-addmatrix.ll
+Fatal error: exception Failure("illegal binary operator int[2][2] + int[2][2] in m1 + m2")
 ###### FAILURE
 
 ###### Testing test-arith1
@@ -56,6 +75,14 @@ llc -filetype=obj test-fib.ll > test-fib.o
 g++ test-fib.o > a.out
 ./a.out > test-fib.out
 diff -b test-fib.out compiler_tests/test-fib.out > test-fib.diff
+###### SUCCESS
+
+###### Testing test-float1
+../JSTEM.native -c compiler_tests/test-float1.JSTEM ../stdlib.JSTEM > test-float1.ll
+llc -filetype=obj test-float1.ll > test-float1.o
+g++ test-float1.o > a.out
+./a.out > test-float1.out
+diff -b test-float1.out compiler_tests/test-float1.out > test-float1.diff
 ###### SUCCESS
 
 ###### Testing test-for1
@@ -121,6 +148,13 @@ g++ test-func7.o > a.out
 ./a.out > test-func7.out
 diff -b test-func7.out compiler_tests/test-func7.out > test-func7.diff
 ###### SUCCESS
+
+###### Testing test-gcd
+../JSTEM.native -c compiler_tests/test-gcd.JSTEM ../stdlib.JSTEM > test-gcd.ll
+llc -filetype=obj test-gcd.ll > test-gcd.o
+g++ test-gcd.o > a.out
+./a.out > test-gcd.out
+###### FAILURE
 
 ###### Testing test-global1
 ../JSTEM.native -c compiler_tests/test-global1.JSTEM ../stdlib.JSTEM > test-global1.ll
@@ -210,6 +244,28 @@ g++ test-matrixaccess1.o > a.out
 diff -b test-matrixaccess1.out compiler_tests/test-matrixaccess1.out > test-matrixaccess1.diff
 ###### SUCCESS
 
+###### Testing test-matrixaccess2
+../JSTEM.native -c compiler_tests/test-matrixaccess2.JSTEM ../stdlib.JSTEM > test-matrixaccess2.ll
+llc -filetype=obj test-matrixaccess2.ll > test-matrixaccess2.o
+g++ test-matrixaccess2.o > a.out
+./a.out > test-matrixaccess2.out
+###### FAILURE
+
+###### Testing test-matrixaccess3
+../JSTEM.native -c compiler_tests/test-matrixaccess3.JSTEM ../stdlib.JSTEM > test-matrixaccess3.ll
+llc -filetype=obj test-matrixaccess3.ll > test-matrixaccess3.o
+g++ test-matrixaccess3.o > a.out
+./a.out > test-matrixaccess3.out
+###### FAILURE
+
+###### Testing test-matrixaccess4
+../JSTEM.native -c compiler_tests/test-matrixaccess4.JSTEM ../stdlib.JSTEM > test-matrixaccess4.ll
+llc -filetype=obj test-matrixaccess4.ll > test-matrixaccess4.o
+g++ test-matrixaccess4.o > a.out
+./a.out > test-matrixaccess4.out
+diff -b test-matrixaccess4.out compiler_tests/test-matrixaccess4.out > test-matrixaccess4.diff
+###### SUCCESS
+
 ###### Testing test-matrixrowaccess
 ../JSTEM.native -c compiler_tests/test-matrixrowaccess.JSTEM ../stdlib.JSTEM > test-matrixrowaccess.ll
 llc -filetype=obj test-matrixrowaccess.ll > test-matrixrowaccess.o
@@ -234,10 +290,33 @@ g++ test-ops2.o > a.out
 diff -b test-ops2.out compiler_tests/test-ops2.out > test-ops2.diff
 ###### SUCCESS
 
+###### Testing test-passString
+../JSTEM.native -c compiler_tests/test-passString.JSTEM ../stdlib.JSTEM > test-passString.ll
+Fatal error: exception Parsing.Parse_error
+###### FAILURE
+
 ###### Testing test-rowaccess1
 ../JSTEM.native -c compiler_tests/test-rowaccess1.JSTEM ../stdlib.JSTEM > test-rowaccess1.ll
-Fatal error: exception Failure("illegal character .")
+llc -filetype=obj test-rowaccess1.ll > test-rowaccess1.o
+g++ test-rowaccess1.o > a.out
+./a.out > test-rowaccess1.out
 ###### FAILURE
+
+###### Testing test-rowaccess2
+../JSTEM.native -c compiler_tests/test-rowaccess2.JSTEM ../stdlib.JSTEM > test-rowaccess2.ll
+llc -filetype=obj test-rowaccess2.ll > test-rowaccess2.o
+g++ test-rowaccess2.o > a.out
+./a.out > test-rowaccess2.out
+diff -b test-rowaccess2.out compiler_tests/test-rowaccess2.out > test-rowaccess2.diff
+###### SUCCESS
+
+###### Testing test-rowaccess3
+../JSTEM.native -c compiler_tests/test-rowaccess3.JSTEM ../stdlib.JSTEM > test-rowaccess3.ll
+llc -filetype=obj test-rowaccess3.ll > test-rowaccess3.o
+g++ test-rowaccess3.o > a.out
+./a.out > test-rowaccess3.out
+diff -b test-rowaccess3.out compiler_tests/test-rowaccess3.out > test-rowaccess3.diff
+###### SUCCESS
 
 ###### Testing test-rowaccess
 ../JSTEM.native -c compiler_tests/test-rowaccess.JSTEM ../stdlib.JSTEM > test-rowaccess.ll
@@ -246,6 +325,15 @@ g++ test-rowaccess.o > a.out
 ./a.out > test-rowaccess.out
 diff -b test-rowaccess.out compiler_tests/test-rowaccess.out > test-rowaccess.diff
 ###### SUCCESS
+
+###### Testing test-string
+../JSTEM.native -c compiler_tests/test-string.JSTEM ../stdlib.JSTEM > test-string.ll
+llc -filetype=obj test-string.ll > test-string.o
+g++ test-string.o > a.out
+./a.out > test-string.out
+diff -b test-string.out compiler_tests/test-string.out > test-string.diff
+FAILED test-string.out differs from compiler_tests/test-string.out
+###### FAILURE
 
 ###### Testing test-stringprint
 ../JSTEM.native -c compiler_tests/test-stringprint.JSTEM ../stdlib.JSTEM > test-stringprint.ll
@@ -262,6 +350,13 @@ g++ test-tupleaccess.o > a.out
 ./a.out > test-tupleaccess.out
 diff -b test-tupleaccess.out compiler_tests/test-tupleaccess.out > test-tupleaccess.diff
 ###### SUCCESS
+
+###### Testing test-tuple
+../JSTEM.native -c compiler_tests/test-tuple.JSTEM ../stdlib.JSTEM > test-tuple.ll
+llc -filetype=obj test-tuple.ll > test-tuple.o
+g++ test-tuple.o > a.out
+./a.out > test-tuple.out
+###### FAILURE
 
 ###### Testing test-var1
 ../JSTEM.native -c compiler_tests/test-var1.JSTEM ../stdlib.JSTEM > test-var1.ll
@@ -293,6 +388,11 @@ llc -filetype=obj test-while2.ll > test-while2.o
 g++ test-while2.o > a.out
 ./a.out > test-while2.out
 diff -b test-while2.out compiler_tests/test-while2.out > test-while2.diff
+###### SUCCESS
+
+###### Testing fail-add
+../JSTEM.native -c compiler_tests/fail-add.JSTEM ../stdlib.JSTEM 2> fail-add.err >> testall.log
+diff -b fail-add.err compiler_tests/fail-add.err > fail-add.diff
 ###### SUCCESS
 
 ###### Testing fail-assign1
@@ -425,9 +525,25 @@ diff -b fail-if2.err compiler_tests/fail-if2.err > fail-if2.diff
 diff -b fail-if3.err compiler_tests/fail-if3.err > fail-if3.diff
 ###### SUCCESS
 
+###### Testing fail-matrix
+../JSTEM.native -c compiler_tests/fail-matrix.JSTEM ../stdlib.JSTEM 2> fail-matrix.err >> testall.log
+diff -b fail-matrix.err compiler_tests/fail-matrix.err > fail-matrix.diff
+FAILED fail-matrix.err differs from compiler_tests/fail-matrix.err
+###### FAILED
+
 ###### Testing fail-nomain
 ../JSTEM.native -c compiler_tests/fail-nomain.JSTEM ../stdlib.JSTEM 2> fail-nomain.err >> testall.log
 diff -b fail-nomain.err compiler_tests/fail-nomain.err > fail-nomain.diff
+###### SUCCESS
+
+###### Testing fail-ops1
+../JSTEM.native -c compiler_tests/fail-ops1.JSTEM ../stdlib.JSTEM 2> fail-ops1.err >> testall.log
+diff -b fail-ops1.err compiler_tests/fail-ops1.err > fail-ops1.diff
+###### SUCCESS
+
+###### Testing fail-ops
+../JSTEM.native -c compiler_tests/fail-ops.JSTEM ../stdlib.JSTEM 2> fail-ops.err >> testall.log
+diff -b fail-ops.err compiler_tests/fail-ops.err > fail-ops.diff
 ###### SUCCESS
 
 ###### Testing fail-return1
@@ -440,11 +556,43 @@ diff -b fail-return1.err compiler_tests/fail-return1.err > fail-return1.diff
 diff -b fail-return2.err compiler_tests/fail-return2.err > fail-return2.diff
 ###### SUCCESS
 
+###### Testing fail-return3
+../JSTEM.native -c compiler_tests/fail-return3.JSTEM ../stdlib.JSTEM 2> fail-return3.err >> testall.log
+diff -b fail-return3.err compiler_tests/fail-return3.err > fail-return3.diff
+###### SUCCESS
+
 ###### Testing fail-rowaccess1
 ../JSTEM.native -c compiler_tests/fail-rowaccess1.JSTEM ../stdlib.JSTEM 2> fail-rowaccess1.err >> testall.log
 diff -b fail-rowaccess1.err compiler_tests/fail-rowaccess1.err > fail-rowaccess1.diff
-FAILED fail-rowaccess1.err differs from compiler_tests/fail-rowaccess1.err
+###### SUCCESS
+
+###### Testing fail-row
+../JSTEM.native -c compiler_tests/fail-row.JSTEM ../stdlib.JSTEM 2> fail-row.err >> testall.log
+diff -b fail-row.err compiler_tests/fail-row.err > fail-row.diff
+FAILED fail-row.err differs from compiler_tests/fail-row.err
 ###### FAILED
+
+###### Testing fail-tuple1
+../JSTEM.native -c compiler_tests/fail-tuple1.JSTEM ../stdlib.JSTEM 2> fail-tuple1.err >> testall.log
+diff -b fail-tuple1.err compiler_tests/fail-tuple1.err > fail-tuple1.diff
+FAILED fail-tuple1.err differs from compiler_tests/fail-tuple1.err
+###### FAILED
+
+###### Testing fail-tuple2
+../JSTEM.native -c compiler_tests/fail-tuple2.JSTEM ../stdlib.JSTEM 2> fail-tuple2.err >> testall.log
+diff -b fail-tuple2.err compiler_tests/fail-tuple2.err > fail-tuple2.diff
+FAILED fail-tuple2.err differs from compiler_tests/fail-tuple2.err
+###### FAILED
+
+###### Testing fail-tuple3
+../JSTEM.native -c compiler_tests/fail-tuple3.JSTEM ../stdlib.JSTEM 2> fail-tuple3.err >> testall.log
+diff -b fail-tuple3.err compiler_tests/fail-tuple3.err > fail-tuple3.diff
+###### SUCCESS
+
+###### Testing fail-tuple
+../JSTEM.native -c compiler_tests/fail-tuple.JSTEM ../stdlib.JSTEM 2> fail-tuple.err >> testall.log
+diff -b fail-tuple.err compiler_tests/fail-tuple.err > fail-tuple.diff
+###### SUCCESS
 
 ###### Testing fail-while1
 ../JSTEM.native -c compiler_tests/fail-while1.JSTEM ../stdlib.JSTEM 2> fail-while1.err >> testall.log

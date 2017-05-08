@@ -1,6 +1,0 @@
-def int main(){
-	float x;
-	x = 1.0 + 1.0;
-	printf(x);
-	return 0;
-}

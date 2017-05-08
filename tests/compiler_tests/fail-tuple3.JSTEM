@@ -1,0 +1,6 @@
+def int main(){
+	int(%3%) t;
+
+	t = (% 1, 2 %);
+	return 0;
+}
