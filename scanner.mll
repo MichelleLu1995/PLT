@@ -65,6 +65,7 @@ rule token = parse
 | "bool"   { BOOL }
 | "float"  { FLOAT }
 | "void"   { VOID }
+| "length" { LENGTH }
 | "mx"     { MATRIX }
 | "tuple"  { TUPLE }
 | "def"    { DEF }
@@ -79,6 +80,7 @@ rule token = parse
 | "File"   { STRING }
 | "~"	   { SQUIGLY }
 | ['0'-'9']+'.'['0'-'9']+ as lxm { FLOAT_LIT(float_of_string lxm) }
+| '.'	   { DOT }
 | ['0'-'9']+ as lxm { INT_LIT(int_of_string lxm) }
 | id as lxm { ID(lxm) }
 | string       				{ STRING_LIT(un_esc s) }

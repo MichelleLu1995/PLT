@@ -104,6 +104,7 @@ let check (globals, functions) =
     locals = []; body = [] } (StringMap.singleton "len"
   { typ = Int; fname = "len"; formals = [(String, "x")];
     locals = []; body = [] } ))))))))))))
+
 in
 
 let function_decls = 
@@ -291,6 +292,10 @@ let find_rowtyp name m =
 									Int -> Int
 								  | _ -> raise (Failure ("attempting to access with non-integer type"))) in
 							mrow_access_type (type_of_identifier s)
+  | Length(s) -> let typ = (match (type_of_identifier s) with
+							MatrixTyp(_, _, _) -> Int
+						  |	RowTyp(_, _) -> Int
+						  | _ -> raise (Failure ("attempting to get length of wrong type"))) in typ
   | RowReference(s) -> check_row_pointer_type( type_of_identifier s )
   | PointerIncrement(s) -> check_pointer_type (type_of_identifier s)
   (*| RowLit(s) -> (match (type_of_identifier s) with

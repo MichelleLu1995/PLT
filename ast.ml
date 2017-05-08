@@ -49,6 +49,7 @@ type expr = IntLit of int
   | PointerIncrement of string
   | Dereference of string
   | RowReference of string
+  | Length of string
             
 type stmt = Block of stmt list 
   | Expr of expr 
@@ -160,7 +161,6 @@ let rec string_of_expr = function
   | MatrixLit(_)-> "matrix literal"
   | TupleLit(t) -> string_of_tuple t 
   | RowLit(r) -> string_of_row r 
-  (*| ColumnLit(c) -> string_of_column c*)
   | Binop(e1, o, e2) ->
       string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
   | Unop(o, e) -> string_of_uop o ^ string_of_expr e
@@ -177,6 +177,7 @@ let rec string_of_expr = function
   | RowReference(s) -> "$" ^ s
   | MatrixReference(s) -> "$$" ^ s
   | Dereference(s) -> "#" ^ s
+  | Length(s) -> s ^ ".length"
   | PointerIncrement(s) -> "~~" ^ s
 
 let rec string_of_stmt = function
