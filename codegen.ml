@@ -520,17 +520,15 @@ let translate (globals, functions) =
           match (typ1, typ2) with
             "int", "int" -> (match (e1,e2) with
               A.IntLit(_),A.IntLit(_) -> int_bop op
-              | A.Id(_), A.IntLit(_) -> int_bop op
-              | A.IntLit(_), A.Id(_) -> int_bop op
-              | A.Id(_), A.Id(_) -> int_bop op
+              | A.Id(int), A.IntLit(_) -> int_bop op
+              | A.IntLit(_), A.Id(int) -> int_bop op
               | _,_ -> match t1,t2 with A.TupleTyp(A.Int,l1),A.TupleTyp(A.Int,l2) when l1=l2->tuple_int_bop l1 op
                                       | A.MatrixTyp(A.Int,r1,c1),A.MatrixTyp(A.Int,r2,c2) when r1=r2 && c1=c2 -> matrix_int_bop r1 c1 op
                                       | _,_ -> raise (Failure("Cannot build ops with given types")))
           | "float" , "float" -> (match (e1,e2) with
               A.FloatLit(_),A.FloatLit(_) -> float_bop op
-              | A.Id(_), A.FloatLit(_) -> float_bop op
-              | A.FloatLit(_), A.Id(_) -> float_bop op
-              | A.Id(_), A.Id(_) -> float_bop op
+              | A.Id(float), A.FloatLit(_) -> float_bop op
+              | A.FloatLit(_), A.Id(float) -> float_bop op
               | _,_ -> match t1,t2 with A.MatrixTyp(A.Float,r1,c1),A.MatrixTyp(A.Float,r2,c2) when r1=r2 && c1=c2 -> matrix_float_bop r1 c1 op
                                         | _,_ -> raise (Failure("Cannot build ops with given types")))
           | _,_ -> raise(UnsupportedBinop)
