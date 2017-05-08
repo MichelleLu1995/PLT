@@ -113,7 +113,7 @@ let translate (globals, functions) =
        declared variables.  Allocate each on the stack, initialize their
        value, if appropriate, and remember their values in the "locals" map *)
 
-	let types = ref StringMap.empty in
+  let types = ref StringMap.empty in
 
     let local_vars = 
       let add_formal m (t, n) p = L.set_value_name n p;
@@ -123,7 +123,7 @@ let translate (globals, functions) =
 
       let add_local m (t, n) =
 
-	types := StringMap.add n t !types;
+  types := StringMap.add n t !types;
 
 
   let local_var = L.build_alloca (ltype_of_typ t) n builder
@@ -133,12 +133,11 @@ let translate (globals, functions) =
           (Array.to_list (L.params the_function)) in
       List.fold_left add_local formals fdecl.A.locals in
 
-	let local_vars = ref local_vars in
+  let local_vars = ref local_vars in
 
-	(* ADD INDEX VARIABLE TO LOCALS FOR MATRIX FOR LOOP *)
-	local_vars := StringMap.add "_i" (L.build_alloca (ltype_of_typ A.Int) "_i" builder) !local_vars;
-
-
+  (* ADD INDEX VARIABLE TO LOCALS FOR MATRIX FOR LOOP *)
+  local_vars := StringMap.add "_i" (L.build_alloca (ltype_of_typ A.Int) "_i" builder) !local_vars;
+  
      let check_function =
         List.fold_left (fun m (t, n) -> StringMap.add n t m)
         StringMap.empty (globals @ fdecl.A.formals @ fdecl.A.locals)
@@ -159,16 +158,19 @@ let translate (globals, functions) =
 	(* ADD ROW TO LOCALS FOR MATRIX FOR LOOP *)
 	let allocate_row name len m =
 
-		let typ = match (StringMap.find m !types) with
-			A.MatrixTyp(A.Int, _, _) -> A.Int
-		  | A.MatrixTyp(A.Float, _, _) -> A.Float
-		  | A.MatrixTyp(A.TupleTyp(A.Int, len), _, _) -> A.TupleTyp(A.Int, len)
-		  | _ -> raise (Failure ("illegal matrix type")) in
+    let typ = match (StringMap.find m !types) with
+      A.MatrixTyp(A.Int, _, _) -> A.Int
+      | A.MatrixTyp(A.Float, _, _) -> A.Float
+      | A.MatrixTyp(A.TupleTyp(A.Int, len), _, _) -> A.TupleTyp(A.Int, len)
+      | _ -> raise (Failure ("illegal matrix type")) in
 
 		check_function := StringMap.add name (A.RowTyp(typ, len)) !check_function;
 		check_function := StringMap.add "_i" (A.Int) !check_function;
 		local_vars := StringMap.add name (L.build_alloca (ltype_of_typ (A.RowTyp(typ, len))) name builder) !local_vars in
-	
+
+    (*let print_vars key value = print_endline(key) in
+    StringMap.iter print_vars local_vars; *)
+
     (* Return the value for a variable or formal argument *)
     let lookup n = 
 					try StringMap.find n !local_vars
@@ -244,40 +246,36 @@ let translate (globals, functions) =
 
     (* New code/supporting functions for getting type *)
     (* A function that is used to check each function *)
-      let check_not_void exceptf = function
-      (A.Void, n) -> raise (Failure (exceptf n))
-    | _ -> ()
-  in
 
  let type_of_tuple1 t =
     match (List.hd t) with
-      A.IntLit _ -> A.TupleTyp(Int, List.length t)
+      A.IntLit _ -> A.TupleTyp(A.Int, List.length t)
     | _ -> raise (Failure ("illegal tuple type")) in
 
   let rec check_tuple_literal1 tt l i =
     let length = List.length l in
     match (tt, List.nth l i) with
-      (A.TupleTyp(Int, _), A.IntLit _) -> if i == length - 1 then A.TupleTyp(Int, length) else check_tuple_literal1 (A.TupleTyp(Int, length)) l (succ i)
+      (A.TupleTyp(A.Int, _), A.IntLit _) -> if i == length - 1 then A.TupleTyp(A.Int, length) else check_tuple_literal1 (A.TupleTyp(A.Int, length)) l (succ i)
     | _ -> raise (Failure ("illegal tuple literal"))
   in
 
   let type_of_row1 r l =
   match (List.hd r) with
-        A.IntLit _ -> A.RowTyp(Int, l)
-      | A.FloatLit _ -> A.RowTyp(Float, l)
+        A.IntLit _ -> A.RowTyp(A.Int, l)
+      | A.FloatLit _ -> A.RowTyp(A.Float, l)
       | A.TupleLit t -> A.RowTyp((type_of_tuple1) t, l)
       | _ -> raise (Failure ("illegal row type"))
   in
 
   let type_of_matrix1 m r c =
     match (List.hd (List.hd m)) with
-        A.IntLit _ -> A.MatrixTyp(Int, r, c)
-      | A.FloatLit _ -> A.MatrixTyp(Float, r, c)
+        A.IntLit _ -> A.MatrixTyp(A.Int, r, c)
+      | A.FloatLit _ -> A.MatrixTyp(A.Float, r, c)
       | A.TupleLit t -> A.MatrixTyp((type_of_tuple1) t, r, c)
       | _ -> raise (Failure ("illegal matrix type"))
   in
 
-  let rec expr1 = function
+  let expr1 = function
     A.IntLit _ -> A.Int
   | A.FloatLit _ -> A.Float
   | A.StringLit _ -> A.String
@@ -286,28 +284,29 @@ let translate (globals, functions) =
   | A.RowLit r -> type_of_row1 r (List.length r)
   | A.TupleLit t -> check_tuple_literal1 (type_of_tuple1 t) t 0
   | A.MatrixLit m -> type_of_matrix1 m (List.length m) (List.length (List.hd m))
+  | _ -> raise (Failure("illegal expression"))
   in
 
-	let build_mrow_access s i1 i2 builder isAssign =
-	  if isAssign
-		then L.build_gep (lookup s) [| i1; i2 |] s builder
-	  else
-		L.build_load (L.build_gep (lookup s) [| i1; i2 |] s builder) s builder
-	in
+  let build_mrow_access s i1 i2 builder isAssign =
+    if isAssign
+    then L.build_gep (lookup s) [| i1; i2 |] s builder
+    else
+    L.build_load (L.build_gep (lookup s) [| i1; i2 |] s builder) s builder
+  in
 
-	let build_matrix_access s i1 i2 i3 builder isAssign =
-	  if isAssign
-		then L.build_gep (lookup s) [| i1; i2; i3|] s builder
-	  else
-		L.build_load (L.build_gep (lookup s) [| i1; i2; i3 |] s builder) s builder
-	in
+  let build_matrix_access s i1 i2 i3 builder isAssign =
+    if isAssign
+    then L.build_gep (lookup s) [| i1; i2; i3|] s builder
+    else
+    L.build_load (L.build_gep (lookup s) [| i1; i2; i3 |] s builder) s builder
+  in
 
-	let build_mrow_access s i1 i2 builder isAssign =
-	  if isAssign
-		then L.build_gep (lookup s) [| i1; i2 |] s builder
-	  else
-		L.build_load (L.build_gep (lookup s) [| i1; i2 |] s builder) s builder
-	in
+  let build_mrow_access s i1 i2 builder isAssign =
+    if isAssign
+    then L.build_gep (lookup s) [| i1; i2 |] s builder
+    else
+    L.build_load (L.build_gep (lookup s) [| i1; i2 |] s builder) s builder
+  in
 
 
     (* Construct code for an expression; return its value *)
@@ -329,11 +328,11 @@ let translate (globals, functions) =
       | A.MatrixReference (s) -> build_matrix_argument s builder
       | A.RowLit r ->  L.const_array (get_row_type r) (Array.of_list (List.map (expr builder) r))
   	  | A.RowAccess(s, e1) -> let i1 = expr builder e1 in build_row_access s (L.const_int i32_t 0) i1 builder false
-	  | A.TupleAccess(s, e1) -> let i1 = expr builder e1 in build_tuple_access s (L.const_int i32_t 0) i1 builder false
-	  | A.MatrixAccess(s, e1, e2) -> let i1 = expr builder e1 and i2 = expr builder e2 in build_matrix_access s (L.const_int i32_t 0) i1 i2 builder false
+	    | A.TupleAccess(s, e1) -> let i1 = expr builder e1 in build_tuple_access s (L.const_int i32_t 0) i1 builder false
+	    | A.MatrixAccess(s, e1, e2) -> let i1 = expr builder e1 and i2 = expr builder e2 in build_matrix_access s (L.const_int i32_t 0) i1 i2 builder false
       | A.PointerIncrement (s) -> build_pointer_increment s builder false
       | A.Dereference (s) -> build_pointer_dereference s builder false
-	  | A.MRowAccess(s, e1) -> let i1 = expr builder e1 in build_mrow_access s (L.const_int i32_t 0) i1 builder false
+	    | A.MRowAccess(s, e1) -> let i1 = expr builder e1 in build_mrow_access s (L.const_int i32_t 0) i1 builder false
       | A.Binop (e1, op, e2) -> 
         let e1' = expr builder e1 and
         e2' = expr builder e2 and
@@ -354,6 +353,7 @@ let translate (globals, functions) =
             | A.Leq     -> L.build_fcmp L.Fcmp.Ole
             | A.Greater -> L.build_fcmp L.Fcmp.Ogt
             | A.Geq     -> L.build_fcmp L.Fcmp.Oge
+            | _ -> raise (Failure("Unsupported operator"))
             ) e1' e2' "tmp" builder 
           in 
 
@@ -371,12 +371,13 @@ let translate (globals, functions) =
             | A.Leq     -> L.build_icmp L.Icmp.Sle
             | A.Greater -> L.build_icmp L.Icmp.Sgt
             | A.Geq     -> L.build_icmp L.Icmp.Sge
+            | _ -> raise (Failure("Unsupported operator"))
             ) e1' e2' "tmp" builder
           in
 
           let tuple_int_bop n_i operator =
-            let lhs_str = (match e1 with A.Id(s) -> s) in
-            let rhs_str = (match e2 with A.Id(s) -> s) in
+            let lhs_str = (match e1 with A.Id(s) -> s | _ -> "") in
+            let rhs_str = (match e2 with A.Id(s) -> s | _ -> "") in
               (match operator with
                 A.Add ->
                   let tmp_t = L.build_alloca (array_t i32_t n_i) "tmptup" builder in
@@ -397,12 +398,13 @@ let translate (globals, functions) =
                       let ld = L.build_gep tmp_t [| L.const_int i32_t 0; L.const_int i32_t i |] "tmptup" builder in
                     ignore(L.build_store add_res ld builder);
                     done;
-                  L.build_load (L.build_gep tmp_t [| L.const_int i32_t 0 |] "tmptup" builder) "tmptup" builder)
+                  L.build_load (L.build_gep tmp_t [| L.const_int i32_t 0 |] "tmptup" builder) "tmptup" builder
+                | _ -> raise (Failure("Unsupported operator")))
             in
 
           let matrix_int_bop r_i c_i operator =
-            let lhs_str = (match e1 with A.Id(s) -> s) in
-            let rhs_str = (match e2 with A.Id(s) -> s) in
+            let lhs_str = (match e1 with A.Id(s) -> s | _ -> "") in
+            let rhs_str = (match e2 with A.Id(s) -> s | _ -> "") in
               (match operator with
                 A.Add ->
                   let tmp_m = L.build_alloca (array_t (array_t i32_t c_i) r_i) "tmpmat" builder in
@@ -427,12 +429,13 @@ let translate (globals, functions) =
                     ignore(L.build_store add_res ld builder);
                     done
                   done;
-                L.build_load (L.build_gep tmp_m [| L.const_int i32_t 0 |] "tmpmat" builder) "tmpmat" builder)
+                L.build_load (L.build_gep tmp_m [| L.const_int i32_t 0 |] "tmpmat" builder) "tmpmat" builder
+              | _ -> raise (Failure("Unsupported operator")))
           in
 
           let matrix_float_bop r_i c_i operator =
-            let lhs_str = (match e1 with A.Id(s) -> s) in
-            let rhs_str = (match e2 with A.Id(s) -> s) in
+            let lhs_str = (match e1 with A.Id(s) -> s | _ -> "") in
+            let rhs_str = (match e2 with A.Id(s) -> s | _ -> "") in
               (match operator with
                 A.Add ->
                   let tmp_m = L.build_alloca (array_t (array_t float_t c_i) r_i) "tmpmat" builder in
@@ -457,7 +460,8 @@ let translate (globals, functions) =
                     ignore(L.build_store add_res ld builder);
                     done
                   done;
-                L.build_load (L.build_gep tmp_m [| L.const_int i32_t 0 |] "tmpmat" builder) "tmpmat" builder)
+                L.build_load (L.build_gep tmp_m [| L.const_int i32_t 0 |] "tmpmat" builder) "tmpmat" builder
+              | _ -> raise (Failure("Unsupported operator")))
           in
 
         let string_of_e1'_llvalue = L.string_of_llvalue e1'
@@ -490,18 +494,20 @@ let translate (globals, functions) =
         let build_ops_with_types typ1 typ2 =
           match (typ1, typ2) with
             "int", "int" -> (match (e1,e2) with
-              IntLit(_),IntLit(_) -> int_bop op
-              | Id(int), IntLit(_) -> int_bop op
-              | IntLit(_), Id(int) -> int_bop op
-              | Id(_), Id(_) -> int_bop op
-              | _,_ -> match t1,t2 with TupleTyp(Int,l1),TupleTyp(Int,l2) when l1=l2->tuple_int_bop l1 op
-                                      | MatrixTyp(Int,r1,c1),MatrixTyp(Int,r2,c2) when r1=r2 && c1=c2 -> matrix_int_bop r1 c1 op)
+              A.IntLit(_),A.IntLit(_) -> int_bop op
+              | A.Id(_), A.IntLit(_) -> int_bop op
+              | A.IntLit(_), A.Id(_) -> int_bop op
+              | A.Id(_), A.Id(_) -> int_bop op
+              | _,_ -> match t1,t2 with A.TupleTyp(A.Int,l1),A.TupleTyp(A.Int,l2) when l1=l2->tuple_int_bop l1 op
+                                      | A.MatrixTyp(A.Int,r1,c1),A.MatrixTyp(A.Int,r2,c2) when r1=r2 && c1=c2 -> matrix_int_bop r1 c1 op
+                                      | _,_ -> raise (Failure("Cannot build ops with given types")))
           | "float" , "float" -> (match (e1,e2) with
-              FloatLit(_),FloatLit(_) -> float_bop op
-              | Id(float), FloatLit(_) -> float_bop op
-              | FloatLit(_), Id(float) -> float_bop op
-              | Id(_), Id(_) -> float_bop op
-              | _,_ -> match t1,t2 with MatrixTyp(Float,r1,c1),MatrixTyp(Float,r2,c2) when r1=r2 && c1=c2 -> matrix_float_bop r1 c1 op)
+              A.FloatLit(_),A.FloatLit(_) -> float_bop op
+              | A.Id(_), A.FloatLit(_) -> float_bop op
+              | A.FloatLit(_), A.Id(_) -> float_bop op
+              | A.Id(_), A.Id(_) -> float_bop op
+              | _,_ -> match t1,t2 with A.MatrixTyp(A.Float,r1,c1),A.MatrixTyp(A.Float,r2,c2) when r1=r2 && c1=c2 -> matrix_float_bop r1 c1 op
+                                        | _,_ -> raise (Failure("Cannot build ops with given types")))
           | _,_ -> raise(UnsupportedBinop)
         in
         build_ops_with_types e1'_type e2'_type
@@ -650,6 +656,7 @@ let translate (globals, functions) =
       | A.For (e1, e2, e3, body) -> stmt builder
       ( A.Block [A.Expr e1 ; A.While (e2, A.Block [body ; A.Expr e3]) ] )
 
+
 	  | A.MFor (s1, s2, body) ->
 		let rows = L.array_length (L.type_of (L.build_load (L.build_gep (lookup s2) [| L.const_int i32_t 0 |] s2 builder) s2 builder)) in
 		let cols = L.array_length (L.type_of (L.build_load (L.build_gep (lookup s2) [| L.const_int i32_t 0; L.const_int i32_t 0 |] s2 builder) s2 builder)) in
@@ -663,6 +670,7 @@ let translate (globals, functions) =
 			 A.While ((A.Binop((A.Id "_i"), A.Less, (A.IntLit rows))),
 			   A.Block [A.Expr (A.Assign((A.Id s1), A.MRowAccess(s2, (A.Id "_i")))); body ; A.Expr(A.Assign((A.Id "_i"), A.Binop((A.Id "_i"), A.Add, (A.IntLit 1))))]) ] )
 	in
+
 
     (* Build the code for each statement in the function *)
     let builder = stmt builder (A.Block fdecl.A.body) in
