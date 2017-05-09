@@ -290,7 +290,7 @@ let translate (globals, functions) =
       | _ -> raise (Failure ("illegal matrix type"))
   in
 
-  let rec expr1 = function
+  let expr1 = function
     A.IntLit _ -> A.Int
   | A.FloatLit _ -> A.Float
   | A.StringLit _ -> A.String
@@ -299,33 +299,6 @@ let translate (globals, functions) =
   | A.RowLit r -> type_of_row1 r (List.length r)
   | A.TupleLit t -> check_tuple_literal1 (type_of_tuple1 t) t 0
   | A.MatrixLit m -> type_of_matrix1 m (List.length m) (List.length (List.hd m))
-  | A.Binop(e1, op, e2) -> let t1 = expr1 e1 and t2 = expr1 e2 in
-  (match op with
-        A.Add -> (match t1,t2 with A.Int,A.Int -> A.Int
-      | A.Float,A.Float | A.Int,A.Float | A.Float,A.Int -> A.Float
-      | A.TupleTyp(A.Int,l1),A.TupleTyp(Int,l2) when l1=l2 -> A.TupleTyp(A.Int,l1)
-      | A.MatrixTyp(A.Int,r1,c1),A.MatrixTyp(A.Int,r2,c2) when r1=r2 && c1=c2 -> A.MatrixTyp(A.Int,r1,c1)
-      | A.MatrixTyp(A.Float,r1,c1),A.MatrixTyp(A.Float,r2,c2) when r1=r2 && c1=c2 -> A.MatrixTyp(A.Float,r1,c1)
-      | _,_ -> raise (Failure("illegal type")))
-    | A.Sub -> (match t1,t2 with A.Int,A.Int -> A.Int
-      | A.Float,A.Float | A.Int,A.Float | A.Float,A.Int -> A.Float
-      | A.TupleTyp(A.Int,l1),A.TupleTyp(A.Int,l2) when l1=l2 -> A.TupleTyp(A.Int,l1)
-      | A.MatrixTyp(A.Int,r1,c1),A.MatrixTyp(A.Int,r2,c2) when r1=r2 && c1=c2 -> A.MatrixTyp(A.Int,r1,c1)
-      | A.MatrixTyp(A.Float,r1,c1),A.MatrixTyp(A.Float,r2,c2) when r1=r2 && c1=c2 -> A.MatrixTyp(A.Float,r1,c1)
-      | _,_ -> raise (Failure("illegal type"))) 
-    | A.Mult -> (match t1,t2 with A.Int,A.Int -> A.Int
-      | A.Float,A.Float | A.Int,A.Float | A.Float,A.Int -> A.Float
-      | _,_ -> raise (Failure("illegal type")))
-    | A.Div -> (match t1,t2 with A.Int,A.Int -> A.Int
-      | A.Float,A.Float | A.Int,A.Float | A.Float,A.Int -> A.Float
-      | _,_ -> raise (Failure("illegal type")))
-    | _ -> raise (Failure ("illegal binop")))
-  | A.Unop(op, e) -> let t = expr1 e in
-  (match op with
-      A.Neg when t = A.Int -> A.Int
-    | A.Neg when t = A.Float -> A.Float
-    | A.Not when t = A.Bool -> A.Bool
-    | _ -> raise (Failure ("illegal unop")))
   | _ -> raise (Failure("illegal expression"))
   in
 
@@ -389,7 +362,7 @@ let translate (globals, functions) =
         let e1' = expr builder e1 and
         e2' = expr builder e2 and
         t1 = expr1 e1 and
-        t2 = expr1 e2 in 
+        t2 = expr1 e2 in
           let float_bop operator = 
             (match operator with
               A.Add     -> L.build_fadd
@@ -461,7 +434,6 @@ let translate (globals, functions) =
                   let tmp_t = L.build_alloca (array_t i32_t n_i) "tmptup" builder in
                   for i=0 to n_i do
                     let v1 = build_tuple_access lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) builder false in
-                (*     let v2 = L.const_int i32_t rhs_str in *)
                     let add_res = L.build_add v1 e2' "tmp" builder in
                     let ld = L.build_gep tmp_t [| L.const_int i32_t 0; L.const_int i32_t i |] "tmptup" builder in
                   ignore(L.build_store add_res ld builder);
@@ -471,8 +443,25 @@ let translate (globals, functions) =
                     let tmp_t = L.build_alloca (array_t i32_t n_i) "tmptup" builder in
                     for i=0 to n_i do
                       let v1 = build_tuple_access lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) builder false in
-                      (* let v2 = L.const_int i32_t rhs_str in *)
                       let add_res = L.build_sub v1 e2' "tmp" builder in
+                      let ld = L.build_gep tmp_t [| L.const_int i32_t 0; L.const_int i32_t i |] "tmptup" builder in
+                    ignore(L.build_store add_res ld builder);
+                    done;
+                  L.build_load (L.build_gep tmp_t [| L.const_int i32_t 0 |] "tmptup" builder) "tmptup" builder
+                | A.Mult ->
+                    let tmp_t = L.build_alloca (array_t i32_t n_i) "tmptup" builder in
+                    for i=0 to n_i do
+                      let v1 = build_tuple_access lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) builder false in
+                      let add_res = L.build_mul v1 e2' "tmp" builder in
+                      let ld = L.build_gep tmp_t [| L.const_int i32_t 0; L.const_int i32_t i |] "tmptup" builder in
+                    ignore(L.build_store add_res ld builder);
+                    done;
+                  L.build_load (L.build_gep tmp_t [| L.const_int i32_t 0 |] "tmptup" builder) "tmptup" builder
+                | A.Div ->
+                    let tmp_t = L.build_alloca (array_t i32_t n_i) "tmptup" builder in
+                    for i=0 to n_i do
+                      let v1 = build_tuple_access lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) builder false in
+                      let add_res = L.build_sdiv v1 e2' "tmp" builder in
                       let ld = L.build_gep tmp_t [| L.const_int i32_t 0; L.const_int i32_t i |] "tmptup" builder in
                     ignore(L.build_store add_res ld builder);
                     done;
@@ -482,13 +471,11 @@ let translate (globals, functions) =
 
           let int_tuple_scalar_bop n_i operator =
             let lhs_str = (match e2 with A.Id(s) -> s | _ -> "") in
-            (* let rhs_str = (match e2 with A.Id(s) -> s | _ -> "") in *)
               (match operator with
                 A.Add ->
                   let tmp_t = L.build_alloca (array_t i32_t n_i) "tmptup" builder in
                   for i=0 to n_i do
                     let v1 = build_tuple_access lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) builder false in
-                (*     let v2 = L.const_int i32_t rhs_str in *)
                     let add_res = L.build_add e1' v1 "tmp" builder in
                     let ld = L.build_gep tmp_t [| L.const_int i32_t 0; L.const_int i32_t i |] "tmptup" builder in
                   ignore(L.build_store add_res ld builder);
@@ -498,8 +485,25 @@ let translate (globals, functions) =
                     let tmp_t = L.build_alloca (array_t i32_t n_i) "tmptup" builder in
                     for i=0 to n_i do
                       let v1 = build_tuple_access lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) builder false in
-                      (* let v2 = L.const_int i32_t rhs_str in *)
                       let add_res = L.build_sub e1' v1 "tmp" builder in
+                      let ld = L.build_gep tmp_t [| L.const_int i32_t 0; L.const_int i32_t i |] "tmptup" builder in
+                    ignore(L.build_store add_res ld builder);
+                    done;
+                  L.build_load (L.build_gep tmp_t [| L.const_int i32_t 0 |] "tmptup" builder) "tmptup" builder
+                | A.Mult ->
+                    let tmp_t = L.build_alloca (array_t i32_t n_i) "tmptup" builder in
+                    for i=0 to n_i do
+                      let v1 = build_tuple_access lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) builder false in
+                      let add_res = L.build_mul e1' v1 "tmp" builder in
+                      let ld = L.build_gep tmp_t [| L.const_int i32_t 0; L.const_int i32_t i |] "tmptup" builder in
+                    ignore(L.build_store add_res ld builder);
+                    done;
+                  L.build_load (L.build_gep tmp_t [| L.const_int i32_t 0 |] "tmptup" builder) "tmptup" builder
+                | A.Div ->
+                    let tmp_t = L.build_alloca (array_t i32_t n_i) "tmptup" builder in
+                    for i=0 to n_i do
+                      let v1 = build_tuple_access lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) builder false in
+                      let add_res = L.build_sdiv e1' v1 "tmp" builder in
                       let ld = L.build_gep tmp_t [| L.const_int i32_t 0; L.const_int i32_t i |] "tmptup" builder in
                     ignore(L.build_store add_res ld builder);
                     done;
@@ -563,6 +567,28 @@ let translate (globals, functions) =
                     done
                   done;
                 L.build_load (L.build_gep tmp_m [| L.const_int i32_t 0 |] "tmpmat" builder) "tmpmat" builder
+              | A.Mult -> 
+                  let tmp_m = L.build_alloca (array_t (array_t i32_t c_i) r_i) "tmpmat" builder in
+                  for i=0 to (r_i-1) do
+                    for j=0 to (c_i-1) do
+                      let m1 = build_matrix_access lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) (L.const_int i32_t j) builder false in
+                      let add_res = L.build_mul m1 e2' "tmp" builder in
+                      let ld = L.build_gep tmp_m [| L.const_int i32_t 0; L.const_int i32_t i; L.const_int i32_t j |] "tmpmat" builder in
+                    ignore(L.build_store add_res ld builder);
+                    done
+                  done;
+                L.build_load (L.build_gep tmp_m [| L.const_int i32_t 0 |] "tmpmat" builder) "tmpmat" builder
+              | A.Div -> 
+                  let tmp_m = L.build_alloca (array_t (array_t i32_t c_i) r_i) "tmpmat" builder in
+                  for i=0 to (r_i-1) do
+                    for j=0 to (c_i-1) do
+                      let m1 = build_matrix_access lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) (L.const_int i32_t j) builder false in
+                      let add_res = L.build_sdiv m1 e2' "tmp" builder in
+                      let ld = L.build_gep tmp_m [| L.const_int i32_t 0; L.const_int i32_t i; L.const_int i32_t j |] "tmpmat" builder in
+                    ignore(L.build_store add_res ld builder);
+                    done
+                  done;
+                L.build_load (L.build_gep tmp_m [| L.const_int i32_t 0 |] "tmpmat" builder) "tmpmat" builder
               | _ -> raise (Failure("Unsupported operator")))
           in
 
@@ -586,6 +612,28 @@ let translate (globals, functions) =
                     for j=0 to (c_i-1) do
                       let m1 = build_matrix_access lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) (L.const_int i32_t j) builder false in
                       let add_res = L.build_sub e1' m1 "tmp" builder in
+                      let ld = L.build_gep tmp_m [| L.const_int i32_t 0; L.const_int i32_t i; L.const_int i32_t j |] "tmpmat" builder in
+                    ignore(L.build_store add_res ld builder);
+                    done
+                  done;
+                L.build_load (L.build_gep tmp_m [| L.const_int i32_t 0 |] "tmpmat" builder) "tmpmat" builder
+              | A.Mult -> 
+                  let tmp_m = L.build_alloca (array_t (array_t i32_t c_i) r_i) "tmpmat" builder in
+                  for i=0 to (r_i-1) do
+                    for j=0 to (c_i-1) do
+                      let m1 = build_matrix_access lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) (L.const_int i32_t j) builder false in
+                      let add_res = L.build_mul e1' m1 "tmp" builder in
+                      let ld = L.build_gep tmp_m [| L.const_int i32_t 0; L.const_int i32_t i; L.const_int i32_t j |] "tmpmat" builder in
+                    ignore(L.build_store add_res ld builder);
+                    done
+                  done;
+                L.build_load (L.build_gep tmp_m [| L.const_int i32_t 0 |] "tmpmat" builder) "tmpmat" builder
+              | A.Div -> 
+                  let tmp_m = L.build_alloca (array_t (array_t i32_t c_i) r_i) "tmpmat" builder in
+                  for i=0 to (r_i-1) do
+                    for j=0 to (c_i-1) do
+                      let m1 = build_matrix_access lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) (L.const_int i32_t j) builder false in
+                      let add_res = L.build_sdiv e1' m1 "tmp" builder in
                       let ld = L.build_gep tmp_m [| L.const_int i32_t 0; L.const_int i32_t i; L.const_int i32_t j |] "tmpmat" builder in
                     ignore(L.build_store add_res ld builder);
                     done
@@ -650,6 +698,28 @@ let translate (globals, functions) =
                     done
                   done;
                 L.build_load (L.build_gep tmp_m [| L.const_int i32_t 0 |] "tmpmat" builder) "tmpmat" builder
+              | A.Mult ->
+                  let tmp_m = L.build_alloca (array_t (array_t float_t c_i) r_i) "tmpmat" builder in
+                  for i=0 to (r_i-1) do
+                    for j=0 to (c_i-1) do
+                      let m1 = build_matrix_access lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) (L.const_int i32_t j) builder false in
+                      let add_res = L.build_fmul m1 e2' "tmp" builder in
+                      let ld = L.build_gep tmp_m [| L.const_int i32_t 0; L.const_int i32_t i; L.const_int i32_t j |] "tmpmat" builder in
+                    ignore(L.build_store add_res ld builder);
+                    done
+                  done;
+                L.build_load (L.build_gep tmp_m [| L.const_int i32_t 0 |] "tmpmat" builder) "tmpmat" builder
+              | A.Div ->
+                  let tmp_m = L.build_alloca (array_t (array_t float_t c_i) r_i) "tmpmat" builder in
+                  for i=0 to (r_i-1) do
+                    for j=0 to (c_i-1) do
+                      let m1 = build_matrix_access lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) (L.const_int i32_t j) builder false in
+                      let add_res = L.build_fdiv m1 e2' "tmp" builder in
+                      let ld = L.build_gep tmp_m [| L.const_int i32_t 0; L.const_int i32_t i; L.const_int i32_t j |] "tmpmat" builder in
+                    ignore(L.build_store add_res ld builder);
+                    done
+                  done;
+                L.build_load (L.build_gep tmp_m [| L.const_int i32_t 0 |] "tmpmat" builder) "tmpmat" builder
               | _ -> raise (Failure("Unsupported operator")))
           in
 
@@ -673,6 +743,28 @@ let translate (globals, functions) =
                     for j=0 to (c_i-1) do
                       let m1 = build_matrix_access lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) (L.const_int i32_t j) builder false in
                       let add_res = L.build_fsub e1' m1 "tmp" builder in
+                      let ld = L.build_gep tmp_m [| L.const_int i32_t 0; L.const_int i32_t i; L.const_int i32_t j |] "tmpmat" builder in
+                    ignore(L.build_store add_res ld builder);
+                    done
+                  done;
+                L.build_load (L.build_gep tmp_m [| L.const_int i32_t 0 |] "tmpmat" builder) "tmpmat" builder
+              | A.Mult ->
+                  let tmp_m = L.build_alloca (array_t (array_t float_t c_i) r_i) "tmpmat" builder in
+                  for i=0 to (r_i-1) do
+                    for j=0 to (c_i-1) do
+                      let m1 = build_matrix_access lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) (L.const_int i32_t j) builder false in
+                      let add_res = L.build_fmul e1' m1 "tmp" builder in
+                      let ld = L.build_gep tmp_m [| L.const_int i32_t 0; L.const_int i32_t i; L.const_int i32_t j |] "tmpmat" builder in
+                    ignore(L.build_store add_res ld builder);
+                    done
+                  done;
+                L.build_load (L.build_gep tmp_m [| L.const_int i32_t 0 |] "tmpmat" builder) "tmpmat" builder
+              | A.Div ->
+                  let tmp_m = L.build_alloca (array_t (array_t float_t c_i) r_i) "tmpmat" builder in
+                  for i=0 to (r_i-1) do
+                    for j=0 to (c_i-1) do
+                      let m1 = build_matrix_access lhs_str (L.const_int i32_t 0) (L.const_int i32_t i) (L.const_int i32_t j) builder false in
+                      let add_res = L.build_fdiv e1' m1 "tmp" builder in
                       let ld = L.build_gep tmp_m [| L.const_int i32_t 0; L.const_int i32_t i; L.const_int i32_t j |] "tmpmat" builder in
                     ignore(L.build_store add_res ld builder);
                     done

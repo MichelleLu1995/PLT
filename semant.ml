@@ -309,8 +309,6 @@ let find_rowtyp name m =
   (match op with
     Add -> (match t1,t2 with Int,Int -> Int
       | Float,Float -> Float
-      | Int,Float -> Float
-      | Float,Int -> Float
       | TupleTyp(Int,l1),TupleTyp(Int,l2) when l1=l2 -> TupleTyp(Int,l1)
       | TupleTyp(Int,l1), Int -> TupleTyp(Int, l1)
       | Int, TupleTyp(Int,l1) -> TupleTyp(Int, l1)
@@ -320,9 +318,9 @@ let find_rowtyp name m =
       | MatrixTyp(Float,r1,c1),MatrixTyp(Float,r2,c2) when r1=r2 && c1=c2 -> MatrixTyp(Float,r1,c1)
       | MatrixTyp(Float,r1,c1), Float -> MatrixTyp(Float,r1,c1)
       | Float, MatrixTyp(Float,r1,c1) -> MatrixTyp(Float,r1,c1)
-      | _,_ -> raise (Failure("illegal binary operator")))
+      | _,_ -> raise (Failure("illegal addition operator")))
     | Sub -> (match t1,t2 with Int,Int -> Int
-      | Float,Float | Int,Float | Float,Int -> Float
+      | Float,Float -> Float
       | TupleTyp(Int,l1),TupleTyp(Int,l2) when l1=l2 -> TupleTyp(Int,l1)
       | TupleTyp(Int,l1), Int -> TupleTyp(Int, l1)
       | Int, TupleTyp(Int,l1) -> TupleTyp(Int, l1)
@@ -332,16 +330,25 @@ let find_rowtyp name m =
       | MatrixTyp(Float,r1,c1),MatrixTyp(Float,r2,c2) when r1=r2 && c1=c2 -> MatrixTyp(Float,r1,c1)
       | MatrixTyp(Float,r1,c1), Float -> MatrixTyp(Float,r1,c1)
       | Float, MatrixTyp(Float,r1,c1) -> MatrixTyp(Float,r1,c1) 
-      | _,_ -> raise (Failure("illegal binary operator")))
+      | _,_ -> raise (Failure("illegal subtraction operator")))
     | Mult -> (match t1,t2 with Int,Int -> Int
       | Float,Float -> Float
-      | Int,Float -> Float
-      | Float,Int -> Float) 
+      | TupleTyp(Int, l1), Int -> TupleTyp(Int, l1)
+      | Int, TupleTyp(Int, l1) -> TupleTyp(Int, l1)
+      | Int, MatrixTyp(Int,r1,c1) -> MatrixTyp(Int,r1,c1)
+      | MatrixTyp(Int,r1,c1), Int -> MatrixTyp(Int,r1,c1)
+      | Float, MatrixTyp(Float,r1,c1) -> MatrixTyp(Float,r1,c1)
+      | MatrixTyp(Float,r1,c1), Float -> MatrixTyp(Float,r1,c1)
+      | _,_ -> raise (Failure("illegal multiplication operator"))) 
     | Div -> (match t1,t2 with Int,Int -> Int
       | Float,Float -> Float
-      | Int,Float -> Float
-      | Float,Int -> Float) 
-      | _,_ -> raise (Failure("illegal type"))) 
+      | TupleTyp(Int, l1), Int -> TupleTyp(Int, l1)
+      | Int, TupleTyp(Int, l1) -> TupleTyp(Int, l1)
+      | Int, MatrixTyp(Int,r1,c1) -> MatrixTyp(Int,r1,c1)
+      | MatrixTyp(Int,r1,c1), Int -> MatrixTyp(Int,r1,c1)
+      | Float, MatrixTyp(Float,r1,c1) -> MatrixTyp(Float,r1,c1)
+      | MatrixTyp(Float,r1,c1), Float -> MatrixTyp(Float,r1,c1)
+      | _,_ -> raise (Failure("illegal division operator"))) 
     | Equal | Neq | Meq when t1 = t2 -> Bool
     | PlusEq when t1 = Int && t2 = Int -> Int
     | PlusEq when t1 = Int && t2 = Float -> Float
