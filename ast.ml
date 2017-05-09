@@ -33,7 +33,6 @@ type expr = IntLit of int
   | MatrixLit of expr list list 
   | RowLit of expr list
   | Init of string * expr
-  (* | ColumnLit of expr list *)
   | Binop of expr * op * expr 
   | Unop of uop * expr
   | Assign of expr * expr 
@@ -49,6 +48,8 @@ type expr = IntLit of int
   | Dereference of string
   | RowReference of string
   | Length of string
+  | Width of string
+  | Type of string
             
 type stmt = Block of stmt list 
   | Expr of expr 
@@ -161,6 +162,8 @@ let rec string_of_expr = function
   | MatrixReference(s) -> "$$" ^ s
   | Dereference(s) -> "#" ^ s
   | Length(s) -> s ^ ".length"
+  | Width(s) -> s ^ ".width"
+  | Type(s) -> s ^ ".type"
   | PointerIncrement(s) -> "~~" ^ s
 
 let rec string_of_stmt = function

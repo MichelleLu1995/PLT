@@ -39,12 +39,12 @@ let check (globals, functions) =
     | (MatrixTyp(Int, r1, c1), MatrixTyp(Int, r2, c2)) -> if r1 == r2 && c1 == c2 then lvaluet else raise err
     | (MatrixTyp(Float, r1, c1), MatrixTyp(Float, r2, c2)) -> if r1 == r2 && c1 == c2 then lvaluet else raise err
     | (MatrixTyp(TupleTyp(Int, d1), r1, c1), MatrixTyp(TupleTyp(Int, d2), r2, c2)) -> if d1 == d2 && r1 == r2 && c1 == c2 then lvaluet else raise err
-    (* | (TuplePointerType(Int), TuplePointerType(Int)) -> lvaluet
-    | (MatrixPointerType(Int), MatrixPointerType(Int)) -> lvaluet
-    | (MatrixPointerType(Float), MatrixPointerType(Float)) -> lvaluet
-    | (MatrixTuplePointerType(Int), MatrixTuplePointerType(Int)) -> lvaluet *)
-    | (RowPointer(Int), RowPointer(Int)) -> lvaluet
     | (MatrixPointer(Int), MatrixPointer(Int)) -> lvaluet
+    | (MatrixPointer(Float), MatrixPointer(Float)) -> lvaluet
+    | (MatrixPointer(TupleTyp(Int, 3)), MatrixPointer(TupleTyp(Int, 3))) -> lvaluet
+    | (RowPointer(Int), RowPointer(Int)) -> lvaluet
+    | (RowPointer(Float), RowPointer(Float)) -> lvaluet
+    | (RowPointer(TupleTyp(Int, 3)), RowPointer(TupleTyp(Int, 3))) -> lvaluet
     | _ -> raise err
   in
 (*
@@ -210,9 +210,6 @@ let find_rowtyp name m =
   in
 
  let check_pointer_type = function
-    (*  TuplePointerType(t) -> TuplePointerType(t)
-    | MatrixPointerType(t) -> MatrixPointerType(t)
-    | MatrixTuplePointerType(t) -> MatrixTuplePointerType(t)*)
       RowPointer(t) -> RowPointer(t)
     | MatrixPointer(t) -> MatrixPointer(t)
     | _ -> raise ( Failure ("cannot increment a non-pointer type") )
@@ -299,6 +296,13 @@ let find_rowtyp name m =
 							MatrixTyp(_, _, _) -> Int
 						  |	RowTyp(_, _) -> Int
 						  | _ -> raise (Failure ("attempting to get length of wrong type"))) in typ
+  | Width(s) -> let typ = (match (type_of_identifier s) with
+							MatrixTyp(_,_,_) -> Int
+						  | _ -> raise (Failure ("attempting to get width of wrong type"))) in typ
+  | Type(s) -> let typ = (match (type_of_identifier s) with
+							MatrixTyp(_, _, _) -> String
+						  | RowTyp(_, _) -> String
+						  | _ -> raise (Failure ("attempting to get type of a non-matrix or row"))) in typ
   | RowReference(s) -> check_row_pointer_type( type_of_identifier s )
   | PointerIncrement(s) -> check_pointer_type (type_of_identifier s)
 (*   | PointerIncrement(s) -> check_pointer_type (type_of_identifier s) *)
@@ -353,7 +357,7 @@ let find_rowtyp name m =
                                                                       RowTyp(t, _) -> (match t with
                                                                                                     Int -> Int
                                                                                                   | Float -> Float
-                                                                                                  | TupleTyp(p, l) -> TupleTyp(p, l) 
+																								  | TupleTyp(p, l) -> TupleTyp(p, l)
                                                                                                   | _ -> raise ( Failure ("illegal row") )
                                                                                                 )
                                                                       | _ -> raise ( Failure ("cannot access a primitive") )

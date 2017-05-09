@@ -1,0 +1,28 @@
+def void print_rowt(int(%3%)[] r, int len) {
+	prints("hello");	
+
+}
+
+def int main() {
+
+	int[4] r;
+	int(%3%) t;
+	int[3][3] m;
+	int(%3%)[2] r2;
+	r = [1, 2, 3, 4];
+	t = (% 10, 11, 12 %);
+	m = {% 1, 2, 3 | 4, 5, 6 | 7, 8, 9 %};
+
+	r2[0] = t;
+	r2[1] = t;
+
+	print_rowi($r, r.length);
+	prints("\n");
+	print_tuple(t);
+	prints("\n");
+	print_matrixi($$m, m.length, m.width);
+
+	
+	prints("\n"); 
+	print_rowt($r2, r2.length);
+}

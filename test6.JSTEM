@@ -1,0 +1,14 @@
+def void hi(int[[]] m){
+	print(#m);
+
+}
+
+def int main() {
+
+	int[2][2] m;
+	m = {% 1, 2 | 3, 4 %};
+	hi($$m);
+
+}
+
+

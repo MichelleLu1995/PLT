@@ -1,0 +1,125 @@
+def void print_tuple(int(%3%) t) {
+	int i;
+	prints("( ");
+	for (i = 0; i < 3; i=i+1) {
+		print(t(%i%));
+		if (i < 2) {
+			prints(", ");
+		}
+	}
+	prints(" )");
+}
+
+def void print_rowi(int[] r, int len) {
+	int i;
+	int len_minus_1;
+	len_minus_1 = len - 1;
+	prints("[ ");
+	for (i = 0; i < len; i=i+1) {
+		print(#r);
+		if (i < len_minus_1) {
+			prints(", ");
+		}
+		r = ~~r;
+	}
+	prints(" ]");
+}
+
+def void print_rowf(float[] r, int len) {
+	int i;
+	int len_minus_1;
+	len_minus_1 = len - 1;
+	prints("[ ");
+	for (i = 0; i < len; i=i+1) {
+		printf(#r);
+		if (i < len_minus_1) {
+			prints(", ");
+		}
+		r = ~~r;
+	}
+	prints(" ]");
+}
+
+def void print_rowt(int(%3%)[] r, int len) {
+	int i;
+	int len_minus_1;
+	len_minus_1 = len - 1;
+	prints("[ ");
+	for (i = 0; i < len; i=i+1) {
+		print_tuple(#r);
+		if (i < len_minus_1) {
+			prints(", ");
+		}
+		r = ~~r;
+	}
+	prints(" ]");
+}
+
+def void print_matrixi(int[[]] m, int len, int wid) {
+	int i;
+	int j;
+	int len_minus_1;
+	int wid_minus_1;
+	len_minus_1 = len - 1;
+	wid_minus_1 = wid - 1;
+	prints("{ ");
+	for (i = 0; i < len; i=i+1) {
+		for (j = 0; j < wid; j=j+1) {
+			print(#m);
+			if (j < wid_minus_1) {
+				prints(", ");
+			}
+			else if (i < len_minus_1) {
+				prints("\n  ");
+			}
+			m = ~~m;
+		}
+	}
+	prints(" }");
+}
+
+def void print_matrixf(float[[]] m, int len, int wid) {
+	int i;
+	int j;
+	int len_minus_1;
+	int wid_minus_1;
+	len_minus_1 = len - 1;
+	wid_minus_1 = wid - 1;
+	prints("{ ");
+	for (i = 0; i < len; i=i+1) {
+		for (j = 0; j < wid; j=j+1) {
+			printf(#m);
+			if (j < wid_minus_1) {
+				prints(", ");
+			}
+			else if (i < len_minus_1) {
+				prints("\n  ");
+			}
+			m = ~~m;
+		}
+	}
+	prints(" }");
+}
+
+def void print_matrixt(int(%3%)[[]] m, int len, int wid) {
+	int i;
+	int j;
+	int len_minus_1;
+	int wid_minus_1;
+	len_minus_1 = len - 1;
+	wid_minus_1 = wid - 1;	
+	prints("{ ");
+	for (i = 0; i < len; i=i+1) {
+		for (j = 0; j < wid; j=j+1) {
+			print_tuple(#m);
+			if (j < wid_minus_1) {
+				prints(", ");
+			}
+			else if (i < len_minus_1) {
+				prints("\n  ");
+			}
+			m = ~~m;
+		}
+	}
+	prints(" }");
+}

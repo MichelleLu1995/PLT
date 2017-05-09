@@ -18,7 +18,7 @@ open Ast
 %token DEF
 %token IN
 %token DOT
-%token LENGTH
+%token LENGTH WIDTH TYPE
 %token EOF
 
 %nonassoc NOELSE
@@ -158,9 +158,8 @@ expr:
   | ID LSQBRACE expr RSQBRACE LSQBRACE COLON RSQBRACE { MRowAccess($1, $3) }
   | ID LSQBRACE COLON RSQBRACE LSQBRACE expr RSQBRACE { MColumnAccess($1, $6) }
   | ID DOT LENGTH { Length($1) }
-
-
-
+  | ID DOT WIDTH { Width($1) }
+  | ID DOT TYPE { Type($1) }
 
 
 primitives:
