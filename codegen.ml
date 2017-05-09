@@ -290,7 +290,7 @@ let translate (globals, functions) =
       | _ -> raise (Failure ("illegal matrix type"))
   in
 
-  let expr1 = function
+  let rec expr1 = function
     A.IntLit _ -> A.Int
   | A.FloatLit _ -> A.Float
   | A.StringLit _ -> A.String
@@ -299,6 +299,33 @@ let translate (globals, functions) =
   | A.RowLit r -> type_of_row1 r (List.length r)
   | A.TupleLit t -> check_tuple_literal1 (type_of_tuple1 t) t 0
   | A.MatrixLit m -> type_of_matrix1 m (List.length m) (List.length (List.hd m))
+  | A.Binop(e1, op, e2) -> let t1 = expr1 e1 and t2 = expr1 e2 in
+  (match op with
+        A.Add -> (match t1,t2 with A.Int,A.Int -> A.Int
+      | A.Float,A.Float | A.Int,A.Float | A.Float,A.Int -> A.Float
+      | A.TupleTyp(A.Int,l1),A.TupleTyp(Int,l2) when l1=l2 -> A.TupleTyp(A.Int,l1)
+      | A.MatrixTyp(A.Int,r1,c1),A.MatrixTyp(A.Int,r2,c2) when r1=r2 && c1=c2 -> A.MatrixTyp(A.Int,r1,c1)
+      | A.MatrixTyp(A.Float,r1,c1),A.MatrixTyp(A.Float,r2,c2) when r1=r2 && c1=c2 -> A.MatrixTyp(A.Float,r1,c1)
+      | _,_ -> raise (Failure("illegal type")))
+    | A.Sub -> (match t1,t2 with A.Int,A.Int -> A.Int
+      | A.Float,A.Float | A.Int,A.Float | A.Float,A.Int -> A.Float
+      | A.TupleTyp(A.Int,l1),A.TupleTyp(A.Int,l2) when l1=l2 -> A.TupleTyp(A.Int,l1)
+      | A.MatrixTyp(A.Int,r1,c1),A.MatrixTyp(A.Int,r2,c2) when r1=r2 && c1=c2 -> A.MatrixTyp(A.Int,r1,c1)
+      | A.MatrixTyp(A.Float,r1,c1),A.MatrixTyp(A.Float,r2,c2) when r1=r2 && c1=c2 -> A.MatrixTyp(A.Float,r1,c1)
+      | _,_ -> raise (Failure("illegal type"))) 
+    | A.Mult -> (match t1,t2 with A.Int,A.Int -> A.Int
+      | A.Float,A.Float | A.Int,A.Float | A.Float,A.Int -> A.Float
+      | _,_ -> raise (Failure("illegal type")))
+    | A.Div -> (match t1,t2 with A.Int,A.Int -> A.Int
+      | A.Float,A.Float | A.Int,A.Float | A.Float,A.Int -> A.Float
+      | _,_ -> raise (Failure("illegal type")))
+    | _ -> raise (Failure ("illegal binop")))
+  | A.Unop(op, e) -> let t = expr1 e in
+  (match op with
+      A.Neg when t = A.Int -> A.Int
+    | A.Neg when t = A.Float -> A.Float
+    | A.Not when t = A.Bool -> A.Bool
+    | _ -> raise (Failure ("illegal unop")))
   | _ -> raise (Failure("illegal expression"))
   in
 
@@ -362,7 +389,7 @@ let translate (globals, functions) =
         let e1' = expr builder e1 and
         e2' = expr builder e2 and
         t1 = expr1 e1 and
-        t2 = expr1 e2 in
+        t2 = expr1 e2 in 
 
           let float_bop operator = 
             (match operator with
