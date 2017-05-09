@@ -29,8 +29,6 @@ rule token = parse
 | "%)"	   { RPERCENT }
 | "{%"     { LMPERCENT }
 | "%}"	   { RMPERCENT }
-| "@["	   { LATBRACE }
-| "]@"     { RATBRACE }
 | ';'      { SEMI }
 | ':'      { COLON }
 | ','      { COMMA }

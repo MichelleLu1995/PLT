@@ -29,6 +29,7 @@ let check (globals, functions) =
       (Int, Int) -> lvaluet
     | (Float, Float) -> lvaluet
     | (String, String) -> lvaluet
+    | (Char, Char) -> lvaluet
     | (Bool, Bool) -> lvaluet
     | (Void, Void) -> lvaluet
     | (TupleTyp(Int, l1), TupleTyp(Int, l2)) -> if l1 == l2 then lvaluet else if l1 == 0 then lvaluet else raise err
@@ -78,8 +79,7 @@ let check (globals, functions) =
   report_duplicate (fun n -> "duplicate function " ^ n)
   (List.map (fun fd -> fd.fname) functions);
 
-{ typ =String; fname="find"; formals=[(String,"x");(String,"y")]; locals=[]; body=[]};
-     
+
   let built_in_decls = StringMap.add "print"
   { typ = Void; fname = "print"; formals = [(Int, "x")]; 
     locals = []; body = [] } (StringMap.add "printf"
@@ -153,7 +153,6 @@ let check_function func =
       IntLit _ -> TupleTyp(Int, List.length t)
     | _ -> raise (Failure ("illegal tuple type")) in
 
-
 let find_rowtyp name m =
 	let m = StringMap.find m !symbols in
 	let typ = match m with
@@ -165,8 +164,6 @@ let find_rowtyp name m =
 		MatrixTyp(_, _, c) -> c
 	  | _ -> raise (Failure ("illegal matrix type")) in
 	symbols := StringMap.add name (RowTyp(typ, cols)) !symbols in
-
-
 
  let type_of_identifier s =
       try StringMap.find s !symbols
@@ -301,14 +298,9 @@ let find_rowtyp name m =
 									Int -> Int
 								  | _ -> raise (Failure ("attempting to access with non-integer type"))) in
 							mrow_access_type (type_of_identifier s)
-  | Length(s) -> let typ = (match (type_of_identifier s) with
-							MatrixTyp(_, _, _) -> Int
-						  |	RowTyp(_, _) -> Int
-						  | _ -> raise (Failure ("attempting to get length of wrong type"))) in typ
   | RowReference(s) -> check_row_pointer_type( type_of_identifier s )
   | PointerIncrement(s) -> check_pointer_type (type_of_identifier s)
-(*   | PointerIncrement(s) -> check_pointer_type (type_of_identifier s) *)
-(*   | RowLit(s) -> (match (type_of_identifier s) with
+  (*| RowLit(s) -> (match (type_of_identifier s) with
                   MatrixTyp(_, _, _) -> Int
                 | _ -> raise (Failure ("cannot get the rows of non-matrix datatype"))) *)
 (*   | Free(s) -> (match (type_of_identifier s) with
@@ -320,16 +312,48 @@ let find_rowtyp name m =
   (*| MatrixTupleReference(s) -> check_matrix_tuple_pointer_type (type_of_identifier s) *)
   | Binop(e1, op, e2) as e -> let t1 = expr e1 and t2 = expr e2 in
   (match op with
-      Add | Sub | Mult | Div when t1 = Int && t2 = Int -> Int
-    | Add | Sub | Mult | Div when t1 = Float && t2 = Float -> Float
-    | Add | Sub | Mult | Div when t1 = Int && t2 = Float -> Float
-    | Add | Sub | Mult | Div when t1 = Float && t2 = Int -> Float (*
-    | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(Int,Int,Int) && t2 = MatrixTyp(Int,Int,Int) -> MatrixTyp(Int,Int,Int)
-    | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(Float) && t2 = MatrixTyp(Float) -> MatrixTyp(Float)
-    | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(Int) && t2 = MatrixTyp(Float) -> MatrixTyp(Float)
-    | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(TupleTyp(Int)) && t2 = MatrixType(TupleTyp(Int)) -> MatrixTyp(TupleTyp(Int))
-    | Madd | Msub | Mmult | Mdiv when t1 = MatrixTyp(TupleTyp(Int)) && t2 = Int -> MatrixTyp(TupleTyp(Int))
-  *)  | Equal | Neq | Meq when t1 = t2 -> Bool
+    Add -> (match t1,t2 with Int,Int -> Int
+      | Float,Float -> Float
+      | TupleTyp(Int,l1),TupleTyp(Int,l2) when l1=l2 -> TupleTyp(Int,l1)
+      | TupleTyp(Int,l1), Int -> TupleTyp(Int, l1)
+      | Int, TupleTyp(Int,l1) -> TupleTyp(Int, l1)
+      | MatrixTyp(Int,r1,c1),MatrixTyp(Int,r2,c2) when r1=r2 && c1=c2 -> MatrixTyp(Int,r1,c1)
+      | MatrixTyp(Int,r1,c1), Int -> MatrixTyp(Int,r1,c1)
+      | Int, MatrixTyp(Int,r1,c1) -> MatrixTyp(Int,r1,c1)
+      | MatrixTyp(Float,r1,c1),MatrixTyp(Float,r2,c2) when r1=r2 && c1=c2 -> MatrixTyp(Float,r1,c1)
+      | MatrixTyp(Float,r1,c1), Float -> MatrixTyp(Float,r1,c1)
+      | Float, MatrixTyp(Float,r1,c1) -> MatrixTyp(Float,r1,c1)
+      | _,_ -> raise (Failure("illegal addition operator")))
+    | Sub -> (match t1,t2 with Int,Int -> Int
+      | Float,Float -> Float
+      | TupleTyp(Int,l1),TupleTyp(Int,l2) when l1=l2 -> TupleTyp(Int,l1)
+      | TupleTyp(Int,l1), Int -> TupleTyp(Int, l1)
+      | Int, TupleTyp(Int,l1) -> TupleTyp(Int, l1)
+      | MatrixTyp(Int,r1,c1),MatrixTyp(Int,r2,c2) when r1=r2 && c1=c2 -> MatrixTyp(Int,r1,c1)
+      | MatrixTyp(Int,r1,c1), Int -> MatrixTyp(Int,r1,c1)
+      | Int, MatrixTyp(Int,r1,c1) -> MatrixTyp(Int,r1,c1)
+      | MatrixTyp(Float,r1,c1),MatrixTyp(Float,r2,c2) when r1=r2 && c1=c2 -> MatrixTyp(Float,r1,c1)
+      | MatrixTyp(Float,r1,c1), Float -> MatrixTyp(Float,r1,c1)
+      | Float, MatrixTyp(Float,r1,c1) -> MatrixTyp(Float,r1,c1) 
+      | _,_ -> raise (Failure("illegal subtraction operator")))
+    | Mult -> (match t1,t2 with Int,Int -> Int
+      | Float,Float -> Float
+      | TupleTyp(Int, l1), Int -> TupleTyp(Int, l1)
+      | Int, TupleTyp(Int, l1) -> TupleTyp(Int, l1)
+      | Int, MatrixTyp(Int,r1,c1) -> MatrixTyp(Int,r1,c1)
+      | MatrixTyp(Int,r1,c1), Int -> MatrixTyp(Int,r1,c1)
+      | Float, MatrixTyp(Float,r1,c1) -> MatrixTyp(Float,r1,c1)
+      | MatrixTyp(Float,r1,c1), Float -> MatrixTyp(Float,r1,c1)
+      | _,_ -> raise (Failure("illegal multiplication operator"))) 
+    | Div -> (match t1,t2 with Int,Int -> Int
+      | Float,Float -> Float
+      | TupleTyp(Int, l1), Int -> TupleTyp(Int, l1)
+      | Int, TupleTyp(Int, l1) -> TupleTyp(Int, l1)
+      | Int, MatrixTyp(Int,r1,c1) -> MatrixTyp(Int,r1,c1)
+      | MatrixTyp(Int,r1,c1), Int -> MatrixTyp(Int,r1,c1)
+      | Float, MatrixTyp(Float,r1,c1) -> MatrixTyp(Float,r1,c1)
+      | MatrixTyp(Float,r1,c1), Float -> MatrixTyp(Float,r1,c1)
+      | _,_ -> raise (Failure("illegal division operator"))) 
     | Equal | Neq | Meq when t1 = t2 -> Bool
     | PlusEq when t1 = Int && t2 = Int -> Int
     | PlusEq when t1 = Int && t2 = Float -> Float
@@ -368,6 +392,7 @@ let find_rowtyp name m =
                                                                 Int -> (match (type_of_identifier s) with
                                                                                     TupleTyp(p, _) -> (match p with
                                                                                                           Int -> Int
+																										| _ -> raise ( Failure ("illegal datatype" ))
                                                                                                        )
                                                                                    | _ -> raise ( Failure ("cannot access a non-tuple type") )
                                                                                  )
@@ -397,6 +422,7 @@ let find_rowtyp name m =
                                                                 Int -> (match (type_of_identifier s) with
                                                                                     TupleTyp(p, _) -> (match p with
                                                                                                           Int -> Int
+																										| _ -> raise ( Failure("illegal datatype"))
                                                                                                        )
                                                                                    | _ -> raise ( Failure ("cannot access a non-tuple type") )
                                                                                  )
@@ -404,6 +430,7 @@ let find_rowtyp name m =
                                                              )
                                       | MatrixAccess(s, _, _) -> (match (type_of_identifier s) with
                                                                       MatrixTyp(t, _, _) -> (match t with
+
                                                                                                   Int -> Int
                                                                                                 | Float -> Float
                                                                                                 | TupleTyp(p, l) -> TupleTyp(p, l)
@@ -426,6 +453,8 @@ let find_rowtyp name m =
         " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e))))
    fd.formals actuals;
    fd.typ
+  | _ -> raise (Failure ("unexpected type of expression"))
+
   in 
 
   let check_bool_expr e =
@@ -459,4 +488,4 @@ let find_rowtyp name m =
 
   in
   List.iter check_function functions
-
+  

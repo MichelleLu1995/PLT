@@ -1,0 +1,10 @@
+def int main() {
+	int(%3%) t;
+	int j;
+	
+	t = (% 4, 15, 26 %);
+
+	for (j=0; j<3; j=j+1) {
+		print(t(%j%));
+	}
+}

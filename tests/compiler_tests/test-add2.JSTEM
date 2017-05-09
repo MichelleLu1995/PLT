@@ -2,6 +2,6 @@ def float add(float x, float y){
 	return x + y;
 }
 
-def void main(){
+def int main(){
 	printf( add(17.1, 25.1) );
 }

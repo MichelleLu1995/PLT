@@ -1,0 +1,15 @@
+def int main() {
+	int(%3%) t1;
+	int(%3%) t2;
+
+	int i;
+
+	t1 = (% 5, 10, 15 %);
+
+	t2 = t1 / 5;
+
+	for(i=0; i<3; i=i+1) {
+		print(t2(%i%));
+	}
+
+}
