@@ -1,0 +1,19 @@
+def int main() { 
+	/* Create a row */
+	int[5] x;
+
+	/* Create a row pointer */
+	int[] y;
+	int q;
+
+	x = [0, 1, 2, 3, 4];
+	
+	/* Point pointer to matrix reference */
+	y = $x;
+
+	/* Dereference the pointer to get the first value in matrix x */
+	q = #y;
+	print(q);
+	
+}
+ 

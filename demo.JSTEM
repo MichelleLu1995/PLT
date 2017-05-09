@@ -1,0 +1,55 @@
+def int main() {
+	
+	/* Declare variables */
+	int[3][3] m1;
+	int[3][3] m2;
+	int[3][3] m3;
+	float[2][2] m4;
+	float[3][2] m5;
+	float[2] r1;
+	int i;
+	int j;
+	int len;
+	int wid;
+
+	/* Demonstrate matrix arithmetic, matrix scalars, & misc functions in standard library */
+	m1 = {% 1, 2, 3 | 4, 5, 6 | 7, 8, 9 %};
+	prints("m1\n");
+	len = m1.length;
+	wid = m1.width;
+	print_matrixi($$m1,len,wid);
+	prints("\n");
+
+	m2 = {% 9, 8, 7 | 6, 5, 4 | 3, 2, 1 %};
+	prints("m2\n");
+	len = m2.length;
+	wid = m2.width;
+	print_matrixi($$m2,len,wid);
+	prints("\n");
+
+	m3 = m1 + m2;
+	prints("m3 = m1 + m2\n");
+	len = m3.length;
+	wid = m3.width;
+	print_matrixi($$m3,len,wid);
+	prints("\n");
+
+	m3 = m1 * 2;
+	prints("m3 = m1 * 2\n");
+	print_matrixi($$m3,len,wid);
+	prints("\n");
+
+	m4 = {% 1.2, 3.5 | 0.7, 4.9 %};
+	prints("m4\n");
+	len = m4.length;
+	wid = m4.width;
+	print_matrixf($$m4,len,wid);
+	prints("\n");
+	r1 = [ 0.5, 0.5 ];
+	len = r1.length;
+	prints("r1\n");
+	print_rowf($r1,len);
+	prints("\n");
+	prints("Append r1 to m4 to get m5\n");
+
+}
