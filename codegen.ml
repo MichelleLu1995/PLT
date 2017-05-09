@@ -303,7 +303,7 @@ let translate (globals, functions) =
   (match op with
         A.Add -> (match t1,t2 with A.Int,A.Int -> A.Int
       | A.Float,A.Float | A.Int,A.Float | A.Float,A.Int -> A.Float
-      | A.TupleTyp(A.Int,l1),A.TupleTyp(Int,l2) when l1=l2 -> A.TupleTyp(A.Int,l1)
+      | A.TupleTyp(A.Int,l1),A.TupleTyp(A.Int,l2) when l1=l2 -> A.TupleTyp(A.Int,l1)
       | A.MatrixTyp(A.Int,r1,c1),A.MatrixTyp(A.Int,r2,c2) when r1=r2 && c1=c2 -> A.MatrixTyp(A.Int,r1,c1)
       | A.MatrixTyp(A.Float,r1,c1),A.MatrixTyp(A.Float,r2,c2) when r1=r2 && c1=c2 -> A.MatrixTyp(A.Float,r1,c1)
       | _,_ -> raise (Failure("illegal type")))
@@ -312,7 +312,7 @@ let translate (globals, functions) =
       | A.TupleTyp(A.Int,l1),A.TupleTyp(A.Int,l2) when l1=l2 -> A.TupleTyp(A.Int,l1)
       | A.MatrixTyp(A.Int,r1,c1),A.MatrixTyp(A.Int,r2,c2) when r1=r2 && c1=c2 -> A.MatrixTyp(A.Int,r1,c1)
       | A.MatrixTyp(A.Float,r1,c1),A.MatrixTyp(A.Float,r2,c2) when r1=r2 && c1=c2 -> A.MatrixTyp(A.Float,r1,c1)
-      | _,_ -> raise (Failure("illegal type"))) 
+      | _,_ -> raise (Failure("illegal type")))
     | A.Mult -> (match t1,t2 with A.Int,A.Int -> A.Int
       | A.Float,A.Float | A.Int,A.Float | A.Float,A.Int -> A.Float
       | _,_ -> raise (Failure("illegal type")))
@@ -326,6 +326,7 @@ let translate (globals, functions) =
     | A.Neg when t = A.Float -> A.Float
     | A.Not when t = A.Bool -> A.Bool
     | _ -> raise (Failure ("illegal unop")))
+  | A.Call(_,_) -> A.Int
   | _ -> raise (Failure("illegal expression"))
   in
 
@@ -378,7 +379,7 @@ let translate (globals, functions) =
       | A.TupleAccess(s, e1) -> let i1 = expr builder e1 in build_tuple_access s (L.const_int i32_t 0) i1 builder false
       | A.MRowAccess(s, e1) -> let i1 = expr builder e1 in build_mrow_access s (L.const_int i32_t 0) i1 builder false 
       | A.MRowAccess(s, e1) -> let i1 = expr builder e1 in build_mrow_access s (L.const_int i32_t 0) i1 builder false
-	    | A.Length(s) -> L.const_int i32_t (get_length s)
+      | A.Length(s) -> L.const_int i32_t (get_length s)
       | A.Init(e1,e2) -> let cnt1=(lookup e1) and cnt2= expr builder e2 in
         let tp= L.element_type (L.type_of cnt1) in 
         let sz=L.size_of tp in

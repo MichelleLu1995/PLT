@@ -148,7 +148,6 @@ let check_function func =
       IntLit _ -> TupleTyp(Int, List.length t)
     | _ -> raise (Failure ("illegal tuple type")) in
 
-
 let find_rowtyp name m =
 	let m = StringMap.find m !symbols in
 	let typ = match m with
@@ -160,8 +159,6 @@ let find_rowtyp name m =
 		MatrixTyp(_, _, c) -> c
 	  | _ -> raise (Failure ("illegal matrix type")) in
 	symbols := StringMap.add name (RowTyp(typ, cols)) !symbols in
-
-
 
  let type_of_identifier s =
       try StringMap.find s !symbols
@@ -467,4 +464,4 @@ let find_rowtyp name m =
 
   in
   List.iter check_function functions
-
+  
