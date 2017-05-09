@@ -78,7 +78,8 @@ let check (globals, functions) =
   report_duplicate (fun n -> "duplicate function " ^ n)
   (List.map (fun fd -> fd.fname) functions);
 
-
+{ typ =String; fname="find"; formals=[(String,"x");(String,"y")]; locals=[]; body=[]};
+     
   let built_in_decls = StringMap.add "print"
   { typ = Void; fname = "print"; formals = [(Int, "x")]; 
     locals = []; body = [] } (StringMap.add "printf"
@@ -103,9 +104,13 @@ let check (globals, functions) =
   { typ = Void ; fname = "itos"; formals = [(String, "x"); (String,"y"); (Int, "z")];
     locals = []; body = [] } (StringMap.add "splitstr"
   { typ = String ; fname = "splitstr"; formals = [(String, "x"); (String,"y")];
+    locals = []; body = [] } (StringMap.add "find"
+  { typ = String; fname = "find"; formals = [(String, "x"); (String, "y")];
+    locals = []; body = [] } (StringMap.add "strcmp"
+  { typ = Int; fname = "strcmp"; formals = [(String, "x"); (String, "y")];
     locals = []; body = [] } (StringMap.singleton "len"
   { typ = Int; fname = "len"; formals = [(String, "x")];
-    locals = []; body = [] } ))))))))))))
+    locals = []; body = [] } ))))))))))))))
 
 in
 
@@ -272,6 +277,8 @@ let find_rowtyp name m =
   | CharLit _ -> Char
   | BoolLit _ -> Bool
   | Id s -> type_of_identifier s
+  | Null(e) -> let k=expr e in (match k with Void -> raise(Failure("no void expression expected"))
+                              |_-> Bool)
   | RowLit r -> type_of_row r (List.length r)
   | TupleLit t -> check_tuple_literal (type_of_tuple t) t 0
   | MatrixLit m -> type_of_matrix m (List.length m) (List.length (List.hd m))

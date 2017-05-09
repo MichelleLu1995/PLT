@@ -1,33 +1,64 @@
+
+def void separate_line(String delim2, String null2, String temp2, bool B, String temp3){
+
+	temp3 = splitstr(temp2, delim2);
+	prints(temp3);
+
+
+}
+
+
+
 def int main() {
 	
 	int i;
+	bool B;
 	String line;
+	String line2;
 	String temp2;
 	String delim;
+	String delim2;
 	File file2;
+	String null;
+	String null2;
+	String temp3;
+	int result;
 
-	line @= new[1000];
-	delim @= new[1];
+	line @= new[10000000];
+	line2 @= new[10000000];
 	temp2 @= new[1000];
-	delim = " ";
+	temp3 @= new[1000];
+	delim @= new[1];
+	delim2 @= new[1];
+	delim2 = " ";
+	delim = "\n";
+	null = find("", "x");
+	null2 = find("", "y");
 
 	file2 = open("tree_1.ppm","r");
 	
-	for (i=0; i<5; i=i+1) {
-		fget(line,1000,file2);
-		temp2 = splitstr(line, delim);
-		prints(temp2); 
+
+	read(line,10000,10000, file2);
+	/*fget(line2, 100, line);*/
+	/*prints(line2);*/
+	/*prints(line);*/
+
+	temp2 = splitstr(line, delim);
+	B = NULL(temp2);
+	prints(temp2);
+
+	while (!B){
+
+		prints("--");
+		temp2 = splitstr(null, delim);
+		prints(temp2);
+
+		separate_line(delim2, null2, temp2, B, temp3);
+
 	}
-	fget(line,1000,file2);
-	temp2 = splitstr(line, delim);
-	prints(temp2); 
-	temp2 = splitstr(line, delim);
-	prints(temp2); 
-	temp2 = splitstr(line, delim);
-	prints(temp2); 
-    
+
 	close(file2);
-	
+
 	return 0;
 
 }

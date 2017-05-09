@@ -50,6 +50,7 @@ type expr = IntLit of int
   | Dereference of string
   | RowReference of string
   | Length of string
+  | Null of expr
             
 type stmt = Block of stmt list 
   | Expr of expr 
@@ -163,6 +164,8 @@ let rec string_of_expr = function
   | Dereference(s) -> "#" ^ s
   | Length(s) -> s ^ ".length"
   | PointerIncrement(s) -> "~~" ^ s
+  | Null(e) -> "null" ^ "(" ^ string_of_expr e ^ ")"
+
 
 let rec string_of_stmt = function
     Block(stmts) ->

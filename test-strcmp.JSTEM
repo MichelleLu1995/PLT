@@ -1,0 +1,16 @@
+def int main() {	
+	String line;
+	String temp;
+	
+	line = "1234";
+	temp = "1345";
+
+	print(strcmp(line,temp));
+
+	line = "hello";
+	temp = "hello";
+
+	print(strcmp(line,temp));
+
+	return 0;
+}
