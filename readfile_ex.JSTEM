@@ -53,29 +53,24 @@ def int main() {
 		m[2][i] = atoi(splitstr(null,delim1));
 	}
 
-	print_matrixi($$m, 3, 4); 
+
 
 	new_m = m * 3;
 
-	prints("\n");
-
-	print_matrixi($$new_m, 3, 4); 
 
 	file_out = open("matrix_out.txt", "w");
 
 	for (i = 0; i < 3; i = i + 1){
 		for (j = 0; j < 4; j = j + 1){
-			print(new_m[i][j]);
-			prints(" ");
+
 			itos(inttemp, "%d", new_m[i][j]);
-			prints(inttemp);
+			write(inttemp, 1, len(inttemp), file_out);
 
-
-			/*write(inttemp, 1, len(inttemp), file_out);
-			write(",", 1, 1, file_out);*/
+			if (j != 3) {
+				write(",", 1, 1, file_out);
+			}
 		}
-		prints("\n");
-		/*write("\n", 1, 2, file_out);*/
+		write("\r\n", 1, 2, file_out);
 	}
 
 	close(file_in);
