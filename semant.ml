@@ -78,7 +78,8 @@ let check (globals, functions) =
   report_duplicate (fun n -> "duplicate function " ^ n)
   (List.map (fun fd -> fd.fname) functions);
 
-    let built_in_decls = StringMap.add "print"
+
+  let built_in_decls = StringMap.add "print"
   { typ = Void; fname = "print"; formals = [(Int, "x")]; 
     locals = []; body = [] } (StringMap.add "printf"
   { typ = Void; fname = "printf"; formals = [(Float, "x")];
@@ -185,8 +186,7 @@ let find_rowtyp name m =
   let matrix_access_type = function
       MatrixTyp(t, _, _) -> t
     | _ -> raise (Failure ("illegal matrix access") ) in
-    
-    
+
   let mrow_access_type = function
 	    MatrixTyp(t, _, c) -> RowTyp(t, c)
 	  | _ -> raise (Failure ("illegal matrix access") ) in
@@ -265,7 +265,8 @@ let find_rowtyp name m =
   let rec expr = function
     IntLit _ -> Int
   | FloatLit _ -> Float
-  | StringLit _ -> String
+  | StringLit _ -> String 
+  | CharLit _ -> Char
   | BoolLit _ -> Bool
   | Id s -> type_of_identifier s
   | RowLit r -> type_of_row r (List.length r)
@@ -273,7 +274,7 @@ let find_rowtyp name m =
   | MatrixLit m -> type_of_matrix m (List.length m) (List.length (List.hd m))
   | RowAccess(s, e) -> let _ = (match (expr e) with
                                     Int -> Int
-                                  | _ -> raise (Failure ("attempting to access with non-integer and non-float type"))) in
+                                  | _ -> raise (Failure ("attempting to access with non-integer type"))) in
                             row_access_type (type_of_identifier s)
   | TupleAccess(s, e) -> let _ = (match (expr e) with
                                     Int -> Int
@@ -303,7 +304,8 @@ let find_rowtyp name m =
 						  | _ -> raise (Failure ("attempting to get type of a non-matrix or row"))) in typ
   | RowReference(s) -> check_row_pointer_type( type_of_identifier s )
   | PointerIncrement(s) -> check_pointer_type (type_of_identifier s)
-  (*| RowLit(s) -> (match (type_of_identifier s) with
+(*   | PointerIncrement(s) -> check_pointer_type (type_of_identifier s) *)
+(*   | RowLit(s) -> (match (type_of_identifier s) with
                   MatrixTyp(_, _, _) -> Int
                 | _ -> raise (Failure ("cannot get the rows of non-matrix datatype"))) *)
 (*   | Free(s) -> (match (type_of_identifier s) with
@@ -354,7 +356,11 @@ let find_rowtyp name m =
                                                                       RowTyp(t, _) -> (match t with
                                                                                                     Int -> Int
                                                                                                   | Float -> Float
+<<<<<<< HEAD
 																								  | TupleTyp(p, l) -> TupleTyp(p, l)
+=======
+                                                                                                  | TupleTyp(p, l) -> TupleTyp(p, l) 
+>>>>>>> 0ec12de66a279459597e847ffc5b4ef3552c61e4
                                                                                                   | _ -> raise ( Failure ("illegal row") )
                                                                                                 )
                                                                       | _ -> raise ( Failure ("cannot access a primitive") )
@@ -383,7 +389,11 @@ let find_rowtyp name m =
                                                                       RowTyp(t, _) -> (match t with
                                                                                                     Int -> Int
                                                                                                   | Float -> Float
+<<<<<<< HEAD
 																								  | TupleTyp(p, l) -> TupleTyp(p, l)
+=======
+                                                                                                  | TupleTyp(p, l) -> TupleTyp(p, l)
+>>>>>>> 0ec12de66a279459597e847ffc5b4ef3552c61e4
                                                                                                   | _ -> raise ( Failure ("illegal row") )
                                                                                                 )
                                                                       | _ -> raise ( Failure ("cannot access a primitive") )

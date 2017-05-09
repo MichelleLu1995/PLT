@@ -1,8 +1,0 @@
-def float add(float x, int y){
-	return x + y;
-}
-
-def int main(){
-	print ( add(17.0, 25) );
-	return 0;
-}
