@@ -7,12 +7,14 @@ def int main() {
 	num = 1234;
 	line = "1234";
 	print(atoi(line));
-
+	prints("\n");
 	print(len(line));
 
-	temp @= new[3];
+	temp @= new[4];
 	itos(temp, "%d", num);
 	prints(temp);
+
+	prints("\n");
 
 	return 0;
 }
