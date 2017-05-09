@@ -1048,6 +1048,10 @@ let translate (globals, functions) =
       | A.Float -> L.build_ret (L.const_float float_t 0.0)
       | A.Bool -> L.build_ret (L.const_int i1_t 0)
       | A.String -> L.build_ret (L.const_pointer_null (pointer_t i8_t))
+	    | A.MatrixPointer(t) -> (match t with
+								A.Int -> L.build_ret (L.const_int (pointer_t i32_t) 0)
+							  | A.Float -> L.build_ret (L.const_float (pointer_t float_t) 0.0)
+							  | _ -> raise (IllegalPointerType))
       | _ -> raise (UnsupportedReturnType))
   in
 

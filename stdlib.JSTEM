@@ -1,3 +1,9 @@
+/*
+NAME: print_tuple
+ARGS: tuple pointer
+RETURN: void
+Desc: print a tuple
+*/
 def void print_tuple(int(%3%) t) {
 	int i;
 	prints("( ");
@@ -10,6 +16,12 @@ def void print_tuple(int(%3%) t) {
 	prints(" )");
 }
 
+/*
+NAME: print_rowi
+ARGS: int row pointer, int
+RETURN: void
+Desc: print an int row
+*/
 def void print_rowi(int[] r, int len) {
 	int i;
 	int len_minus_1;
@@ -25,6 +37,12 @@ def void print_rowi(int[] r, int len) {
 	prints(" ]");
 }
 
+/*
+NAME: print_rowf
+ARGS: float row pointer, int
+RETURN: void
+Desc: print a float row
+*/
 def void print_rowf(float[] r, int len) {
 	int i;
 	int len_minus_1;
@@ -40,6 +58,12 @@ def void print_rowf(float[] r, int len) {
 	prints(" ]");
 }
 
+/*
+NAME: print_rowt
+ARGS: tuple row pointer, int
+RETURN: void
+Desc: print a tuple row
+*/
 def void print_rowt(int(%3%)[] r, int len) {
 	int i;
 	int len_minus_1;
@@ -55,6 +79,12 @@ def void print_rowt(int(%3%)[] r, int len) {
 	prints(" ]");
 }
 
+/*
+NAME: print_matrixi
+ARGS: int matrix pointer, int, int
+RETURN: void
+Desc: print an int matrix
+*/
 def void print_matrixi(int[[]] m, int len, int wid) {
 	int i;
 	int j;
@@ -78,6 +108,12 @@ def void print_matrixi(int[[]] m, int len, int wid) {
 	prints(" }");
 }
 
+/*
+NAME: print_matrixf
+ARGS: float matrix pointer, int, int
+RETURN: void
+Desc: print a float matrix
+*/
 def void print_matrixf(float[[]] m, int len, int wid) {
 	int i;
 	int j;
@@ -101,6 +137,12 @@ def void print_matrixf(float[[]] m, int len, int wid) {
 	prints(" }");
 }
 
+/*
+NAME: print_matrixt
+ARGS: tuple matrix pointer, int, int
+RETURN: void
+Desc: print a tuple matrix
+*/
 def void print_matrixt(int(%3%)[[]] m, int len, int wid) {
 	int i;
 	int j;
@@ -122,4 +164,72 @@ def void print_matrixt(int(%3%)[[]] m, int len, int wid) {
 		}
 	}
 	prints(" }");
+}
+
+/*
+NAME: add_rowi
+ARGS: int matrix pointer, int matrix pointer, int row pointer, int, int
+RETURN: int matrix pointer
+Desc: adds a row to an int matrix, returns a pointer to a new matrix
+*/
+def int[[]] add_rowi(int[[]] oldm, int[[]] newm_ptr, int[] row, int len, int wid) {
+	int i;
+	int j;
+	int len_plus_1;
+	int offset1;
+	int offset;
+	int[[]] newm;
+	
+	offset1 = len * wid;
+	offset = offset1 + wid;
+	len_plus_1 = len + 1;
+	newm = newm_ptr;
+
+	for(i = 0; i < offset; i=i+1) {
+		if (i < offset1) {
+			#newm = #oldm;
+			oldm = ~~oldm;
+			newm = ~~newm;
+		}
+		else {
+			#newm = #row;
+			row = ~~row;
+			newm = ~~newm;
+		}
+	}
+	return newm_ptr;
+}
+
+/*
+NAME: add_rowf
+ARGS: float matrix pointer, float matrix pointer, float row pointer, int, int
+RETURN: float matrix pointer
+Desc: adds a row to a float matrix, returns a pointer to a new matrix
+*/
+def float[[]] add_rowf(float[[]] oldm, float[[]] newm_ptr, float[] row, int len, int wid) {
+	int i;
+	int j;
+	int len_plus_1;
+	int offset1;
+	int offset;
+	float[[]] newm;
+	
+	offset1 = len * wid;
+	offset = offset1 + wid;
+	len_plus_1 = len + 1;
+	newm = newm_ptr;
+
+	for(i = 0; i < offset; i=i+1) {
+		if (i < offset1) {
+			#newm = #oldm;
+			oldm = ~~oldm;
+			newm = ~~newm;
+		}
+		else {
+			#newm = #row;
+			row = ~~row;
+			newm = ~~newm;
+		}
+	}
+	return newm_ptr;
 }
