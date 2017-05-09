@@ -63,11 +63,9 @@ def int main() {
 
 
 
-	m1 = m * 3;
-
-
 	/* Demonstrate matrix arithmetic, matrix scalars, & misc functions in standard library */
 
+	m1 = m * 3;
 	prints("m1\n");
 	len = 3;
 	wid = 3;
