@@ -4,7 +4,6 @@ def int main() {
 	for (i=0; i<5; i=i+1) {
 		r[i] = i;
 	}
-	for (i=0; i<5; i=i+1) {
-		print(r[i]);
-	}
+	
+	print_rowi($r, 5);
 }

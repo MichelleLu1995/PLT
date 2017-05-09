@@ -1,14 +1,12 @@
-def void main() {
-	int(%4%) t1;
-	int(%4%) t2;
+def int main() {
+	int(%3%) t1;
+	int(%3%) t2;
 	int i;
 
-	t1 = (% 0,1,2,3 %);
-	t2 = (% 0,0,0,0 %);
-
+	t1 = (% 0, 1, 2 %);
 	t2 = 2 + t1;
 
-	for(i=0; i<4; i=i+1){
-		print(t2(%i%));
-	}
+	print_tuple(t2);
+
+	return 0;
 }

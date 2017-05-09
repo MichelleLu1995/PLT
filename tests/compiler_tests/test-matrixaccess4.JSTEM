@@ -1,8 +1,6 @@
 def int main(){
 	int(%3%)[2][2] m;
-	int(%3%) t1;
-	int(%3%) t2;
-	
+
 	int i;
 	int j;
 
@@ -12,10 +10,7 @@ def int main(){
 		}
 	}
 
-	t1 = m[1][1];
-	print( t1(%0%) );
-	print( t1(%1%) );
-	print( t1(%2%) );
+	print_matrixt($$m, 2, 2);
 
 	return 0;
 }

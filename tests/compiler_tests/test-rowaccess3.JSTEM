@@ -1,8 +1,5 @@
 def int main() {
 	int(%3%)[2] r;
-	int(%3%) x;
-	int(%3%) y;
-	
 	int i;
 	int j;
 
@@ -11,13 +8,7 @@ def int main() {
 		r[i] = (% 0, 1, 2 %);
 	}
 
-	x = r[0];
-	y = r[1];
+	print_rowt($r, 2);
 
-	print( x(%0%) );
-	print( x(%1%) );
-	print( x(%2%) );
-	print( y(%0%) );
-	print( y(%1%) );
-	print( y(%2%) );
+	return 0;
 }

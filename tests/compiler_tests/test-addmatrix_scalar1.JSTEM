@@ -12,11 +12,7 @@ def int main() {
 	}
 
 	m2 = 2 + m1;
-	for(i=0; i<3; i=i+1) {
-		for (j=0; j<3; j=j+1) {
-			print(m2[i][j]);
-		}
-	}
+	print_matrixi($$m2, 3, 3);
 
 	return 0;
 }

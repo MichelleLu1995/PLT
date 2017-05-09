@@ -7,15 +7,8 @@ def int main(){
 
 	m = {% (% 1, 2, 3 %), (% 3, 2, 1 %) | (% 4, 5, 6 %), (% 6, 5, 4 %) %};
 
-	for(i=0; i<2; i=i+1){
-		for(j=0; j<2; j=j+1){
-			t1 = m[i][j];
-			print(t1(%0%));
-			print(t1(%1%));
-			print(t1(%2%));
-		}
-	}
-  
+	print_matrixt($$m, 2, 2);
+
 	return 0;
 }
 

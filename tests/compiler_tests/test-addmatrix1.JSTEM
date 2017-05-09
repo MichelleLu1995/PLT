@@ -15,11 +15,11 @@ def int main() {
 			m2[i][j] = 2;
 		}
 	}
+	
 	m3 = m1 + m2;
-	for(i=0; i<3; i=i+1) {
-		for (j=0; j<3; j=j+1) {
-			print(m3[i][j]);
-		}
-	}
+	
+	print_matrixi($$m3, 3, 3);
+
+	return 0;
 }
 
