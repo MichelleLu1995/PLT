@@ -78,6 +78,8 @@ let check (globals, functions) =
   { typ = Void; fname = "printf"; formals = [(Float, "x")];
     locals = []; body = [] } (StringMap.add "prints"
   { typ = Void; fname = "prints"; formals = [(String, "x")];
+    locals = []; body = [] } (StringMap.add "printfs"
+  { typ = Void; fname = "printfs"; formals = [(String, "x")];
     locals = []; body = [] } (StringMap.add "printb" 
   { typ = Void; fname = "printb"; formals = [(Bool, "x")];
     locals = []; body = [] } (StringMap.add "open"
@@ -102,7 +104,7 @@ let check (globals, functions) =
   { typ = Int; fname = "strcmp"; formals = [(String, "x"); (String, "y")];
     locals = []; body = [] } (StringMap.singleton "len"
   { typ = Int; fname = "len"; formals = [(String, "x")];
-    locals = []; body = [] } ))))))))))))))
+    locals = []; body = [] } )))))))))))))))
 
 in
 
