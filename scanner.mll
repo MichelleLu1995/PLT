@@ -31,6 +31,8 @@ rule token = parse
 | "%}"	   { RMPERCENT }
 | "@["	   { LATBRACE }
 | "]@"     { RATBRACE }
+| "&["	   { LAMPBRACE }
+| "]&"     { RAMPBRACE }
 | ';'      { SEMI }
 | ':'      { COLON }
 | ','      { COMMA }

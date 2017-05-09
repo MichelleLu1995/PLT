@@ -7,7 +7,7 @@ type typ =
 	Int
   | Float
   | String 
-  | String_T
+  | String_P
   | Char
   | Bool
   | Void  
@@ -50,6 +50,8 @@ type expr = IntLit of int
   | Dereference of string
   | RowReference of string
   | Length of string
+  | Arr of string * expr
+  | ArrAssign of string * expr * expr
             
 type stmt = Block of stmt list 
   | Expr of expr 
@@ -163,6 +165,8 @@ let rec string_of_expr = function
   | Dereference(s) -> "#" ^ s
   | Length(s) -> s ^ ".length"
   | PointerIncrement(s) -> "~~" ^ s
+  | Arr(v,e) -> v ^ "&[" ^ string_of_expr e ^ "]&"
+  | ArrAssign(v,e1,e2) -> v ^ "@[" ^ string_of_expr e1 ^ "]@" ^ "=" ^string_of_expr e2
 
 let rec string_of_stmt = function
     Block(stmts) ->
@@ -184,7 +188,7 @@ let rec string_of_typ = function
   | Void -> "void"
   | Float -> "float"
   | String -> "string"
-  | String_T -> "string *"
+  | String_P -> "string *"
   | Char -> "char"
   | MatrixTyp(t, l1, l2) -> (match t with 
                         Int -> "int" ^ "[" ^ string_of_int l1 ^ "][" ^ string_of_int l2 ^ "]"

@@ -34,7 +34,7 @@ let translate (globals, functions) =
     | A.Void -> void_t
     | A.Float -> float_t
     | A.String -> pointer_t i8_t
-    | A.String_T -> L.pointer_type (pointer_t i8_t)
+    | A.String_P -> L.pointer_type (pointer_t i8_t)
     | A.Char -> i8_t
     | A.TupleTyp(typ, size) -> (match typ with
                                   A.Int    -> array_t i32_t size
@@ -352,6 +352,15 @@ let translate (globals, functions) =
       | A.MRowAccess(s, e1) -> let i1 = expr builder e1 in build_mrow_access s (L.const_int i32_t 0) i1 builder false 
       | A.MRowAccess(s, e1) -> let i1 = expr builder e1 in build_mrow_access s (L.const_int i32_t 0) i1 builder false
 	    | A.Length(s) -> L.const_int i32_t (get_length s)
+      | A.Arr(e1, e2) -> let para1=(expr builder (A.Id e1)) 
+        and para2=(expr builder e2) in 
+        let k=L.build_in_bounds_gep para1 [|para2|] "tmpp" builder in
+        L.build_load k "deref" builder
+      | A.ArrAssign(e1, e2,e3) -> let para1=(expr builder (A.Id e1)) 
+        and para2=(expr builder e2) 
+        and para3=(expr builder e3) 
+        in let k=L.build_in_bounds_gep para1 [|para2|] "tmpp" builder in
+        L.build_store para3 k builder
       | A.Init(e1,e2) -> let cnt1=(lookup e1) and cnt2= expr builder e2 in
         let tp= L.element_type (L.type_of cnt1) in 
         let sz=L.size_of tp in

@@ -29,6 +29,7 @@ let check (globals, functions) =
       (Int, Int) -> lvaluet
     | (Float, Float) -> lvaluet
     | (String, String) -> lvaluet
+    | (String_P, String_P) -> lvaluet
     | (Bool, Bool) -> lvaluet
     | (Void, Void) -> lvaluet
     | (TupleTyp(Int, l1), TupleTyp(Int, l2)) -> if l1 == l2 then lvaluet else if l1 == 0 then lvaluet else raise err
@@ -102,7 +103,7 @@ let check (globals, functions) =
     locals = []; body = [] } (StringMap.add "itos"
   { typ = Void ; fname = "itos"; formals = [(String, "x"); (String,"y"); (Int, "z")];
     locals = []; body = [] } (StringMap.add "splitstr"
-  { typ = String ; fname = "splitstr"; formals = [(String, "x"); (String,"y")];
+  { typ = RowTyp(String,_ ) ; fname = "splitstr"; formals = [(String, "x"); (String,"y")];
     locals = []; body = [] } (StringMap.singleton "len"
   { typ = Int; fname = "len"; formals = [(String, "x")];
     locals = []; body = [] } ))))))))))))
@@ -343,6 +344,15 @@ let find_rowtyp name m =
     | Not when t = Bool -> Bool
     | _ -> raise (Failure ("illegal unary operator " ^ string_of_uop op ^
       string_of_typ t ^ " in " ^ string_of_expr ex)))
+  | Arr(var,_) -> let k=function  String -> Char
+                                    | String_P -> String
+                                    | _->raise(Failure("illegal ID as array"))
+      in k (type_of_identifier var)
+  | ArrAssign(var,_,_) ->let k=function  String -> Char
+                                    | String_P -> String
+                                    | _->raise(Failure("illegal ID as array"))
+      in k (type_of_identifier var)
+
   | Init(var, lit) -> let a = type_of_identifier var and b= expr lit in
     (match b with Int -> a
     | _ -> raise (Failure("illegal "^ string_of_typ b ^", expected int")))
