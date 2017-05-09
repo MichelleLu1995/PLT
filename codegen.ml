@@ -39,7 +39,7 @@ let translate (globals, functions) =
                                   A.Int    -> array_t i32_t size
                                 | _ -> raise (UnsupportedTupleType))
     | A.MatrixTyp(typ, size1, size2) -> (match typ with
-                                      A.Int    -> array_t (array_t i32_t size2) size1
+                                      A.Int    -> array_t (array_t i32_t size1) size1
                                     | A.Float  -> array_t (array_t float_t size2) size1
                                     | A.TupleTyp(typ1,size3) -> (match typ1 with
                                               A.Int    -> array_t (array_t (array_t i32_t size3) size2) size1
@@ -1048,6 +1048,10 @@ let translate (globals, functions) =
       | A.Float -> L.build_ret (L.const_float float_t 0.0)
       | A.Bool -> L.build_ret (L.const_int i1_t 0)
       | A.String -> L.build_ret (L.const_pointer_null (pointer_t i8_t))
+	    | A.MatrixPointer(t) -> (match t with
+								A.Int -> L.build_ret (L.const_int (pointer_t i32_t) 0)
+							  | A.Float -> L.build_ret (L.const_float (pointer_t float_t) 0.0)
+							  | _ -> raise (IllegalPointerType))
       | _ -> raise (UnsupportedReturnType))
   in
 

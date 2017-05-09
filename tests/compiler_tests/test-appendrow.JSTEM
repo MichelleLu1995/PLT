@@ -1,0 +1,34 @@
+def int main() {
+	/* add a row to a matrix, return new matrix */
+	int[2][2] m;
+	float[2][2] f;
+	int[3][2] m2;
+	float[3][2] f2;
+	int[[]] new_matrix;
+	float[[]] f_matrix;
+	int[2] r;
+	float[2] rf;
+	int len;
+	int len_plus_1;
+	int wid;
+	int i;
+
+	m = {% 1, 2 | 3, 4 %};
+	f = {% 1.1, 2.2 | 3.3, 4.4 %};
+	r = [5, 6];
+	rf = [5.5, 6.6];
+	len = m.length;
+	len_plus_1 = len + 1;
+	wid = m.width;
+	i = 0;
+
+	new_matrix = add_rowi($$m, $$m2, $r, len, wid);
+	f_matrix = add_rowf($$f, $$f2, $rf, len, wid);
+
+	prints("add to int matrix:\n");
+	print_matrixi(new_matrix, len_plus_1, wid);	
+	prints("\nadd to float matrix:\n");
+	print_matrixf(f_matrix, len_plus_1, wid);
+	prints("\n");
+		
+}
