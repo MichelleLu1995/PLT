@@ -1,20 +1,30 @@
 def int main() {
 	
-	
-	File file2;
 	int i;
 	String line;
+	String temp2;
+	String delim;
+	File file2;
 
 	line @= new[1000];
-	
+	delim @= new[1];
+	temp2 @= new[1000];
+	delim = " ";
 
-	
 	file2 = open("tree_1.ppm","r");
 	
 	for (i=0; i<5; i=i+1) {
 		fget(line,1000,file2);
-		prints(line); 
+		temp2 = splitstr(line, delim);
+		prints(temp2); 
 	}
+	fget(line,1000,file2);
+	temp2 = splitstr(line, delim);
+	prints(temp2); 
+	temp2 = splitstr(line, delim);
+	prints(temp2); 
+	temp2 = splitstr(line, delim);
+	prints(temp2); 
     
 	close(file2);
 	
