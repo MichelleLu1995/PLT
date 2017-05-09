@@ -8,13 +8,11 @@ def int main() {
 	line = "1234";
 	print(atoi(line));
 	prints("\n");
-	print(len(line));
 
-	temp @= new[4];
+	temp @= new[3];
 	itos(temp, "%d", num);
-	prints(temp);
+	printfs(temp);
 
-	prints("\n");
 
 	return 0;
 }
