@@ -228,14 +228,14 @@ let translate (globals, functions) =
       match (List.hd matrix) with
         A.IntLit _ -> ltype_of_typ (A.Int)
       | A.FloatLit _ -> ltype_of_typ (A.Float)
-      | A.TupleLit _ -> ltype_of_typ (A.Tuple)
+      | A.TupleLit _ -> ltype_of_typ (A.TupleTyp(A.Int, 3))
       | _ -> raise (UnsupportedMatrixType) in
 
     let get_row_type row =
       match (List.hd row) with
         A.IntLit _ -> ltype_of_typ (A.Int)
       | A.FloatLit _ -> ltype_of_typ (A.Float)
-      | A.TupleLit _ -> ltype_of_typ (A.Tuple)
+      | A.TupleLit _ -> ltype_of_typ (A.TupleTyp(A.Int, 3))
       | _ -> raise (UnsupportedRowType) in
 
   let build_row_access s i1 i2 builder isAssign =

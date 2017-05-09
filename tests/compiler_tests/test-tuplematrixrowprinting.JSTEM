@@ -1,0 +1,43 @@
+def int main() {
+
+	int[4] int_row;
+	int[2][4] int_matrix;
+
+	float[3] float_row;
+	float[2][3] float_matrix;	
+
+	int(%3%) t;
+	int(%3%)[2] tuple_row;
+	int(%3%)[2][2] tuple_matrix;
+	
+	int_row = [1,2,3,4];
+	int_matrix = {% 1,2,3,4 | 5,6,7,8 %};
+	
+	float_row = [1.1,2.2,3.3];
+	float_matrix = {% 1.1,2.2,3.3 | 4.4,5.5,6.6 %};
+
+	t = (%1,2,3%);	
+	tuple_row = [(%1,2,3%),(%3,4,5%)];
+	tuple_matrix = {% (%1,2,3%), (%4,5,6%) | (%7,8,9%), (%10,11,12%) %};	
+
+	prints("ints: \n");
+	print_rowi($int_row, int_row.length);
+	prints("\n");
+	print_matrixi($$int_matrix, int_matrix.length, int_matrix.width);
+	prints("\n");
+	
+	prints("floats: \n");
+	print_rowf($float_row, float_row.length);
+	prints("\n");
+	print_matrixf($$float_matrix, float_matrix.length, float_matrix.width);
+	prints("\n");
+
+	prints("tuples: \n");
+	print_tuple(t);
+	prints("\n");
+	print_rowt($tuple_row, tuple_row.length);
+	prints("\n");
+	print_matrixt($$tuple_matrix, tuple_matrix.length, tuple_matrix.width);
+	prints("\n");
+
+}
