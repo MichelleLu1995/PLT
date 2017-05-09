@@ -836,6 +836,7 @@ let translate (globals, functions) =
                                       | A.MatrixTyp(A.Int,r1,c1),A.MatrixTyp(A.Int,r2,c2) when r1=r2 && c1=c2 -> matrix_int_bop r1 c1 op
                                       | A.MatrixTyp(A.Int,r1,c1), A.Int -> matrix_int_scalar_bop r1 c1 op 
                                       | A.Int, A.MatrixTyp(A.Int,r1,c1) -> int_matrix_scalar_bop r1 c1 op
+                                      | A.Bool, A.Bool -> int_bop op
                                       | _,_ -> raise (Failure("Cannot build ops with given types")))
           | "float" , "float" -> (match (t1,t2) with A.Float, A.Float -> float_bop op
                                         | A.MatrixTyp(A.Float,r1,c1),A.MatrixTyp(A.Float,r2,c2) when r1=r2 && c1=c2 -> matrix_float_bop r1 c1 op
