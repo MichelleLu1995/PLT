@@ -2,7 +2,7 @@
 open Ast
 %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA BAR COLON LSQBRACE RSQBRACE LPERCENT RPERCENT LMPERCENT RMPERCENT LATBRACE RATBRACE 
+%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA BAR COLON LSQBRACE RSQBRACE LPERCENT RPERCENT LMPERCENT RMPERCENT
 %token PLUS MINUS TIMES DIVIDE ASSIGN NOT MPLUS MMINUS MTIMES MDIVIDE PLUSEQ ATASSIGN 
 %token EQ NEQ LT LEQ GT GEQ AND OR MEQ NEW 
 %token TRUE FALSE
@@ -90,7 +90,6 @@ primitive:
   | CHAR { Char }
   | FLOAT { Float }
   | STRING { String }
-  /*| STRING TIMES { String_T }*/
   | tuple_typ { $1 }
   | row_pointer_typ { $1 }
   | matrix_pointer_typ { $1 }
@@ -148,8 +147,6 @@ expr:
   | expr ASSIGN expr   { Assign($1, $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | LPAREN expr RPAREN { $2 }
-/*  | ID LATBRACE expr RATBRACE { Array($1,$3) } */
-/*  | ID LATBRACE expr RATBRACE ASSIGN expr { ArrayAssign($1,$3,$6) } */
   | ID ATASSIGN NEW LSQBRACE expr RSQBRACE { Init($1,$5) }
   | DOLLAR ID { RowReference($2) }
   | DOLLAR DOLLAR ID { MatrixReference($3) }

@@ -34,7 +34,6 @@ let translate (globals, functions) =
     | A.Void -> void_t
     | A.Float -> float_t
     | A.String -> pointer_t i8_t
-    | A.String_T -> L.pointer_type (pointer_t i8_t)
     | A.Char -> i8_t
     | A.TupleTyp(typ, size) -> (match typ with
                                   A.Int    -> array_t i32_t size
@@ -101,7 +100,7 @@ let translate (globals, functions) =
   let sprintf_func = L.declare_function "sprintf" sprintf_ty the_module in
   let calloc_ty = L.function_type (pointer_t i8_t) [|i32_t; i32_t|] in
   let calloc_func = L.declare_function "calloc" calloc_ty the_module in
-  let strtok_ty = L.function_type (pointer_t i8_t) [| (pointer_t i8_t) ; L.pointer_type i8_t |] in
+  let strtok_ty = L.function_type (pointer_t i8_t) [| (pointer_t i8_t) ; (pointer_t i8_t) |] in
   let strtok_fun = L.declare_function "strtok" strtok_ty the_module in
   
   (* Data casting *)

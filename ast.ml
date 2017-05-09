@@ -7,7 +7,6 @@ type typ =
 	Int
   | Float
   | String 
-  | String_T
   | Char
   | Bool
   | Void  
@@ -184,7 +183,6 @@ let rec string_of_typ = function
   | Void -> "void"
   | Float -> "float"
   | String -> "string"
-  | String_T -> "string *"
   | Char -> "char"
   | MatrixTyp(t, l1, l2) -> (match t with 
                         Int -> "int" ^ "[" ^ string_of_int l1 ^ "][" ^ string_of_int l2 ^ "]"
@@ -199,7 +197,6 @@ let rec string_of_typ = function
   | RowTyp(r, l1) -> (match r with 
                       Int -> "int" ^ "[" ^ string_of_int l1 ^ "]"
                      | Float -> "float" ^ "[" ^ string_of_int l1 ^ "]" 
-                     | String -> "string" ^ "[" ^ string_of_int l1 ^ "]"
                      | TupleTyp(x, l) -> (match x with 
                                           Int -> "int" ^ "(%" ^ string_of_int l ^ "%)[" ^ string_of_int l1 ^ "]" 
 										| _ -> raise( Failure("Illegal expression in tuple primitive") ))
