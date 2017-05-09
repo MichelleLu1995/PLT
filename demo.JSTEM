@@ -10,6 +10,7 @@ def int main() {
 	int i;
 	int j;
 	int len;
+	int len_plus_1;
 	int wid;
 
 	/* Demonstrate matrix arithmetic, matrix scalars, & misc functions in standard library */
@@ -27,6 +28,7 @@ def int main() {
 	print_matrixi($$m2,len,wid);
 	prints("\n");
 
+	/* adds matrix 1 and matrix 2 to result matrix 3 */
 	m3 = m1 + m2;
 	prints("m3 = m1 + m2\n");
 	len = m3.length;
@@ -34,6 +36,7 @@ def int main() {
 	print_matrixi($$m3,len,wid);
 	prints("\n");
 
+	/* multiples matrix 1 by scalar 2 to result matrix 3 */
 	m3 = m1 * 2;
 	prints("m3 = m1 * 2\n");
 	print_matrixi($$m3,len,wid);
@@ -45,11 +48,19 @@ def int main() {
 	wid = m4.width;
 	print_matrixf($$m4,len,wid);
 	prints("\n");
+
 	r1 = [ 0.5, 0.5 ];
 	len = r1.length;
+	len_plus_1 = len + 1;
 	prints("r1\n");
 	print_rowf($r1,len);
 	prints("\n");
+
+	/* appends row to matrix 4 to result matrix 5 */
 	prints("Append r1 to m4 to get m5\n");
+	add_rowf($$m4,$$m5,$r1,len,wid);
+	prints("m5\n");
+	print_matrixf($$m5,len_plus_1,wid);
+	prints("\n");
 
 }
