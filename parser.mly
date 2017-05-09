@@ -90,7 +90,6 @@ primitive:
   | CHAR { Char }
   | FLOAT { Float }
   | STRING { String }
-  | STRING TIMES { String_P }
   | tuple_typ { $1 }
   | row_pointer_typ { $1 }
   | matrix_pointer_typ { $1 }
@@ -148,8 +147,6 @@ expr:
   | expr ASSIGN expr   { Assign($1, $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | LPAREN expr RPAREN { $2 }
-  | ID LAMPBRACE expr RAMPBRACE { Arr($1,$3) } 
-  | ID LATBRACE expr RATBRACE ASSIGN expr { ArrAssign($1,$3,$6) } 
   | ID ATASSIGN NEW LSQBRACE expr RSQBRACE { Init($1,$5) }
   | DOLLAR ID { RowReference($2) }
   | DOLLAR DOLLAR ID { MatrixReference($3) }

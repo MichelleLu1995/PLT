@@ -1,15 +1,17 @@
 def int main() {	
-	String line;
-	String *tempL;
-	String save;
+	String temp2;
+	String temp3;
+	String delim;
 
-	line = "1234";
+	temp2 @= new[1000];
+	temp3 @= new[1000];
+	delim @= new[1];
 
-	tempL &[2]&;
-	tempL @[0]@ = "h";
+	temp3 = "12345";
+	delim = "3";
 
-   
-    /*save = splitstr(line, "3");*/
+    temp2 = splitstr(temp3, delim);
+
     /* 
     for (i = 0; i < 2; i=i+1) {
 		prints(temp[i]);
