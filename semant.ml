@@ -356,11 +356,7 @@ let find_rowtyp name m =
                                                                       RowTyp(t, _) -> (match t with
                                                                                                     Int -> Int
                                                                                                   | Float -> Float
-<<<<<<< HEAD
 																								  | TupleTyp(p, l) -> TupleTyp(p, l)
-=======
-                                                                                                  | TupleTyp(p, l) -> TupleTyp(p, l) 
->>>>>>> 0ec12de66a279459597e847ffc5b4ef3552c61e4
                                                                                                   | _ -> raise ( Failure ("illegal row") )
                                                                                                 )
                                                                       | _ -> raise ( Failure ("cannot access a primitive") )
@@ -389,11 +385,7 @@ let find_rowtyp name m =
                                                                       RowTyp(t, _) -> (match t with
                                                                                                     Int -> Int
                                                                                                   | Float -> Float
-<<<<<<< HEAD
-																								  | TupleTyp(p, l) -> TupleTyp(p, l)
-=======
                                                                                                   | TupleTyp(p, l) -> TupleTyp(p, l)
->>>>>>> 0ec12de66a279459597e847ffc5b4ef3552c61e4
                                                                                                   | _ -> raise ( Failure ("illegal row") )
                                                                                                 )
                                                                       | _ -> raise ( Failure ("cannot access a primitive") )
