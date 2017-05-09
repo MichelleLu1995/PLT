@@ -5,11 +5,9 @@ def int main() {
 	int i;
 
 	t1 = (% 5, 10, 15 %);
-
 	t2 = t1 / 5;
 
 	print_tuple(t2);
 
 	return 0;
-
 }

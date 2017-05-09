@@ -358,6 +358,7 @@ let find_rowtyp name m =
                                                                 Int -> (match (type_of_identifier s) with
                                                                                     TupleTyp(p, _) -> (match p with
                                                                                                           Int -> Int
+																										| _ -> raise ( Failure ("illegal datatype" ))
                                                                                                        )
                                                                                    | _ -> raise ( Failure ("cannot access a non-tuple type") )
                                                                                  )
@@ -387,6 +388,7 @@ let find_rowtyp name m =
                                                                 Int -> (match (type_of_identifier s) with
                                                                                     TupleTyp(p, _) -> (match p with
                                                                                                           Int -> Int
+																										| _ -> raise ( Failure("illegal datatype"))
                                                                                                        )
                                                                                    | _ -> raise ( Failure ("cannot access a non-tuple type") )
                                                                                  )
@@ -417,6 +419,8 @@ let find_rowtyp name m =
         " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e))))
    fd.formals actuals;
    fd.typ
+  | _ -> raise (Failure ("unexpected type of expression"))
+
   in 
 
   let check_bool_expr e =

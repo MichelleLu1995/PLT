@@ -9,6 +9,5 @@ def int main() {
 	t3 = t2 - t1;
 	print_tuple(t3);
 	
-	return 0;
-	
+	return 0;	
 }

@@ -8,6 +8,5 @@ def int main() {
 
 	print_tuple(t2);
 
-	return 0;
-	
+	return 0;	
 }

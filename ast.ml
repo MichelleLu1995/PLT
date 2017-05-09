@@ -41,7 +41,6 @@ type expr = IntLit of int
   | TupleAccess of string * expr
   | MatrixAccess of string * expr * expr
   | MRowAccess of string * expr
-  | MColumnAccess of string * expr
   | Noexpr
   | MatrixReference of string
   | PointerIncrement of string
@@ -155,7 +154,6 @@ let rec string_of_expr = function
   | TupleAccess(t, e) -> t ^ "(%" ^ string_of_expr e ^ "%)"
   | MatrixAccess(m, e1, e2) -> m ^ "[" ^ string_of_expr e1 ^ "][" ^ string_of_expr e2 ^ "]"
   | MRowAccess(r, e) -> r ^ "[" ^ string_of_expr e ^ "][:]"
-  | MColumnAccess(c, e) -> c ^ "[:][" ^ string_of_expr e ^ "]"
   | Init(v,e) -> v ^ "=" ^ "new" ^ "[" ^ string_of_expr e ^ "]"
   | Noexpr -> ""
   | RowReference(s) -> "$" ^ s
@@ -206,15 +204,6 @@ let rec string_of_typ = function
 					 | _ -> raise( Failure("Illegal expression in row primitive")))
   | RowPointer(t) -> string_of_typ t ^ "[]"
   | MatrixPointer(t) -> string_of_typ t ^ "[[]]"
-  (* | RowPointer(Int) -> "int[]" *)
-  (*| ColumnTyp(c, l1) -> (match c with 
-                       Int -> "int" ^ "[" ^ string_of_int l1 ^ "]"
-                     | Float -> "float" ^ "[" ^ string_of_int l1 ^ "]" 
-                     | TupleTyp(x, l) -> (match x with 
-                                          Int -> "int" ^ "(" ^ string_of_int l ^ ")"
-										| _ -> raise( Failure("Illegal expression in tuple primitive") ))
-					 | _ -> raise( Failure("Illegal expression in column primitive")))*)
-  (*| File*) 
   | _ -> raise( Failure("Illegal expression in string_of_typ"))
   
 
