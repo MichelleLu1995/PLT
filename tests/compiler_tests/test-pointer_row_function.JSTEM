@@ -1,9 +1,0 @@
-def void print_rowi(int [] r){
-	prints("here");
-}
-
-def int main() {
-	int[4] r;
-	r = [1, 2, 3, 4];
-	print_rowi($r);
-}

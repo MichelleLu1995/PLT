@@ -1,9 +1,0 @@
-/* def void hi(int[[]] m) { */
-	/* prints("hello"); */
-/* } */
-
-def int main(){
-	/* int[2][2] m; */
-	/* m = {% 1, 2 | 3, 4 %}; */
-	/* hi($$m); */
-}
