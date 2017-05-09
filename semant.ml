@@ -341,6 +341,7 @@ let find_rowtyp name m =
       | Float,Float -> Float
       | Int,Float -> Float
       | Float,Int -> Float) 
+      | _,_ -> raise (Failure("illegal type"))) 
     | Equal | Neq | Meq when t1 = t2 -> Bool
     | PlusEq when t1 = Int && t2 = Int -> Int
     | PlusEq when t1 = Int && t2 = Float -> Float
