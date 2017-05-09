@@ -107,6 +107,10 @@ let translate (globals, functions) =
   let calloc_func = L.declare_function "calloc" calloc_ty the_module in
   let strtok_ty = L.function_type (pointer_t i8_t) [| (pointer_t i8_t) ; (pointer_t i8_t) |] in
   let strtok_fun = L.declare_function "strtok" strtok_ty the_module in
+  let strfind_ty = L.function_type (pointer_t i8_t) [| (pointer_t i8_t); (pointer_t i8_t)|] in
+  let strfind_func = L.declare_function "strstr" strfind_ty the_module in
+  let strcmp_ty = L.function_type i32_t [| (pointer_t i8_t); (pointer_t i8_t)|] in
+  let strcmp_func = L.declare_function "strcmp" strcmp_ty the_module in
   
   (* Data casting *)
 
@@ -396,6 +400,8 @@ let translate (globals, functions) =
 	    | A.Length(s) -> L.const_int i32_t (get_length s)
 		  | A.Width(s) -> L.const_int i32_t (get_width s)
 		  | A.Type(s) -> L.build_global_stringptr (get_type s) "string" builder
+      | A.Null(e1) -> let cnt1= expr builder e1 in
+        L.build_is_null cnt1 "isnull" builder
       | A.Init(e1,e2) -> let cnt1=(lookup e1) and cnt2= expr builder e2 in
         let tp= L.element_type (L.type_of cnt1) in 
         let sz=L.size_of tp in
@@ -943,8 +949,12 @@ let translate (globals, functions) =
     L.build_call cast_str_int_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "tmp3" builder 
       | A.Call ("itos", e) ->
     L.build_call sprintf_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "sprintf" builder 
-      | A.Call("splitstr", e)->
+      | A.Call("splitstr", e) ->
      L.build_call strtok_fun (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "tmp5" builder 
+      | A.Call("find", e) -> 
+    L.build_call strfind_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "find" builder     
+      | A.Call("strcmp", e) -> 
+    L.build_call strcmp_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "strcmp" builder     
       | A.Call ("print", [e]) | A.Call ("printb", [e]) ->
     L.build_call printf_func [| int_format_str ; (expr builder e) |]
       "printf" builder

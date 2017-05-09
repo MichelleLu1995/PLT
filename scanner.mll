@@ -79,6 +79,7 @@ rule token = parse
 | "String" { STRING }
 | "File"   { STRING }
 | "~"	   { SQUIGLY }
+| "NULL"   { NULL}
 | ['0'-'9']+'.'['0'-'9']+ as lxm { FLOAT_LIT(float_of_string lxm) }
 | '.'	   { DOT }
 | ['0'-'9']+ as lxm { INT_LIT(int_of_string lxm) }

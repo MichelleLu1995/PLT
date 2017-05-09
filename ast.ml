@@ -49,7 +49,8 @@ type expr = IntLit of int
   | Length of string
   | Width of string
   | Type of string
-            
+  | Null of expr
+           
 type stmt = Block of stmt list 
   | Expr of expr 
   | If of expr * stmt * stmt
@@ -163,6 +164,8 @@ let rec string_of_expr = function
   | Width(s) -> s ^ ".width"
   | Type(s) -> s ^ ".type"
   | PointerIncrement(s) -> "~~" ^ s
+  | Null(e) -> "null" ^ "(" ^ string_of_expr e ^ ")"
+
 
 let rec string_of_stmt = function
     Block(stmts) ->
