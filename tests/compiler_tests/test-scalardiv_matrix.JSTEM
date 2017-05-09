@@ -1,0 +1,20 @@
+def int main() {
+	int[2][2] m1;
+	int[2][2] m2;
+
+	int i;
+	int j;
+
+	for(i=0; i<2; i=i+1) {
+		for (j=0; j<2; j=j+1) {
+			m1[i][j] = 10;
+		}
+	}
+
+	m2 = 20 / m1;
+	for(i=0; i<2; i=i+1) {
+		for (j=0; j<2; j=j+1) {
+			print(m2[i][j]);
+		}
+	}
+}

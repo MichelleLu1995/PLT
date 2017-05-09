@@ -1,0 +1,12 @@
+exception UnsupportedMatrixType
+exception UnsupportedRowType
+exception UnsupportedTupleType
+
+exception UnsupportedBinop
+exception UnsupportedUnopOnFloat
+exception UnsupportedUnop
+
+exception IllegalAssignment
+exception UnsupportedReturnType
+
+exception IllegalPointerType
