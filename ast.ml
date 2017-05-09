@@ -191,7 +191,7 @@ let rec string_of_typ = function
   | Char -> "char"
   | MatrixTyp(t, l1, l2) -> (match t with 
                         Int -> "int" ^ "[" ^ string_of_int l1 ^ "][" ^ string_of_int l2 ^ "]"
-                      | Float -> "float" ^ "[" ^ string_of_int l1 ^ "][" ^ string_of_int l2 ^ "]" 
+                      | Float -> "float" ^ "[" ^ string_of_int l1 ^ "][" ^ string_of_int l2 ^ "]"
                       | TupleTyp(x, l) -> (match x with 
                                            Int -> "int" ^ "(%" ^ string_of_int l ^ "%)[" ^ string_of_int l1 ^ "][" ^ string_of_int l2 ^ "]" 
 										| _ -> raise( Failure("Illegal expression in tuple primitive") ))
@@ -200,7 +200,7 @@ let rec string_of_typ = function
                       Int -> "int" ^ "(%" ^ string_of_int l ^ "%)" 
 					 | _ -> raise( Failure("Illegal expression in tuple primitive")))
   | RowTyp(r, l1) -> (match r with 
-                      Int -> "int" ^ "[" ^ string_of_int l1 ^ "]"
+						Int -> "int" ^ "[" ^ string_of_int l1 ^ "]"
                      | Float -> "float" ^ "[" ^ string_of_int l1 ^ "]" 
                      | String -> "string" ^ "[" ^ string_of_int l1 ^ "]"
                      | TupleTyp(x, l) -> (match x with 
