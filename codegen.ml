@@ -1,5 +1,4 @@
-(* Code generation: translate takes a semantically checked AST and
-produces LLVM IR
+(* Code generation: translate takes a semantically checked AST and produces LLVM IR
 
 LLVM tutorial: Make sure to read the OCaml version of the tutorial
 
@@ -35,6 +34,7 @@ let translate (globals, functions) =
     | A.Void -> void_t
     | A.Float -> float_t
     | A.String -> pointer_t i8_t
+    | A.String_T -> L.pointer_type (pointer_t i8_t)
     | A.Char -> i8_t
     | A.TupleTyp(typ, size) -> (match typ with
                                   A.Int    -> array_t i32_t size
@@ -73,26 +73,38 @@ let translate (globals, functions) =
       in StringMap.add n (L.define_global n init the_module) m in
     List.fold_left global_var StringMap.empty globals in
 
-  (* Declare printf(), which the print built-in function will call *)
+  (* Printing *)
   let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
   let printf_func = L.declare_function "printf" printf_t the_module in
 
   let prints_t = L.var_arg_function_type (pointer_t i8_t) [|L.pointer_type i8_t|] in
   let prints_func = L.declare_function "puts" prints_t the_module in
 
-  (* Declare C functions for file inegration *)
+  (* file inegration *)
   let open_ty = L.function_type (pointer_t i8_t) [| (pointer_t i8_t) ; L.pointer_type i8_t |] in
   let open_func = L.declare_function "fopen" open_ty the_module in 
   let close_ty = L.function_type i32_t [| (pointer_t i8_t) |] in
   let close_func = L.declare_function "fclose" close_ty the_module in
-  let read_ty = L.function_type i32_t [| (pointer_t i8_t); i32_t; i32_t; (pointer_t i8_t)|] in 
+  let read_ty = L.function_type i32_t [| (pointer_t i8_t); i32_t; i32_t; (pointer_t i8_t) |] in 
   let read_func = L.declare_function "fread" read_ty the_module in
-  let get_ty = L.function_type (pointer_t i8_t) [| (pointer_t i8_t); i32_t; (pointer_t i8_t)|] in 
+  let get_ty = L.function_type (pointer_t i8_t) [| (pointer_t i8_t); i32_t; (pointer_t i8_t) |] in 
   let get_func = L.declare_function "fgets" get_ty the_module in
-  let fwrite_ty = L.function_type i32_t [| (pointer_t i8_t); i32_t; i32_t; (pointer_t i8_t)|] in
+  let fwrite_ty = L.function_type i32_t [| (pointer_t i8_t); i32_t; i32_t; (pointer_t i8_t) |] in
   let fwrite_func = L.declare_function "fwrite" fwrite_ty the_module in
-  let strlen_t = L.function_type i32_t [| (pointer_t i8_t) |] in
-  let strlen_func = L.declare_function "strlen" strlen_t the_module in
+
+  (* String functions *)
+  let strlen_ty = L.function_type i32_t [| (pointer_t i8_t) |] in
+  let strlen_func = L.declare_function "strlen" strlen_ty the_module in
+  let cast_str_int_ty = L.function_type i32_t [| (pointer_t i8_t) |] in
+  let cast_str_int_func = L.declare_function "atoi" cast_str_int_ty the_module in
+  let sprintf_ty = L.function_type (pointer_t i8_t) [| (pointer_t i8_t); L.pointer_type i8_t; i32_t|] in
+  let sprintf_func = L.declare_function "sprintf" sprintf_ty the_module in
+  let calloc_ty = L.function_type (pointer_t i8_t) [|i32_t; i32_t|] in
+  let calloc_func = L.declare_function "calloc" calloc_ty the_module in
+  let strtok_ty = L.function_type (pointer_t i8_t) [| (pointer_t i8_t) ; L.pointer_type i8_t |] in
+  let strtok_fun = L.declare_function "strtok" strtok_ty the_module in
+  
+  (* Data casting *)
 
   (* Define each function (arguments and return type) so we can call it *)
   let function_decls =
@@ -115,13 +127,19 @@ let translate (globals, functions) =
     (* Construct the function's "locals": formal arguments and locally
        declared variables.  Allocate each on the stack, initialize their
        value, if appropriate, and remember their values in the "locals" map *)
-    let local_vars =
+
+  let types = ref StringMap.empty in
+
+    let local_vars = 
       let add_formal m (t, n) p = L.set_value_name n p;
   let local = L.build_alloca (ltype_of_typ t) n builder in
   ignore (L.build_store p local builder); 
   StringMap.add n local m in
 
       let add_local m (t, n) = (* print_endline(A.string_of_typ t); *)
+
+      types := StringMap.add n t !types;
+
   let local_var = (* L.build_alloca (ltype_of_typ t) n builder *)
    (match t with
        A.MatrixTyp(A.TupleTyp(_, l), r, c) -> if r * c * l > 1000
@@ -130,31 +148,46 @@ let translate (globals, functions) =
                                                   L.build_alloca (ltype_of_typ t) n builder
      | _ -> L.build_alloca (ltype_of_typ t) n builder)
   in StringMap.add n local_var m in
-   (* let local_var =
-      (match t with
-       A.MatrixTyp(A.TupleTyp(_, l), r, c) -> if r * c * l > 1000
-                                                  then L.build_malloc (ltype_of_typ t) n builder
-                                                else
-                                                  L.build_alloca (ltype_of_typ t) n builder
-     | _ -> L.build_alloca (ltype_of_typ t) n builder)
-  in StringMap.add n local_var m in*)
 
       let formals = List.fold_left2 add_formal StringMap.empty fdecl.A.formals
           (Array.to_list (L.params the_function)) in
       List.fold_left add_local formals fdecl.A.locals in
 
+	let local_vars = ref local_vars in
+
+	(* ADD INDEX VARIABLE TO LOCALS FOR MATRIX FOR LOOP *)
+	local_vars := StringMap.add "_i" (L.build_alloca (ltype_of_typ A.Int) "_i" builder) !local_vars;
+	
+	let check_function = List.fold_left (fun m (t, n) -> StringMap.add n t m)
+		StringMap.empty (globals @ fdecl.A.formals @ fdecl.A.locals) in
+	
+	let check_function = ref check_function in
+
+
+	(* ADD ROW TO LOCALS FOR MATRIX FOR LOOP *)
+	let allocate_row name len m =
+
+    let typ = match (StringMap.find m !types) with
+      A.MatrixTyp(A.Int, _, _) -> A.Int
+      | A.MatrixTyp(A.Float, _, _) -> A.Float
+      | A.MatrixTyp(A.TupleTyp(A.Int, len), _, _) -> A.TupleTyp(A.Int, len)
+      | _ -> raise (Failure ("illegal matrix type")) in
+
+		check_function := StringMap.add name (A.RowTyp(typ, len)) !check_function;
+		check_function := StringMap.add "_i" (A.Int) !check_function;
+		local_vars := StringMap.add name (L.build_alloca (ltype_of_typ (A.RowTyp(typ, len))) name builder) !local_vars in
+
+    (*let print_vars key value = print_endline(key) in
+    StringMap.iter print_vars local_vars; *)
+
     (* Return the value for a variable or formal argument *)
-    let lookup n = try StringMap.find n local_vars
+    let lookup n = 
+					try StringMap.find n !local_vars
                    with Not_found -> StringMap.find n global_vars
     in
 
-        let check_function =
-        List.fold_left (fun m (t, n) -> StringMap.add n t m)
-        StringMap.empty (globals @ fdecl.A.formals @ fdecl.A.locals)
-    in
-
     let type_of_identifier s =
-      let symbols = check_function in
+      let symbols = !check_function in
       StringMap.find s symbols
     in
 
@@ -222,40 +255,42 @@ let translate (globals, functions) =
 
     (* New code/supporting functions for getting type *)
     (* A function that is used to check each function *)
-      let check_not_void exceptf = function
-      (A.Void, n) -> raise (Failure (exceptf n))
-    | _ -> ()
-  in
+	let build_mrow_access s i1 i2 builder isAssign =
+	  if isAssign
+		then L.build_gep (lookup s) [| i1; i2 |] s builder
+	  else
+		L.build_load (L.build_gep (lookup s) [| i1; i2 |] s builder) s builder
+	in
 
  let type_of_tuple1 t =
     match (List.hd t) with
-      A.IntLit _ -> A.TupleTyp(Int, List.length t)
+      A.IntLit _ -> A.TupleTyp(A.Int, List.length t)
     | _ -> raise (Failure ("illegal tuple type")) in
 
   let rec check_tuple_literal1 tt l i =
     let length = List.length l in
     match (tt, List.nth l i) with
-      (A.TupleTyp(Int, _), A.IntLit _) -> if i == length - 1 then A.TupleTyp(Int, length) else check_tuple_literal1 (A.TupleTyp(Int, length)) l (succ i)
+      (A.TupleTyp(A.Int, _), A.IntLit _) -> if i == length - 1 then A.TupleTyp(A.Int, length) else check_tuple_literal1 (A.TupleTyp(A.Int, length)) l (succ i)
     | _ -> raise (Failure ("illegal tuple literal"))
   in
 
   let type_of_row1 r l =
   match (List.hd r) with
-        A.IntLit _ -> A.RowTyp(Int, l)
-      | A.FloatLit _ -> A.RowTyp(Float, l)
+        A.IntLit _ -> A.RowTyp(A.Int, l)
+      | A.FloatLit _ -> A.RowTyp(A.Float, l)
       | A.TupleLit t -> A.RowTyp((type_of_tuple1) t, l)
       | _ -> raise (Failure ("illegal row type"))
   in
 
   let type_of_matrix1 m r c =
     match (List.hd (List.hd m)) with
-        A.IntLit _ -> A.MatrixTyp(Int, r, c)
-      | A.FloatLit _ -> A.MatrixTyp(Float, r, c)
+        A.IntLit _ -> A.MatrixTyp(A.Int, r, c)
+      | A.FloatLit _ -> A.MatrixTyp(A.Float, r, c)
       | A.TupleLit t -> A.MatrixTyp((type_of_tuple1) t, r, c)
       | _ -> raise (Failure ("illegal matrix type"))
   in
 
-  let rec expr1 = function
+  let expr1 = function
     A.IntLit _ -> A.Int
   | A.FloatLit _ -> A.Float
   | A.StringLit _ -> A.String
@@ -264,14 +299,32 @@ let translate (globals, functions) =
   | A.RowLit r -> type_of_row1 r (List.length r)
   | A.TupleLit t -> check_tuple_literal1 (type_of_tuple1 t) t 0
   | A.MatrixLit m -> type_of_matrix1 m (List.length m) (List.length (List.hd m))
+  | _ -> raise (Failure("illegal expression"))
   in
 
-	let build_mrow_access s i1 i2 builder isAssign =
-	  if isAssign
-		then L.build_gep (lookup s) [| i1; i2 |] s builder
-	  else
-		L.build_load (L.build_gep (lookup s) [| i1; i2 |] s builder) s builder
-	in
+  let build_mrow_access s i1 i2 builder isAssign =
+    if isAssign
+    then L.build_gep (lookup s) [| i1; i2 |] s builder
+    else
+    L.build_load (L.build_gep (lookup s) [| i1; i2 |] s builder) s builder
+  in
+
+  let build_matrix_access s i1 i2 i3 builder isAssign =
+    if isAssign
+    then L.build_gep (lookup s) [| i1; i2; i3|] s builder
+    else
+    L.build_load (L.build_gep (lookup s) [| i1; i2; i3 |] s builder) s builder
+  in
+
+  let build_mrow_access s i1 i2 builder isAssign =
+    if isAssign
+    then L.build_gep (lookup s) [| i1; i2 |] s builder
+    else
+    L.build_load (L.build_gep (lookup s) [| i1; i2 |] s builder) s builder
+  in
+
+	let get_length s =
+		L.array_length (L.type_of (L.build_load (L.build_gep (lookup s) [| L.const_int i32_t 0 |] s builder) s builder)) in
 
     (* Construct code for an expression; return its value *)
     let rec expr builder = function
@@ -295,10 +348,17 @@ let translate (globals, functions) =
       | A.PointerIncrement (s) -> build_pointer_increment s builder false
       | A.Dereference (s) -> build_pointer_dereference s builder false
 	    | A.RowAccess(s, e1) -> let i1 = expr builder e1 in build_row_access s (L.const_int i32_t 0) i1 builder false
-	    | A.TupleAccess(s, e1) -> let i1 = expr builder e1 in build_tuple_access s (L.const_int i32_t 0) i1 builder false
-	    | A.MRowAccess(s, e1) -> let i1 = expr builder e1 in build_mrow_access s (L.const_int i32_t 0) i1 builder false
+      | A.TupleAccess(s, e1) -> let i1 = expr builder e1 in build_tuple_access s (L.const_int i32_t 0) i1 builder false
+      | A.MRowAccess(s, e1) -> let i1 = expr builder e1 in build_mrow_access s (L.const_int i32_t 0) i1 builder false 
+      | A.MRowAccess(s, e1) -> let i1 = expr builder e1 in build_mrow_access s (L.const_int i32_t 0) i1 builder false
+	    | A.Length(s) -> L.const_int i32_t (get_length s)
+      | A.Init(e1,e2) -> let cnt1=(lookup e1) and cnt2= expr builder e2 in
+        let tp= L.element_type (L.type_of cnt1) in 
+        let sz=L.size_of tp in
+        let sz1=L.build_intcast sz (i32_t) "intc" builder in
+        let dt=L.build_bitcast (L.build_call calloc_func [|cnt2;sz1|] "tmpa" builder) tp "tmpb" builder in
+        L.build_store dt cnt1 builder
       | A.Binop (e1, op, e2) -> 
-
         let e1' = expr builder e1 and
         e2' = expr builder e2 and
         t1 = expr1 e1 and
@@ -317,6 +377,7 @@ let translate (globals, functions) =
             | A.Leq     -> L.build_fcmp L.Fcmp.Ole
             | A.Greater -> L.build_fcmp L.Fcmp.Ogt
             | A.Geq     -> L.build_fcmp L.Fcmp.Oge
+            | _ -> raise (Failure("Unsupported operator"))
             ) e1' e2' "tmp" builder 
           in 
 
@@ -334,12 +395,13 @@ let translate (globals, functions) =
             | A.Leq     -> L.build_icmp L.Icmp.Sle
             | A.Greater -> L.build_icmp L.Icmp.Sgt
             | A.Geq     -> L.build_icmp L.Icmp.Sge
+            | _ -> raise (Failure("Unsupported operator"))
             ) e1' e2' "tmp" builder
           in
 
           let tuple_int_bop n_i operator =
-            let lhs_str = (match e1 with A.Id(s) -> s) in
-            let rhs_str = (match e2 with A.Id(s) -> s) in
+            let lhs_str = (match e1 with A.Id(s) -> s | _ -> "") in
+            let rhs_str = (match e2 with A.Id(s) -> s | _ -> "") in
               (match operator with
                 A.Add ->
                   let tmp_t = L.build_alloca (array_t i32_t n_i) "tmptup" builder in
@@ -360,12 +422,13 @@ let translate (globals, functions) =
                       let ld = L.build_gep tmp_t [| L.const_int i32_t 0; L.const_int i32_t i |] "tmptup" builder in
                     ignore(L.build_store add_res ld builder);
                     done;
-                  L.build_load (L.build_gep tmp_t [| L.const_int i32_t 0 |] "tmptup" builder) "tmptup" builder)
+                  L.build_load (L.build_gep tmp_t [| L.const_int i32_t 0 |] "tmptup" builder) "tmptup" builder
+                | _ -> raise (Failure("Unsupported operator")))
             in
 
           let matrix_int_bop r_i c_i operator =
-            let lhs_str = (match e1 with A.Id(s) -> s) in
-            let rhs_str = (match e2 with A.Id(s) -> s) in
+            let lhs_str = (match e1 with A.Id(s) -> s | _ -> "") in
+            let rhs_str = (match e2 with A.Id(s) -> s | _ -> "") in
               (match operator with
                 A.Add ->
                   let tmp_m = L.build_alloca (array_t (array_t i32_t c_i) r_i) "tmpmat" builder in
@@ -390,12 +453,13 @@ let translate (globals, functions) =
                     ignore(L.build_store add_res ld builder);
                     done
                   done;
-                L.build_load (L.build_gep tmp_m [| L.const_int i32_t 0 |] "tmpmat" builder) "tmpmat" builder)
+                L.build_load (L.build_gep tmp_m [| L.const_int i32_t 0 |] "tmpmat" builder) "tmpmat" builder
+              | _ -> raise (Failure("Unsupported operator")))
           in
 
           let matrix_float_bop r_i c_i operator =
-            let lhs_str = (match e1 with A.Id(s) -> s) in
-            let rhs_str = (match e2 with A.Id(s) -> s) in
+            let lhs_str = (match e1 with A.Id(s) -> s | _ -> "") in
+            let rhs_str = (match e2 with A.Id(s) -> s | _ -> "") in
               (match operator with
                 A.Add ->
                   let tmp_m = L.build_alloca (array_t (array_t float_t c_i) r_i) "tmpmat" builder in
@@ -420,7 +484,8 @@ let translate (globals, functions) =
                     ignore(L.build_store add_res ld builder);
                     done
                   done;
-                L.build_load (L.build_gep tmp_m [| L.const_int i32_t 0 |] "tmpmat" builder) "tmpmat" builder)
+                L.build_load (L.build_gep tmp_m [| L.const_int i32_t 0 |] "tmpmat" builder) "tmpmat" builder
+              | _ -> raise (Failure("Unsupported operator")))
           in
 
         let string_of_e1'_llvalue = L.string_of_llvalue e1'
@@ -453,18 +518,18 @@ let translate (globals, functions) =
         let build_ops_with_types typ1 typ2 =
           match (typ1, typ2) with
             "int", "int" -> (match (e1,e2) with
-              IntLit(_),IntLit(_) -> int_bop op
-              | Id(int), IntLit(_) -> int_bop op
-              | IntLit(_), Id(int) -> int_bop op
-              | Id(_), Id(_) -> int_bop op
-              | _,_ -> match t1,t2 with TupleTyp(Int,l1),TupleTyp(Int,l2) when l1=l2->tuple_int_bop l1 op
-                                      | MatrixTyp(Int,r1,c1),MatrixTyp(Int,r2,c2) when r1=r2 && c1=c2 -> matrix_int_bop r1 c1 op)
+              A.IntLit(_),A.IntLit(_) -> int_bop op
+              | A.Id(int), A.IntLit(_) -> int_bop op
+              | A.IntLit(_), A.Id(int) -> int_bop op
+              | _,_ -> match t1,t2 with A.TupleTyp(A.Int,l1),A.TupleTyp(A.Int,l2) when l1=l2->tuple_int_bop l1 op
+                                      | A.MatrixTyp(A.Int,r1,c1),A.MatrixTyp(A.Int,r2,c2) when r1=r2 && c1=c2 -> matrix_int_bop r1 c1 op
+                                      | _,_ -> raise (Failure("Cannot build ops with given types")))
           | "float" , "float" -> (match (e1,e2) with
-              FloatLit(_),FloatLit(_) -> float_bop op
-              | Id(float), FloatLit(_) -> float_bop op
-              | FloatLit(_), Id(float) -> float_bop op
-              | Id(_), Id(_) -> float_bop op
-              | _,_ -> match t1,t2 with MatrixTyp(Float,r1,c1),MatrixTyp(Float,r2,c2) when r1=r2 && c1=c2 -> matrix_float_bop r1 c1 op)
+              A.FloatLit(_),A.FloatLit(_) -> float_bop op
+              | A.Id(float), A.FloatLit(_) -> float_bop op
+              | A.FloatLit(_), A.Id(float) -> float_bop op
+              | _,_ -> match t1,t2 with A.MatrixTyp(A.Float,r1,c1),A.MatrixTyp(A.Float,r2,c2) when r1=r2 && c1=c2 -> matrix_float_bop r1 c1 op
+                                        | _,_ -> raise (Failure("Cannot build ops with given types")))
           | _,_ -> raise(UnsupportedBinop)
         in
         build_ops_with_types e1'_type e2'_type
@@ -526,24 +591,30 @@ let translate (globals, functions) =
 										  | A.RowAccess(s, e1) -> let i1 = expr builder e1 in build_row_access s (L.const_int i32_t 0) i1 builder true
 										  | A.TupleAccess(s, e1) -> let i1 = expr builder e1 in build_tuple_access s (L.const_int i32_t 0) i1 builder true
 										  | A.MatrixAccess(s, e1, e2) -> let i1 = expr builder e1 and i2 = expr builder e2 in build_matrix_access s (L.const_int i32_t 0) i1 i2 builder true
-                      | A.MRowAccess(s, e1) -> let i1 = expr builder e1 in build_mrow_access s (L.const_int i32_t 0) i1 builder true
+										  | A.MRowAccess(s, e1) -> let i1 = expr builder e1 in build_mrow_access s (L.const_int i32_t 0) i1 builder true
                       | A.PointerIncrement(s) -> build_pointer_increment s builder true
                       | A.Dereference(s) -> build_pointer_dereference s builder true
                       | _ -> raise (IllegalAssignment))
                              and e2' = expr builder e2 in
                      ignore (L.build_store e2' e1' builder); e2' 
       | A.Call("open", e) -> 
-            L.build_call open_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "fopen" builder
+    L.build_call open_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "fopen" builder
       | A.Call("close", e) -> 
-            L.build_call close_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "fclose" builder
+    L.build_call close_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "fclose" builder
       | A.Call("write", e) -> 
-            L.build_call fwrite_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "tmpy" builder 
+    L.build_call fwrite_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "tmpy" builder 
       | A.Call("read", e) -> 
-            L.build_call read_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "tmpx" builder
-      | A.Call("fget",e) -> 
-            L.build_call get_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "tmpz" builder
+    L.build_call read_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "tmpx" builder
+      | A.Call("fget", e) -> 
+    L.build_call get_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "tmpz" builder
       | A.Call("len", e) -> 
-            L.build_call strlen_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "len" builder
+    L.build_call strlen_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "len" builder
+      | A.Call ("atoi", e) ->
+    L.build_call cast_str_int_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "tmp3" builder 
+      | A.Call ("itos", e) ->
+    L.build_call sprintf_func (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "sprintf" builder 
+      | A.Call("splitstr", e)->
+     L.build_call strtok_fun (Array.of_list (List.rev (List.map (expr builder) (List.rev e)))) "tmp5" builder 
       | A.Call ("print", [e]) | A.Call ("printb", [e]) ->
     L.build_call printf_func [| int_format_str ; (expr builder e) |]
       "printf" builder
@@ -613,25 +684,21 @@ let translate (globals, functions) =
       | A.For (e1, e2, e3, body) -> stmt builder
       ( A.Block [A.Expr e1 ; A.While (e2, A.Block [body ; A.Expr e3]) ] )
 
-	  (* for(r in m) *)
-	  (*| A.MFor (e1, e2, body) -> 
-		let rows = L.array_length (L.type_of (L.build_load (L.build_gep (lookup (L.string_of_llvalue (expr builder e2))) [| L.const_int i32_t 0 |] (L.string_of_llvalue (expr builder e2)) builder) (L.string_of_llvalue (expr builder e2)) builder)) in
-		let i = 0 in
-		  stmt builder
-		  ( A.Block 
-			[A.Expr (A.IntLit i); 
-			 A.While ((A.Binop((A.IntLit i), A.Less, (A.IntLit rows))), 
-			   A.Block [A.Expr (A.Assign(e1, A.MRowAccess((L.string_of_llvalue(expr builder e2)), (A.IntLit i)))); body ; A.Expr(A.Assign(A.IntLit(i), A.IntLit(i+1)))]) ] )*) 
+
 	  | A.MFor (s1, s2, body) ->
 		let rows = L.array_length (L.type_of (L.build_load (L.build_gep (lookup s2) [| L.const_int i32_t 0 |] s2 builder) s2 builder)) in
-		let i = 0 in
-			stmt builder
-		  ( A.Block
-			[A.Expr (A.IntLit i);
-			 A.While ((A.Binop((A.IntLit i), A.Less, (A.IntLit rows))),
-			   A.Block [A.Expr (A.Assign((A.Id s1), A.MRowAccess(s2, (A.IntLit i)))); body ; A.Expr(A.Assign(A.IntLit(i), A.IntLit(i+1)))]) ] )
+		let cols = L.array_length (L.type_of (L.build_load (L.build_gep (lookup s2) [| L.const_int i32_t 0; L.const_int i32_t 0 |] s2 builder) s2 builder)) in
+		allocate_row s1 cols s2; 
+		(*let print_vars key value = print_endline(key) in
+		StringMap.iter print_vars !local_vars;	*)
 
+		stmt builder
+		  ( A.Block
+			[A.Expr (A.Assign(A.Id "_i", A.IntLit 0));
+			 A.While ((A.Binop((A.Id "_i"), A.Less, (A.IntLit rows))),
+			   A.Block [A.Expr (A.Assign((A.Id s1), A.MRowAccess(s2, (A.Id "_i")))); body ; A.Expr(A.Assign((A.Id "_i"), A.Binop((A.Id "_i"), A.Add, (A.IntLit 1))))]) ] )
 	in
+
 
     (* Build the code for each statement in the function *)
     let builder = stmt builder (A.Block fdecl.A.body) in
@@ -642,8 +709,8 @@ let translate (globals, functions) =
       | A.Int -> L.build_ret (L.const_int i32_t 0)
       | A.Float -> L.build_ret (L.const_float float_t 0.0)
       | A.Bool -> L.build_ret (L.const_int i1_t 0)
-
-    (*  | A.RowTyp(t) -> (match t with
+     (*
+      | A.RowTyp(t) -> (match t with
                           A.Int -> L.build_ret(L.const_pointer_null (pointer_t i32_t))
                         | A.Float -> L.build_ret (L.const_pointer_null (pointer_t float_t))
                         | _ -> raise (UnsupportedReturnType))

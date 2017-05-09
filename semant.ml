@@ -43,6 +43,7 @@ let check (globals, functions) =
     | (MatrixPointerType(Float), MatrixPointerType(Float)) -> lvaluet
     | (MatrixTuplePointerType(Int), MatrixTuplePointerType(Int)) -> lvaluet *)
     | (RowPointer(Int), RowPointer(Int)) -> lvaluet
+    | (MatrixPointer(Int), MatrixPointer(Int)) -> lvaluet
     | _ -> raise err
   in
 (*
@@ -77,7 +78,7 @@ let check (globals, functions) =
   report_duplicate (fun n -> "duplicate function " ^ n)
   (List.map (fun fd -> fd.fname) functions);
 
-    let built_in_decls = StringMap.add "print"
+  let built_in_decls = StringMap.add "print"
   { typ = Void; fname = "print"; formals = [(Int, "x")]; 
     locals = []; body = [] } (StringMap.add "printf"
   { typ = Void; fname = "printf"; formals = [(Float, "x")];
@@ -90,14 +91,21 @@ let check (globals, functions) =
     locals = []; body = [] } (StringMap.add "read"
   { typ = String; fname = "read"; formals = [(String,"w"); (Int, "x"); (Int, "y"); (String, "z")];
     locals = []; body = [] } (StringMap.add "write"
-  { typ = Int; fname = "write"; formals = [(String, "w"); (Int,"x"); (Int,"y"); (String, "z")];
+  { typ = Int; fname = "write"; formals = [(String, "w"); (Int, "x"); (Int, "y"); (String, "z")];
     locals = []; body = [] } (StringMap.add "close"
   { typ = Void; fname = "close"; formals = [(String, "x")];
     locals = []; body = [] } (StringMap.add "fget"
-  { typ = String; fname = "fget"; formals = [(String,"x");(Int,"y");(String, "z")];
+  { typ = String; fname = "fget"; formals = [(String, "x"); (Int, "y"); (String, "z")];
+    locals = []; body = [] } (StringMap.add "atoi"
+  { typ = Int ; fname = "atoi"; formals = [(String, "x")];
+    locals = []; body = [] } (StringMap.add "itos"
+  { typ = Void ; fname = "itos"; formals = [(String, "x"); (String,"y"); (Int, "z")];
+    locals = []; body = [] } (StringMap.add "splitstr"
+  { typ = String ; fname = "splitstr"; formals = [(String, "x"); (String,"y")];
     locals = []; body = [] } (StringMap.singleton "len"
   { typ = Int; fname = "len"; formals = [(String, "x")];
-    locals = []; body = [] } )))))))))
+    locals = []; body = [] } ))))))))))))
+
 in
 
 let function_decls = 
@@ -127,19 +135,37 @@ let check_function func =
 		"Duplicate local " ^ n ^ " in " ^ func.fname)(List.map snd func.locals);
 
 (* Check variables *)
-    let symbols = List.fold_left (fun m (t, n) -> StringMap.add n t m)
-	StringMap.empty (globals @ func.formals @ func.locals )
-	in
+  let symbols = List.fold_left (fun m (t, n) -> StringMap.add n t m) (* name type map *)
+    StringMap.empty (globals @ func.formals @ func.locals )
+  in
 
- let type_of_identifier s =
-      try StringMap.find s symbols
-    with Not_found -> raise (Failure ("undeclared identifier " ^ s))
- in
+  let symbols = ref symbols in
+
 
  let type_of_tuple t =
     match (List.hd t) with
       IntLit _ -> TupleTyp(Int, List.length t)
     | _ -> raise (Failure ("illegal tuple type")) in
+
+
+let find_rowtyp name m =
+	let m = StringMap.find m !symbols in
+	let typ = match m with
+		MatrixTyp(Int, _, _) -> Int
+	  | MatrixTyp(Float, _, _) -> Float
+	  | MatrixTyp(TupleTyp(Int, len), _, _) -> TupleTyp(Int, len)
+	  | _ -> raise (Failure ("illegal matrix type")) in
+	let cols = match m with
+		MatrixTyp(_, _, c) -> c
+	  | _ -> raise (Failure ("illegal matrix type")) in
+	symbols := StringMap.add name (RowTyp(typ, cols)) !symbols in
+
+
+
+ let type_of_identifier s =
+      try StringMap.find s !symbols
+    with Not_found -> raise (Failure ("undeclared identifier " ^ s))
+   in
 
   let rec check_tuple_literal tt l i =
     let length = List.length l in
@@ -236,10 +262,6 @@ let check_function func =
     | RowPointer(t) -> t
     | MatrixPointer(t) -> t
     | _ -> raise ( Failure ("cannot dereference a non-pointer type") ) in
-    
-  let get_int x = match x with
-    IntLit(n) -> n
-  in
 
   (* Return the type of an expression or throw an exception *)
   let rec expr = function
@@ -292,12 +314,9 @@ let check_function func =
       | TupleTyp(Int,l1),TupleTyp(Int,l2) when l1=l2 -> TupleTyp(Int,l1)
       | MatrixTyp(Int,r1,c1),MatrixTyp(Int,r2,c2) when r1=r2 && c1=c2 -> MatrixTyp(Int,r1,c1)
       | MatrixTyp(Float,r1,c1),MatrixTyp(Float,r2,c2) when r1=r2 && c1=c2 -> MatrixTyp(Float,r1,c1)
-      | MatrixTyp(Int,r1,c1),MatrixTyp(Float,r2,c2) when r1=r2 && c1=c2 -> MatrixTyp(Float,r1,c1)
-      | MatrixTyp(Float,r1,c1),MatrixTyp(Int,r2,c2) when r1=r2 && c1=c2 -> MatrixTyp(Float,r1,c1)) 
+      | _,_ -> raise (Failure("illegal binary operator")))
     | Sub -> (match t1,t2 with Int,Int -> Int
-      | Float,Float -> Float
-      | Int,Float -> Float
-      | Float,Int -> Float
+      | Float,Float | Int,Float | Float,Int -> Float
       | TupleTyp(Int,l1),TupleTyp(Int,l2) when l1=l2 -> TupleTyp(Int,l1)
       | MatrixTyp(Int,r1,c1),MatrixTyp(Int,r2,c2) when r1=r2 && c1=c2 -> MatrixTyp(Int,r1,c1)
       | MatrixTyp(Float,r1,c1),MatrixTyp(Float,r2,c2) when r1=r2 && c1=c2 -> MatrixTyp(Float,r1,c1)
@@ -314,7 +333,10 @@ let check_function func =
     | Equal | Neq | Meq when t1 = t2 -> Bool
     | PlusEq when t1 = Int && t2 = Int -> Int
     | PlusEq when t1 = Int && t2 = Float -> Float
-    | Less | Leq | Greater | Geq when t1 = Int && t2 = Int -> Bool
+    (* | PlusEq when t1 = MatrixTyp && MatrixTyp -> MatrixTyp
+    | PlusEq when t1 = MatrixTyp && Int -> MatrixTyp
+    | PlusEq when t1 = MatrixTyp && Float -> MatrixTyp
+    *) | Less | Leq | Greater | Geq when t1 = Int && t2 = Int -> Bool
     | Less | Leq | Greater | Geq when t1 = Float && t2 = Float -> Float
     | And | Or when t1 = Bool && t2 = Bool -> Bool
     | _ -> raise (Failure ("illegal binary operator " ^
@@ -328,6 +350,9 @@ let check_function func =
     | Not when t = Bool -> Bool
     | _ -> raise (Failure ("illegal unary operator " ^ string_of_uop op ^
       string_of_typ t ^ " in " ^ string_of_expr ex)))
+  | Init(var, lit) -> let a = type_of_identifier var and b= expr lit in
+    (match b with Int -> a
+    | _ -> raise (Failure("illegal "^ string_of_typ b ^", expected int")))
   | Noexpr -> Void
   | Assign(e1, e2) as ex -> let lt = (match e1 with
                                       | RowAccess(s, _) -> (match (type_of_identifier s) with
@@ -427,7 +452,7 @@ let check_function func =
   | If(p, b1, b2) -> check_bool_expr p; stmt b1; stmt b2
   | For(e1, e2, e3, st) -> ignore (expr e1); check_bool_expr e2;
   ignore (expr e3); stmt st
-  | MFor(s1, s2, s) -> type_of_identifier s1; type_of_identifier s2; stmt s
+  | MFor(s1, s2, s) -> find_rowtyp s1 s2; ignore(s1); ignore(s2); stmt s
   | While(p, s) -> check_bool_expr p; stmt s
   in
 
@@ -435,3 +460,4 @@ let check_function func =
 
   in
   List.iter check_function functions
+
