@@ -1,0 +1,7 @@
+def int main() {
+	
+	float[3][2] r;
+	r = {% 1.1, 2.3 | 4.1,4.3 | 5.4, 4.2 %};
+	print(r.length);
+	print(r.width);	
+}

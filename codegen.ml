@@ -56,10 +56,16 @@ let translate (globals, functions) =
     | A.RowPointer(t) -> (match t with
                               A.Int -> pointer_t i32_t
                             | A.Float -> pointer_t float_t
+							| A.TupleTyp(typ1,size1) -> (match typ1 with
+                                              A.Int    -> array_t i32_t size1
+                                            | _ -> raise (UnsupportedTupleType))
                             | _ -> raise (IllegalPointerType))
     | A.MatrixPointer(t) -> (match t with
                               A.Int -> pointer_t i32_t
                             | A.Float -> pointer_t float_t
+							| A.TupleTyp(typ1,size1) -> (match typ1 with
+                                              A.Int    -> array_t i32_t size1
+                                            | _ -> raise (UnsupportedTupleType))
                             | _ -> raise (IllegalPointerType))
   in
 

@@ -39,7 +39,11 @@ let check (globals, functions) =
     | (MatrixTyp(Float, r1, c1), MatrixTyp(Float, r2, c2)) -> if r1 == r2 && c1 == c2 then lvaluet else raise err
     | (MatrixTyp(TupleTyp(Int, d1), r1, c1), MatrixTyp(TupleTyp(Int, d2), r2, c2)) -> if d1 == d2 && r1 == r2 && c1 == c2 then lvaluet else raise err
     | (MatrixPointer(Int), MatrixPointer(Int)) -> lvaluet
+    | (MatrixPointer(Float), MatrixPointer(Float)) -> lvaluet
+    | (MatrixPointer(TupleTyp(Int, 3)), MatrixPointer(TupleTyp(Int, 3))) -> lvaluet
     | (RowPointer(Int), RowPointer(Int)) -> lvaluet
+    | (RowPointer(Float), RowPointer(Float)) -> lvaluet
+    | (RowPointer(TupleTyp(Int, 3)), RowPointer(TupleTyp(Int, 3))) -> lvaluet
     | _ -> raise err
   in
 (*
@@ -350,6 +354,7 @@ let find_rowtyp name m =
                                                                       RowTyp(t, _) -> (match t with
                                                                                                     Int -> Int
                                                                                                   | Float -> Float
+																								  | TupleTyp(p, l) -> TupleTyp(p, l)
                                                                                                   | _ -> raise ( Failure ("illegal row") )
                                                                                                 )
                                                                       | _ -> raise ( Failure ("cannot access a primitive") )
@@ -378,6 +383,7 @@ let find_rowtyp name m =
                                                                       RowTyp(t, _) -> (match t with
                                                                                                     Int -> Int
                                                                                                   | Float -> Float
+																								  | TupleTyp(p, l) -> TupleTyp(p, l)
                                                                                                   | _ -> raise ( Failure ("illegal row") )
                                                                                                 )
                                                                       | _ -> raise ( Failure ("cannot access a primitive") )
