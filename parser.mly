@@ -156,7 +156,6 @@ expr:
   | ID LPERCENT expr RPERCENT { TupleAccess($1, $3) }
   | ID LSQBRACE expr RSQBRACE LSQBRACE expr RSQBRACE { MatrixAccess($1, $3, $6) }
   | ID LSQBRACE expr RSQBRACE LSQBRACE COLON RSQBRACE { MRowAccess($1, $3) }
-  | ID LSQBRACE COLON RSQBRACE LSQBRACE expr RSQBRACE { MColumnAccess($1, $6) }
   | ID DOT LENGTH { Length($1) }
 
 
