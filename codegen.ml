@@ -290,7 +290,7 @@ let translate (globals, functions) =
       | _ -> raise (Failure ("illegal matrix type"))
   in
 
-  let expr1 = function
+  let rec expr1 = function
     A.IntLit _ -> A.Int
   | A.FloatLit _ -> A.Float
   | A.StringLit _ -> A.String
