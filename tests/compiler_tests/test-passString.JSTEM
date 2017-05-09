@@ -1,8 +1,0 @@
-def String hello(String word){
-	return word;
-}
-
-def int main(){
-	prints(hello("hi"));
-	return 0;
-}
