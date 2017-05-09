@@ -1,4 +1,4 @@
-def void main() {
+def int main() {
 	float[5] r;
 	int i;
 	

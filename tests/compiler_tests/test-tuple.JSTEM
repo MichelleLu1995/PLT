@@ -1,4 +1,4 @@
-def void main() {
+def int main() {
 	int(%3%) t;
 	int j;
 	
