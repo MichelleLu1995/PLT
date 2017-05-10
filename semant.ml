@@ -29,7 +29,6 @@ let check (globals, functions) =
       (Int, Int) -> lvaluet
     | (Float, Float) -> lvaluet
     | (String, String) -> lvaluet
-    | (Char, Char) -> lvaluet
     | (Bool, Bool) -> lvaluet
     | (Void, Void) -> lvaluet
     | (TupleTyp(Int, l1), TupleTyp(Int, l2)) -> if l1 == l2 then lvaluet else if l1 == 0 then lvaluet else raise err
@@ -246,7 +245,6 @@ let find_rowtyp name m =
     IntLit _ -> Int
   | FloatLit _ -> Float
   | StringLit _ -> String 
-  | CharLit _ -> Char
   | BoolLit _ -> Bool
   | Id s -> type_of_identifier s
   | Null(e) -> let k=expr e in (match k with Void -> raise(Failure("no void expression expected"))

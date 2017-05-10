@@ -34,7 +34,6 @@ let translate (globals, functions) =
     | A.Void -> void_t
     | A.Float -> float_t
     | A.String -> pointer_t i8_t
-    | A.Char -> i8_t
     | A.TupleTyp(typ, size) -> (match typ with
                                   A.Int    -> array_t i32_t size
                                 | _ -> raise (UnsupportedTupleType))
@@ -378,7 +377,6 @@ let translate (globals, functions) =
       | A.FloatLit f -> L.const_float float_t f
       | A.BoolLit b -> L.const_int i1_t (if b then 1 else 0)
       | A.StringLit s -> L.build_global_stringptr s "string" builder
-      | A.CharLit c -> L.const_int i8_t (Char.code c)
       | A.Noexpr -> L.const_int i32_t 0
       | A.Id s -> L.build_load (lookup s) s builder
       | A.TupleLit t -> L.const_array (get_tuple_type t) (Array.of_list (List.map (expr builder) t))

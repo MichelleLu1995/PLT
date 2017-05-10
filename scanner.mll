@@ -67,7 +67,6 @@ rule token = parse
 | "False"  { FALSE }
 | "$"	     { DOLLAR }
 | "#"	     { OCTOTHORP }
-| "char"   { CHAR }
 | "new"    { NEW }
 | "String" { STRING }
 | "File"   { STRING }
@@ -78,7 +77,6 @@ rule token = parse
 | ['0'-'9']+ as lxm { INT_LIT(int_of_string lxm) }
 | id as lxm { ID(lxm) }
 | string       				{ STRING_LIT(un_esc s) }
-| char   as lxm {CHAR_LIT( String.get lxm 1)}
 | eof { EOF }
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
 

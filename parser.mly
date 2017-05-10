@@ -6,13 +6,12 @@ open Ast
 %token PLUS MINUS TIMES DIVIDE ASSIGN NOT ATASSIGN NULL
 %token EQ NEQ LT LEQ GT GEQ AND OR NEW 
 %token TRUE FALSE
-%token RETURN IF ELSE FOR WHILE INT BOOL VOID FLOAT TUPLE STRING CHAR
+%token RETURN IF ELSE FOR WHILE INT BOOL VOID FLOAT TUPLE STRING
 %token OCTOTHORP DOLLAR SQUIGLY
 
 %token <int> INT_LIT
 %token <string> STRING_LIT 
 %token <string> ID
-%token <char> CHAR_LIT
 %token <float> FLOAT_LIT
 
 %token DEF
@@ -86,7 +85,6 @@ primitive:
   	INT { Int }
   | BOOL { Bool }
   | VOID { Void }
-  | CHAR { Char }
   | FLOAT { Float }
   | STRING { String }
   | tuple_typ { $1 }
@@ -158,7 +156,6 @@ primitives:
 	INT_LIT      { IntLit($1) }
   | FLOAT_LIT  { FloatLit($1) }
   | STRING_LIT { StringLit($1) }
-  | CHAR_LIT   { CharLit($1) }
   | TRUE       { BoolLit(true) }
   | FALSE      { BoolLit(false) }
 

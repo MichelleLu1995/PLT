@@ -1,7 +1,5 @@
 EQ
 NEQ
-MEQ
-PLUSEQ
 LT
 LEQ
 GT

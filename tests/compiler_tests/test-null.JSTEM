@@ -1,0 +1,21 @@
+def int main() {
+	String s;
+	String null;
+
+	s = "test";
+	null = find("","x");
+
+	if (NULL(s)){
+		printfs("IS NULL");
+	}
+	else {
+		printfs("NOT NULL");
+	}
+
+	if (NULL(null)){
+		printfs("IS NULL");
+	}
+	else {
+		printfs("NOT NULL");
+	}
+}
