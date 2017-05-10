@@ -1,0 +1,16 @@
+def int main() {
+	int(%3%)[2][2] m1;
+	int len;
+
+	m1 = {% (%1, 1, 1%), (%2, 2, 2%) | (%3, 3, 3%), (%4, 4, 4%) %};
+	len = m1.length;
+
+	for(any_variable_name in m1){
+		print_rowt($any_variable_name, len);
+		prints("\n");
+	}
+
+	return 0;
+}
+
+

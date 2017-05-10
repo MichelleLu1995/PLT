@@ -1,9 +1,0 @@
-def int main() {
-
-	float[2][2] m;
-	m = {% 1.1, 2.2 | 3.3, 4.4 %};
-
-	for (row in m) {
-		printf(row[0]);
-	}
-}
