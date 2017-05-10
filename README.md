@@ -1,7 +1,7 @@
 # COMS W4115: Programming Languages and Translators, Spring 2017
 
 # Project
-JSTEM: A Matrix  Manipulation Language
+JSTEM: A Matrix  Manipulation Language [![Build Status](https://travis-ci.org/MichelleLu1995/PLT.svg?branch=master)](https://travis-ci.org/MichelleLu1995/PLT)
 
 # Contributors
 Julia Troxell<br>
