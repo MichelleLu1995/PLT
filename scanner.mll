@@ -34,19 +34,13 @@ rule token = parse
 | ','      { COMMA }
 | '|'	   { BAR }
 | '+'      { PLUS }
-| "++"     { MPLUS }
 | '-'      { MINUS }
-| "--"     { MMINUS }
 | '*'      { TIMES }
-| "**"     { MTIMES }
 | '/'      { DIVIDE }
-| "//"     { MDIVIDE }
 | "@="     { ATASSIGN }
 | '='      { ASSIGN }
 | "=="     { EQ }
 | "!="     { NEQ }
-| "=?"     { MEQ }
-| "+="     { PLUSEQ }
 | '<'      { LT }
 | "<="     { LEQ }
 | ">"      { GT }
@@ -66,7 +60,6 @@ rule token = parse
 | "length" { LENGTH }
 | "width"  { WIDTH }
 | "type"   { TYPE }
-| "mx"     { MATRIX }
 | "tuple"  { TUPLE }
 | "def"    { DEF }
 | "in"     { IN }

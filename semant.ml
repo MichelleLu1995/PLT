@@ -332,9 +332,7 @@ let find_rowtyp name m =
       | Float, MatrixTyp(Float,r1,c1) -> MatrixTyp(Float,r1,c1)
       | MatrixTyp(Float,r1,c1), Float -> MatrixTyp(Float,r1,c1)
       | _,_ -> raise (Failure("illegal division operator"))) 
-    | Equal | Neq | Meq when t1 = t2 -> Bool
-    | PlusEq when t1 = Int && t2 = Int -> Int
-    | PlusEq when t1 = Int && t2 = Float -> Float
+    | Equal | Neq when t1 = t2 -> Bool
     | Less | Leq | Greater | Geq when t1 = Int && t2 = Int -> Bool
     | Less | Leq | Greater | Geq when t1 = Float && t2 = Float -> Float
     | And | Or when t1 = Bool && t2 = Bool -> Bool

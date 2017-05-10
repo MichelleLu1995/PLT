@@ -3,10 +3,10 @@ open Ast
 %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA BAR COLON LSQBRACE RSQBRACE LPERCENT RPERCENT LMPERCENT RMPERCENT
-%token PLUS MINUS TIMES DIVIDE ASSIGN NOT MPLUS MMINUS MTIMES MDIVIDE PLUSEQ ATASSIGN NULL
-%token EQ NEQ LT LEQ GT GEQ AND OR MEQ NEW 
+%token PLUS MINUS TIMES DIVIDE ASSIGN NOT ATASSIGN NULL
+%token EQ NEQ LT LEQ GT GEQ AND OR NEW 
 %token TRUE FALSE
-%token RETURN IF ELSE FOR WHILE INT BOOL VOID MATRIX FLOAT TUPLE STRING CHAR
+%token RETURN IF ELSE FOR WHILE INT BOOL VOID FLOAT TUPLE STRING CHAR
 %token OCTOTHORP DOLLAR SQUIGLY
 
 %token <int> INT_LIT
@@ -28,9 +28,9 @@ open Ast
 %left OR
 %left AND
 %left EQ NEQ
-%left LT GT LEQ GEQ MEQ
-%left PLUS MINUS MPLUS MMINUS PLUSEQ
-%left TIMES DIVIDE MTIMES MDIVIDE
+%left LT GT LEQ GEQ
+%left PLUS MINUS
+%left TIMES DIVIDE
 %right NOT NEG
 
 %start program
@@ -79,7 +79,6 @@ matrix_pointer_typ:
 
 typ:
   primitive { $1 }
-  | MATRIX { Matrix }
   | matrix_typ { $1 }
   | row_typ { $1 }
 
@@ -136,12 +135,6 @@ expr:
   | expr GEQ    expr { Binop($1, Geq,   $3) }
   | expr AND    expr { Binop($1, And,   $3) }
   | expr OR     expr { Binop($1, Or,    $3) }
-  | expr MPLUS  expr { Binop($1, Madd,  $3) }
-  | expr MMINUS expr { Binop($1, Msub,  $3) }
-  | expr MTIMES expr { Binop($1, Mmult, $3) }
-  | expr MDIVIDE expr{ Binop($1, Mdiv,  $3) }
-  | expr MEQ    expr { Binop($1, Meq,   $3) }
-  | expr PLUSEQ expr { Binop($1, PlusEq,$3) }
   | MINUS expr %prec NEG { Unop(Neg, $2) }
   | NOT expr         { Unop(Not, $2) }
   | expr ASSIGN expr   { Assign($1, $3) }

@@ -1,5 +1,5 @@
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq |
-  And | Or | Madd | Msub | Mmult | Mdiv | Meq | PlusEq  
+  And | Or  
 
 type uop = Neg | Not
 
@@ -11,12 +11,9 @@ type typ =
   | Bool
   | Void  
   | Tuple
-  | Matrix
   | Row
-  | Column
   | MatrixTyp of typ * int * int 
   | RowTyp of typ * int
-  | ColumnTyp of typ * int
   | TupleTyp of typ * int
   | RowPointer of typ
   | MatrixPointer of typ
@@ -84,13 +81,7 @@ let string_of_op = function
   | Geq -> ">="
   | And -> "&&"
   | Or -> "||"
-  | Madd -> "++"
-  | Msub -> "--"
-  | Mmult -> "**"
-  | Mdiv -> "//"
-  | Meq -> "=?"
-  | PlusEq -> "+="
-
+ 
 let string_of_uop = function
     Neg -> "-"
   | Not -> "!"
